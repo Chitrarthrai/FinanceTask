@@ -39,14 +39,20 @@ const Transactions = () => {
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-end gap-6">
         <div>
-          <h1 className="text-3xl font-extrabold text-slate-800 tracking-tight mb-2">Transactions</h1>
-          <p className="text-slate-500 font-medium">Manage and track your financial history.</p>
+          <h1 className="text-3xl font-extrabold text-slate-800 dark:text-white tracking-tight mb-2">Transactions</h1>
+          <p className="text-slate-500 dark:text-slate-400 font-medium">Manage and track your financial history.</p>
         </div>
         <div className="flex gap-3">
-          <button className="flex items-center gap-2 px-5 py-2.5 bg-white/60 backdrop-blur-md text-slate-700 font-bold rounded-full border border-white hover:bg-white transition-all shadow-sm hover:shadow-md">
+          <button 
+            onClick={() => alert('Exporting transaction history to CSV...')}
+            className="flex items-center gap-2 px-5 py-2.5 bg-white/60 dark:bg-slate-800/60 backdrop-blur-md text-slate-700 dark:text-slate-200 font-bold rounded-full border border-white dark:border-slate-700 hover:bg-white dark:hover:bg-slate-800 transition-all shadow-sm hover:shadow-md"
+          >
             <Download className="w-4 h-4" /> Export
           </button>
-          <button className="flex items-center gap-2 px-6 py-2.5 bg-brand-500 text-white font-bold rounded-full hover:bg-brand-600 transition-all shadow-lg shadow-brand-500/30 active:scale-95">
+          <button 
+            onClick={() => alert('Opening Add Transaction Modal...')}
+            className="flex items-center gap-2 px-6 py-2.5 bg-brand-500 text-white font-bold rounded-full hover:bg-brand-600 transition-all shadow-lg shadow-brand-500/30 active:scale-95"
+          >
             <Plus className="w-5 h-5" /> Add Transaction
           </button>
         </div>
@@ -54,21 +60,21 @@ const Transactions = () => {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="glass-panel p-6 rounded-3xl flex items-center justify-between group hover:border-emerald-200 transition-all">
+        <div className="glass-panel p-6 rounded-3xl flex items-center justify-between group hover:border-emerald-200 dark:hover:border-emerald-900 transition-all">
           <div>
-            <p className="text-slate-500 font-semibold mb-1">Total Income</p>
-            <h3 className="text-3xl font-extrabold text-emerald-600">$7,450.00</h3>
+            <p className="text-slate-500 dark:text-slate-400 font-semibold mb-1">Total Income</p>
+            <h3 className="text-3xl font-extrabold text-emerald-600 dark:text-emerald-400">$7,450.00</h3>
           </div>
-          <div className="w-14 h-14 bg-emerald-100 rounded-2xl flex items-center justify-center text-emerald-600 group-hover:scale-110 transition-transform shadow-sm">
+          <div className="w-14 h-14 bg-emerald-100 dark:bg-emerald-900/30 rounded-2xl flex items-center justify-center text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform shadow-sm">
             <ArrowDownRight className="w-8 h-8" />
           </div>
         </div>
-        <div className="glass-panel p-6 rounded-3xl flex items-center justify-between group hover:border-rose-200 transition-all">
+        <div className="glass-panel p-6 rounded-3xl flex items-center justify-between group hover:border-rose-200 dark:hover:border-rose-900 transition-all">
           <div>
-            <p className="text-slate-500 font-semibold mb-1">Total Expenses</p>
-            <h3 className="text-3xl font-extrabold text-slate-800">$3,450.00</h3>
+            <p className="text-slate-500 dark:text-slate-400 font-semibold mb-1">Total Expenses</p>
+            <h3 className="text-3xl font-extrabold text-slate-800 dark:text-white">$3,450.00</h3>
           </div>
-          <div className="w-14 h-14 bg-rose-100 rounded-2xl flex items-center justify-center text-rose-500 group-hover:scale-110 transition-transform shadow-sm">
+          <div className="w-14 h-14 bg-rose-100 dark:bg-rose-900/30 rounded-2xl flex items-center justify-center text-rose-500 dark:text-rose-400 group-hover:scale-110 transition-transform shadow-sm">
             <ArrowUpRight className="w-8 h-8" />
           </div>
         </div>
@@ -89,7 +95,7 @@ const Transactions = () => {
                 className={`px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all ${
                   filter === cat 
                     ? 'bg-brand-500 text-white shadow-lg shadow-brand-500/20' 
-                    : 'bg-white/50 text-slate-500 hover:bg-white hover:text-slate-800'
+                    : 'bg-white/50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 hover:text-slate-800 dark:hover:text-slate-200'
                 }`}
               >
                 {cat}
@@ -104,10 +110,10 @@ const Transactions = () => {
               <input 
                 type="text" 
                 placeholder="Search..." 
-                className="w-full pl-10 pr-4 py-2.5 bg-white/50 border border-white/50 rounded-xl focus:ring-2 focus:ring-brand-200 focus:bg-white outline-none transition-all text-sm font-medium"
+                className="w-full pl-10 pr-4 py-2.5 bg-white/50 dark:bg-slate-800/50 border border-white/50 dark:border-slate-700/50 rounded-xl focus:ring-2 focus:ring-brand-200 focus:bg-white dark:focus:bg-slate-900 outline-none transition-all text-sm font-medium text-slate-700 dark:text-slate-200"
               />
             </div>
-            <button className="p-2.5 bg-white/50 rounded-xl border border-white/50 hover:bg-white text-slate-600 transition-all">
+            <button className="p-2.5 bg-white/50 dark:bg-slate-800/50 rounded-xl border border-white/50 dark:border-slate-700/50 hover:bg-white dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 transition-all">
               <Filter className="w-5 h-5" />
             </button>
           </div>
@@ -116,23 +122,23 @@ const Transactions = () => {
         {/* Transaction List */}
         <div className="space-y-3">
           {filteredData.map((t, idx) => (
-            <div key={t.id} className="flex items-center justify-between p-4 rounded-2xl hover:bg-white/60 transition-all group border border-transparent hover:border-white/60">
+            <div key={t.id} className="flex items-center justify-between p-4 rounded-2xl hover:bg-white/60 dark:hover:bg-white/5 transition-all group border border-transparent hover:border-white/60 dark:hover:border-white/10">
               <div className="flex items-center gap-5">
                 <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-105 shadow-sm ${
-                  t.type === 'expense' ? 'bg-orange-50 text-orange-500' : 'bg-emerald-50 text-emerald-500'
+                  t.type === 'expense' ? 'bg-orange-50 dark:bg-orange-900/20 text-orange-500' : 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-500'
                 }`}>
                   {getIcon(t.category)}
                 </div>
                 <div>
-                  <p className="font-bold text-slate-800 text-lg">{t.title}</p>
+                  <p className="font-bold text-slate-800 dark:text-slate-200 text-lg">{t.title}</p>
                   <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-slate-100 text-slate-500">{t.category}</span>
+                    <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">{t.category}</span>
                     <span className="text-xs text-slate-400 font-medium">{t.date}</span>
                   </div>
                 </div>
               </div>
               <div className="text-right">
-                <span className={`block font-bold text-xl ${t.type === 'expense' ? 'text-slate-800' : 'text-emerald-600'}`}>
+                <span className={`block font-bold text-xl ${t.type === 'expense' ? 'text-slate-800 dark:text-slate-200' : 'text-emerald-600 dark:text-emerald-400'}`}>
                   {t.type === 'expense' ? '-' : '+'}${t.amount.toFixed(2)}
                 </span>
                 <span className="text-xs text-slate-400 font-medium">
@@ -151,7 +157,7 @@ const Transactions = () => {
 
         {/* Pagination Placeholder */}
         <div className="flex justify-center mt-8">
-           <button className="text-sm font-bold text-brand-600 hover:text-brand-700 transition-colors">Load More</button>
+           <button className="text-sm font-bold text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 transition-colors">Load More</button>
         </div>
 
       </div>

@@ -1,22 +1,26 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { HashRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import Dashboard from './pages/Dashboard';
 import Transactions from './pages/Transactions';
+import Tasks from './pages/Tasks';
+import Analytics from './pages/Analytics';
+import Settings from './pages/Settings';
 import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 
 // Layout for the main authenticated application
-const AppLayout = () => {
+const AppLayout = ({ theme }: { theme: string }) => {
   return (
-    <div className="flex min-h-screen text-slate-800 font-sans selection:bg-brand-200 selection:text-brand-900">
+    <div className="flex min-h-screen text-slate-800 dark:text-slate-100 font-sans selection:bg-brand-200 selection:text-brand-900 transition-colors duration-300">
       <Sidebar />
       <div className="flex-1 lg:pl-64 transition-all duration-300">
         <Header />
         <main className="px-6 py-4">
-           <Outlet />
+           {/* Pass context to children like Settings */}
+           <Outlet context={{ theme }} />
         </main>
       </div>
     </div>
@@ -24,6 +28,17 @@ const AppLayout = () => {
 };
 
 const App = () => {
+  // Theme state management
+  const [theme, setTheme] = useState('light');
+
+  useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [theme]);
+
   return (
     <HashRouter>
       <Routes>
@@ -32,13 +47,15 @@ const App = () => {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
 
-        {/* Protected App Routes */}
-        <Route path="/app" element={<AppLayout />}>
-          <Route index element={<Dashboard />} />
-          <Route path="transactions" element={<Transactions />} />
-          <Route path="tasks" element={<div className="glass-panel p-8 rounded-3xl m-6 text-center text-slate-500 font-medium">Tasks Board (Coming Soon)</div>} />
-          <Route path="analytics" element={<div className="glass-panel p-8 rounded-3xl m-6 text-center text-slate-500 font-medium">Analytics Module (Coming Soon)</div>} />
-          <Route path="settings" element={<div className="glass-panel p-8 rounded-3xl m-6 text-center text-slate-500 font-medium">Settings (Coming Soon)</div>} />
+        {/* Protected App Routes - Pass setTheme via context for Settings page */}
+        <Route path="/app" element={<Outlet context={{ theme, setTheme }} />}>
+           <Route element={<AppLayout theme={theme} />}>
+            <Route index element={<Dashboard />} />
+            <Route path="transactions" element={<Transactions />} />
+            <Route path="tasks" element={<Tasks />} />
+            <Route path="analytics" element={<Analytics />} />
+            <Route path="settings" element={<Settings />} />
+          </Route>
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

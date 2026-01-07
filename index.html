@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script>
       tailwind.config = {
+        darkMode: 'class',
         theme: {
           extend: {
             fontFamily: {
@@ -70,6 +71,15 @@
         background-attachment: fixed;
         color: #1e293b;
         min-height: 100vh;
+        transition: background-image 0.5s ease;
+      }
+
+      /* Dark Mode Background */
+      .dark body {
+        background-image: 
+          linear-gradient(120deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.9) 100%),
+          url('https://images.unsplash.com/photo-1639322537228-f710d846310a?q=80&w=2500&auto=format&fit=crop');
+        color: #e2e8f0;
       }
 
       /* Custom Scrollbar */
@@ -98,6 +108,13 @@
           0 4px 6px -1px rgba(0, 0, 0, 0.02),
           0 2px 4px -1px rgba(0, 0, 0, 0.02),
           inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+        transition: background-color 0.3s ease, border-color 0.3s ease;
+      }
+
+      .dark .glass-panel {
+        background: rgba(30, 41, 59, 0.4);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
       }
       
       .glass-sidebar {
@@ -105,6 +122,12 @@
         backdrop-filter: blur(25px);
         -webkit-backdrop-filter: blur(25px);
         border-right: 1px solid rgba(255, 255, 255, 0.6);
+        transition: background-color 0.3s ease, border-color 0.3s ease;
+      }
+
+      .dark .glass-sidebar {
+        background: rgba(15, 23, 42, 0.6);
+        border-right: 1px solid rgba(255, 255, 255, 0.05);
       }
 
       .glass-card-hover {
@@ -118,10 +141,23 @@
         border-color: rgba(255, 255, 255, 0.9);
       }
 
+      .dark .glass-card-hover:hover {
+        background: rgba(30, 41, 59, 0.8);
+        border-color: rgba(255, 255, 255, 0.1);
+        box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
+      }
+
       .glass-input {
         background: rgba(255, 255, 255, 0.5);
         border: 1px solid rgba(255, 255, 255, 0.5);
         backdrop-filter: blur(10px);
+        transition: background-color 0.3s ease, color 0.3s ease;
+      }
+
+      .dark .glass-input {
+        background: rgba(15, 23, 42, 0.4);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: #f1f5f9;
       }
       
       .glass-input:focus {
@@ -129,6 +165,11 @@
         border-color: #fb923c;
         box-shadow: 0 0 0 2px rgba(251, 146, 60, 0.2);
         outline: none;
+      }
+
+      .dark .glass-input:focus {
+        background: rgba(30, 41, 59, 0.9);
+        border-color: #fb923c;
       }
     </style>
   <script type="importmap">
@@ -139,7 +180,7 @@
     "react": "https://esm.sh/react@^19.2.3",
     "recharts": "https://esm.sh/recharts@^3.6.0",
     "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "react-router-dom": "https://esm.sh/react-router-dom@^7.11.0"
+    "react-router-dom": "https://esm.sh/react-router-dom@6"
   }
 }
 </script>

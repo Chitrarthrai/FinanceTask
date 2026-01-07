@@ -12,6 +12,11 @@ const Sidebar = () => {
     { icon: Settings, label: 'Settings', path: '/app/settings' },
   ];
 
+  const handleLogout = () => {
+    // Clear any user session data here if needed
+    navigate('/');
+  };
+
   return (
     <>
       {/* Desktop Sidebar */}
@@ -20,14 +25,14 @@ const Sidebar = () => {
           <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-500 to-brand-400 flex items-center justify-center shadow-lg shadow-brand-500/20">
             <CreditCard className="w-5 h-5 text-white" />
           </div>
-          <h1 className="text-xl font-bold text-slate-800 tracking-tight">
+          <h1 className="text-xl font-bold text-slate-800 dark:text-white tracking-tight">
             FinanceTask
           </h1>
         </div>
 
         <nav className="flex-1 px-4 space-y-2 overflow-y-auto pt-4">
           <div className="px-4 pb-2">
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Main Menu</p>
+            <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Main Menu</p>
           </div>
           {navItems.map((item) => (
             <NavLink
@@ -37,8 +42,8 @@ const Sidebar = () => {
               className={({ isActive }) =>
                 `flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-200 group relative overflow-hidden ${
                   isActive
-                    ? 'bg-white/60 text-brand-600 shadow-sm font-semibold'
-                    : 'text-slate-500 hover:bg-white/40 hover:text-slate-900 font-medium'
+                    ? 'bg-white/60 dark:bg-white/10 text-brand-600 dark:text-brand-400 shadow-sm font-semibold'
+                    : 'text-slate-500 dark:text-slate-400 hover:bg-white/40 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-slate-200 font-medium'
                 }`
               }
             >
@@ -46,7 +51,7 @@ const Sidebar = () => {
                 <>
                   <item.icon
                     className={`w-5 h-5 transition-transform duration-200 ${
-                      isActive ? 'text-brand-500' : 'text-slate-400 group-hover:text-slate-600'
+                      isActive ? 'text-brand-500 dark:text-brand-400' : 'text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300'
                     } ${isActive ? 'scale-110' : 'group-hover:scale-110'}`}
                   />
                   <span>{item.label}</span>
@@ -74,8 +79,8 @@ const Sidebar = () => {
             </div>
           </div>
           <button 
-            onClick={() => navigate('/')}
-            className="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-rose-500 transition-colors w-full rounded-2xl hover:bg-rose-50/50"
+            onClick={handleLogout}
+            className="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 transition-colors w-full rounded-2xl hover:bg-rose-50/50 dark:hover:bg-rose-900/20"
           >
             <LogOut className="w-5 h-5" />
             <span className="font-medium">Log Out</span>
@@ -84,7 +89,7 @@ const Sidebar = () => {
       </aside>
 
       {/* Mobile Bottom Nav */}
-      <nav className="lg:hidden fixed bottom-4 left-4 right-4 bg-white/80 backdrop-blur-xl rounded-2xl shadow-xl shadow-slate-900/5 border border-white/50 z-50 px-6 py-3 flex justify-between items-center">
+      <nav className="lg:hidden fixed bottom-4 left-4 right-4 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-2xl shadow-xl shadow-slate-900/5 border border-white/50 dark:border-slate-700/50 z-50 px-6 py-3 flex justify-between items-center">
         {navItems.slice(0, 4).map((item) => (
           <NavLink
             key={item.path}
@@ -92,7 +97,7 @@ const Sidebar = () => {
             end={item.path === '/app'}
             className={({ isActive }) =>
               `flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${
-                isActive ? 'text-brand-600 bg-brand-50' : 'text-slate-400'
+                isActive ? 'text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/20' : 'text-slate-400 dark:text-slate-500'
               }`
             }
           >

@@ -29,6 +29,7 @@ export interface Task {
   dueDate: string;
   assignee?: string;
   tags?: string[];
+  recurring?: boolean;
 }
 
 export interface ChartData {

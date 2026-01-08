@@ -1,12 +1,19 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import KPICard from '../components/KPICard';
-import { KPI_MOCK_DATA, RECENT_TRANSACTIONS, UPCOMING_TASKS } from '../constants';
+import { KPI_MOCK_DATA } from '../constants';
 import { SpendingOverview, CategoryDistribution } from '../components/DashboardCharts';
 import { ArrowUpRight, ArrowRight, Clock, MoreVertical, Plus, Calendar } from 'lucide-react';
+import { useData } from '../contexts/DataContext';
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const { transactions, tasks } = useData();
+
+  // Get only top 4 recent transactions
+  const recentTransactions = transactions.slice(0, 4);
+  // Get only top 3 upcoming tasks
+  const upcomingTasks = tasks.filter(t => t.status !== 'completed').slice(0, 3);
 
   return (
     <div className="space-y-8 animate-fade-in pb-20">
@@ -113,7 +120,7 @@ const Dashboard = () => {
             </button>
           </div>
           <div className="space-y-2">
-            {RECENT_TRANSACTIONS.map((t) => (
+            {recentTransactions.map((t) => (
               <div key={t.id} className="flex items-center justify-between p-4 rounded-2xl hover:bg-white/40 dark:hover:bg-white/5 transition-all group cursor-pointer border border-transparent hover:border-white/50 dark:hover:border-white/10">
                 <div className="flex items-center gap-4">
                   <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-colors shadow-sm ${
@@ -127,7 +134,7 @@ const Dashboard = () => {
                   </div>
                 </div>
                 <span className={`font-bold text-lg ${t.type === 'expense' ? 'text-slate-800 dark:text-slate-200' : 'text-emerald-600 dark:text-emerald-400'}`}>
-                  {t.type === 'expense' ? '-' : '+'}${t.amount.toFixed(2)}
+                  {t.type === 'expense' ? '-' : '+'}${Number(t.amount).toFixed(2)}
                 </span>
               </div>
             ))}
@@ -146,7 +153,7 @@ const Dashboard = () => {
             </button>
           </div>
           <div className="space-y-3">
-            {UPCOMING_TASKS.map((task) => (
+            {upcomingTasks.map((task) => (
               <div key={task.id} className="flex items-center gap-4 p-4 border border-white/40 dark:border-white/10 rounded-2xl bg-white/20 dark:bg-white/5 hover:bg-white/60 dark:hover:bg-white/10 transition-all hover:shadow-md group cursor-pointer">
                   <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center cursor-pointer transition-all ${
                     task.status === 'completed' ? 'bg-brand-500 border-brand-500' : 'border-slate-300 dark:border-slate-600 hover:border-brand-400'

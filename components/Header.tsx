@@ -1,8 +1,13 @@
 import React from 'react';
-import { Search, Bell, Menu } from 'lucide-react';
+import { Search, Bell, Menu, Sun, Moon } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 
-const Header = () => {
+interface HeaderProps {
+  theme: string;
+  setTheme: (theme: string) => void;
+}
+
+const Header: React.FC<HeaderProps> = ({ theme, setTheme }) => {
   const location = useLocation();
 
   const getPageTitle = () => {
@@ -13,6 +18,10 @@ const Header = () => {
       case '/app/settings': return 'Settings';
       default: return 'Dashboard';
     }
+  };
+
+  const toggleTheme = () => {
+    setTheme(theme === 'light' ? 'dark' : 'light');
   };
 
   return (
@@ -26,7 +35,6 @@ const Header = () => {
 
       <div className="hidden lg:flex items-center gap-2">
          <h2 className="text-2xl font-bold text-slate-800 dark:text-white transition-colors">{getPageTitle()}</h2>
-         <span className="px-3 py-1 bg-gradient-to-r from-brand-100 to-brand-50 text-brand-700 text-xs font-bold rounded-full border border-brand-200 shadow-sm">PRO</span>
       </div>
 
       <div className="flex items-center gap-4 ml-auto">
@@ -38,6 +46,19 @@ const Header = () => {
             className="bg-transparent border-none outline-none text-sm text-slate-700 dark:text-slate-200 placeholder:text-slate-500 w-full"
           />
         </div>
+
+        {/* Theme Toggle */}
+        <button 
+          onClick={toggleTheme}
+          className="p-3 bg-white/40 dark:bg-slate-800/50 hover:bg-white/80 dark:hover:bg-slate-700/80 rounded-xl border border-white/50 dark:border-slate-700/50 text-slate-600 dark:text-slate-300 transition-all hover:shadow-lg hover:shadow-brand-500/10 group backdrop-blur-md"
+          aria-label="Toggle Dark Mode"
+        >
+          {theme === 'dark' ? (
+            <Sun className="w-5 h-5 text-amber-400 group-hover:rotate-45 transition-transform" />
+          ) : (
+            <Moon className="w-5 h-5 text-slate-600 group-hover:-rotate-12 transition-transform" />
+          )}
+        </button>
 
         <button className="relative p-3 bg-white/40 dark:bg-slate-800/50 hover:bg-white/80 dark:hover:bg-slate-700/80 rounded-xl border border-white/50 dark:border-slate-700/50 text-slate-600 dark:text-slate-300 hover:text-brand-600 transition-all hover:shadow-lg hover:shadow-brand-500/10 group backdrop-blur-md">
           <Bell className="w-5 h-5 group-hover:scale-110 transition-transform" />

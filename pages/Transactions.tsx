@@ -1,20 +1,24 @@
 import React, { useState } from 'react';
-import { Search, Filter, Download, Plus, ArrowUpRight, ArrowDownRight, Coffee, ShoppingBag, Home, Car, DollarSign } from 'lucide-react';
-import { RECENT_TRANSACTIONS } from '../constants';
+import { Search, Filter, Download, Plus, ArrowUpRight, ArrowDownRight, Coffee, ShoppingBag, Home, Car, DollarSign, ChevronDown } from 'lucide-react';
+import { useData } from '../contexts/DataContext';
+import Modal from '../components/Modal';
+import { Transaction } from '../types';
 
 const Transactions = () => {
+  const { transactions, addTransaction } = useData();
   const [filter, setFilter] = useState('All');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [limit, setLimit] = useState(6);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Expanded Mock Data
-  const allTransactions = [
-    ...RECENT_TRANSACTIONS,
-    { id: '5', title: 'Salary Deposit', category: 'Income', amount: 5400.00, date: 'Aug 20, 2024', type: 'income' as const },
-    { id: '6', title: 'Electric Bill', category: 'Utilities', amount: 145.20, date: 'Aug 18, 2024', type: 'expense' as const },
-    { id: '7', title: 'Starbucks', category: 'Food', amount: 6.50, date: 'Aug 18, 2024', type: 'expense' as const },
-    { id: '8', title: 'Gym Membership', category: 'Health', amount: 45.00, date: 'Aug 15, 2024', type: 'expense' as const },
-    { id: '9', title: 'Client Payment', category: 'Income', amount: 1200.00, date: 'Aug 12, 2024', type: 'income' as const },
-    { id: '10', title: 'Uber Ride', category: 'Transport', amount: 24.50, date: 'Aug 10, 2024', type: 'expense' as const },
-  ];
+  // Form State
+  const [newTrans, setNewTrans] = useState<Partial<Transaction>>({
+    title: '',
+    amount: 0,
+    category: 'Food',
+    type: 'expense',
+    date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+  });
 
   const categories = ['All', 'Food', 'Transport', 'Entertainment', 'Income', 'Utilities'];
 
@@ -29,9 +33,45 @@ const Transactions = () => {
     }
   };
 
-  const filteredData = filter === 'All' 
-    ? allTransactions 
-    : allTransactions.filter(t => t.category === filter);
+  const filteredData = transactions
+    .filter(t => filter === 'All' ? true : t.category === filter)
+    .filter(t => t.title.toLowerCase().includes(searchTerm.toLowerCase()));
+
+  const displayedData = filteredData.slice(0, limit);
+
+  const handleExport = () => {
+    const headers = ['ID', 'Title', 'Category', 'Amount', 'Date', 'Type'];
+    const rows = filteredData.map(t => [t.id, t.title, t.category, t.amount, t.date, t.type]);
+    const csvContent = "data:text/csv;charset=utf-8," 
+      + headers.join(",") + "\n" 
+      + rows.map(e => e.join(",")).join("\n");
+    
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "transactions.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleAddTransaction = (e: React.FormEvent) => {
+    e.preventDefault();
+    addTransaction({
+      id: Math.random().toString(36).substr(2, 9),
+      title: newTrans.title || 'Untitled',
+      category: newTrans.category || 'Others',
+      amount: Number(newTrans.amount),
+      date: newTrans.date || 'Today',
+      type: newTrans.type as 'income' | 'expense'
+    });
+    setIsModalOpen(false);
+    setNewTrans({ title: '', amount: 0, category: 'Food', type: 'expense', date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) });
+  };
+
+  // Calculations for summary cards based on filtered data or all data? Usually all data is better for summary.
+  const totalIncome = transactions.filter(t => t.type === 'income').reduce((acc, curr) => acc + curr.amount, 0);
+  const totalExpenses = transactions.filter(t => t.type === 'expense').reduce((acc, curr) => acc + curr.amount, 0);
 
   return (
     <div className="space-y-8 animate-fade-in pb-20">
@@ -44,13 +84,13 @@ const Transactions = () => {
         </div>
         <div className="flex gap-3">
           <button 
-            onClick={() => alert('Exporting transaction history to CSV...')}
+            onClick={handleExport}
             className="flex items-center gap-2 px-5 py-2.5 bg-white/60 dark:bg-slate-800/60 backdrop-blur-md text-slate-700 dark:text-slate-200 font-bold rounded-full border border-white dark:border-slate-700 hover:bg-white dark:hover:bg-slate-800 transition-all shadow-sm hover:shadow-md"
           >
             <Download className="w-4 h-4" /> Export
           </button>
           <button 
-            onClick={() => alert('Opening Add Transaction Modal...')}
+            onClick={() => setIsModalOpen(true)}
             className="flex items-center gap-2 px-6 py-2.5 bg-brand-500 text-white font-bold rounded-full hover:bg-brand-600 transition-all shadow-lg shadow-brand-500/30 active:scale-95"
           >
             <Plus className="w-5 h-5" /> Add Transaction
@@ -63,7 +103,7 @@ const Transactions = () => {
         <div className="glass-panel p-6 rounded-3xl flex items-center justify-between group hover:border-emerald-200 dark:hover:border-emerald-900 transition-all">
           <div>
             <p className="text-slate-500 dark:text-slate-400 font-semibold mb-1">Total Income</p>
-            <h3 className="text-3xl font-extrabold text-emerald-600 dark:text-emerald-400">$7,450.00</h3>
+            <h3 className="text-3xl font-extrabold text-emerald-600 dark:text-emerald-400">${totalIncome.toLocaleString()}</h3>
           </div>
           <div className="w-14 h-14 bg-emerald-100 dark:bg-emerald-900/30 rounded-2xl flex items-center justify-center text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform shadow-sm">
             <ArrowDownRight className="w-8 h-8" />
@@ -72,7 +112,7 @@ const Transactions = () => {
         <div className="glass-panel p-6 rounded-3xl flex items-center justify-between group hover:border-rose-200 dark:hover:border-rose-900 transition-all">
           <div>
             <p className="text-slate-500 dark:text-slate-400 font-semibold mb-1">Total Expenses</p>
-            <h3 className="text-3xl font-extrabold text-slate-800 dark:text-white">$3,450.00</h3>
+            <h3 className="text-3xl font-extrabold text-slate-800 dark:text-white">${totalExpenses.toLocaleString()}</h3>
           </div>
           <div className="w-14 h-14 bg-rose-100 dark:bg-rose-900/30 rounded-2xl flex items-center justify-center text-rose-500 dark:text-rose-400 group-hover:scale-110 transition-transform shadow-sm">
             <ArrowUpRight className="w-8 h-8" />
@@ -110,6 +150,8 @@ const Transactions = () => {
               <input 
                 type="text" 
                 placeholder="Search..." 
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-2.5 bg-white/50 dark:bg-slate-800/50 border border-white/50 dark:border-slate-700/50 rounded-xl focus:ring-2 focus:ring-brand-200 focus:bg-white dark:focus:bg-slate-900 outline-none transition-all text-sm font-medium text-slate-700 dark:text-slate-200"
               />
             </div>
@@ -121,7 +163,7 @@ const Transactions = () => {
 
         {/* Transaction List */}
         <div className="space-y-3">
-          {filteredData.map((t, idx) => (
+          {displayedData.map((t) => (
             <div key={t.id} className="flex items-center justify-between p-4 rounded-2xl hover:bg-white/60 dark:hover:bg-white/5 transition-all group border border-transparent hover:border-white/60 dark:hover:border-white/10">
               <div className="flex items-center gap-5">
                 <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-105 shadow-sm ${
@@ -139,7 +181,7 @@ const Transactions = () => {
               </div>
               <div className="text-right">
                 <span className={`block font-bold text-xl ${t.type === 'expense' ? 'text-slate-800 dark:text-slate-200' : 'text-emerald-600 dark:text-emerald-400'}`}>
-                  {t.type === 'expense' ? '-' : '+'}${t.amount.toFixed(2)}
+                  {t.type === 'expense' ? '-' : '+'}${Number(t.amount).toFixed(2)}
                 </span>
                 <span className="text-xs text-slate-400 font-medium">
                   {t.type === 'expense' ? 'Debit Card' : 'Direct Deposit'}
@@ -148,19 +190,86 @@ const Transactions = () => {
             </div>
           ))}
           
-          {filteredData.length === 0 && (
+          {displayedData.length === 0 && (
              <div className="py-12 text-center">
                <p className="text-slate-400 font-medium">No transactions found.</p>
              </div>
           )}
         </div>
 
-        {/* Pagination Placeholder */}
-        <div className="flex justify-center mt-8">
-           <button className="text-sm font-bold text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 transition-colors">Load More</button>
-        </div>
+        {/* Pagination */}
+        {displayedData.length < filteredData.length && (
+          <div className="flex justify-center mt-8">
+             <button 
+               onClick={() => setLimit(prev => prev + 5)}
+               className="text-sm font-bold text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 transition-colors"
+             >
+               Load More
+             </button>
+          </div>
+        )}
 
       </div>
+
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Add Transaction">
+        <form onSubmit={handleAddTransaction} className="space-y-4">
+          <div>
+            <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Title</label>
+            <input 
+              required
+              type="text" 
+              value={newTrans.title}
+              onChange={(e) => setNewTrans({...newTrans, title: e.target.value})}
+              className="w-full px-4 py-3 rounded-xl glass-input font-medium"
+              placeholder="e.g. Grocery Shopping"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Amount ($)</label>
+              <input 
+                required
+                type="number" 
+                step="0.01"
+                value={newTrans.amount}
+                onChange={(e) => setNewTrans({...newTrans, amount: parseFloat(e.target.value)})}
+                className="w-full px-4 py-3 rounded-xl glass-input font-medium"
+                placeholder="0.00"
+              />
+            </div>
+             <div>
+              <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Type</label>
+              <div className="relative">
+                <select 
+                  value={newTrans.type}
+                  onChange={(e) => setNewTrans({...newTrans, type: e.target.value as any})}
+                  className="w-full px-4 py-3 rounded-xl glass-input font-medium appearance-none"
+                >
+                  <option value="expense">Expense</option>
+                  <option value="income">Income</option>
+                </select>
+                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
+              </div>
+            </div>
+          </div>
+           <div>
+              <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Category</label>
+              <div className="relative">
+                <select 
+                  value={newTrans.category}
+                  onChange={(e) => setNewTrans({...newTrans, category: e.target.value})}
+                  className="w-full px-4 py-3 rounded-xl glass-input font-medium appearance-none"
+                >
+                  {categories.filter(c => c !== 'All').map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
+              </div>
+            </div>
+          <button type="submit" className="w-full py-3 bg-brand-500 text-white font-bold rounded-xl hover:bg-brand-600 transition-colors shadow-lg shadow-brand-500/30">
+            Save Transaction
+          </button>
+        </form>
+      </Modal>
     </div>
   );
 };

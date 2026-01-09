@@ -32,7 +32,7 @@ const App = () => {
   // Theme state management with localStorage persistence
   const [theme, setTheme] = useState(() => {
     const savedTheme = localStorage.getItem('theme');
-    return savedTheme || 'light';
+    return savedTheme || 'dark';
   });
 
   useEffect(() => {

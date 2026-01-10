@@ -23,29 +23,55 @@
 }
 
 @keyframes fadeIn {
-  0% { opacity: 0; }
-  100% { opacity: 1; }
+  0% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
+  }
 }
 
 @keyframes slideUp {
-  0% { opacity: 0; transform: translateY(20px); }
-  100% { opacity: 1; transform: translateY(0); }
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes slideInRight {
-  0% { opacity: 0; transform: translateX(20px); }
-  100% { opacity: 1; transform: translateX(0); }
+  0% {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
 }
 
 /* Background Setup */
 body {
   /* Abstract 3D Gold/Money Background */
-  background-image: 
+  background-image:
     linear-gradient(120deg, rgba(255, 247, 237, 0.85) 0%, rgba(255, 255, 255, 0.7) 100%),
     url('https://images.unsplash.com/photo-1639322537228-f710d846310a?q=80&w=2500&auto=format&fit=crop');
   background-size: cover;
@@ -58,7 +84,7 @@ body {
 
 /* Dark Mode Background */
 .dark body {
-  background-image: 
+  background-image:
     linear-gradient(120deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.9) 100%),
     url('https://images.unsplash.com/photo-1639322537228-f710d846310a?q=80&w=2500&auto=format&fit=crop');
   color: #e2e8f0;
@@ -69,13 +95,16 @@ body {
   width: 6px;
   height: 6px;
 }
+
 ::-webkit-scrollbar-track {
   background: transparent;
 }
+
 ::-webkit-scrollbar-thumb {
   background: rgba(148, 163, 184, 0.5);
   border-radius: 10px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(148, 163, 184, 0.8);
 }
@@ -86,7 +115,7 @@ body {
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.6);
-  box-shadow: 
+  box-shadow:
     0 4px 6px -1px rgba(0, 0, 0, 0.02),
     0 2px 4px -1px rgba(0, 0, 0, 0.02),
     inset 0 0 0 1px rgba(255, 255, 255, 0.5);
@@ -159,7 +188,101 @@ option {
   background-color: white;
   color: #1e293b;
 }
+
 .dark option {
   background-color: #1e293b;
   color: #f1f5f9;
+}
+
+/* Force KPI Text Color */
+.kpi-value-text {
+  color: #1e293b;
+  /* slate-800 */
+}
+
+.dark .kpi-value-text {
+  color: #ffffff !important;
+}
+
+/* Global Dark Mode Text Overrides - The Nuclear Option */
+.dark h1,
+.dark h2,
+.dark h3,
+.dark h4,
+.dark h5,
+.dark h6 {
+  color: #f8fafc !important;
+  /* slate-50 */
+}
+
+/* Force standard dark text to be light in dark mode */
+.dark .text-slate-900,
+.dark .text-slate-800,
+.dark .text-slate-700,
+.dark .text-gray-900,
+.dark .text-gray-800,
+.dark .text-gray-700 {
+  color: #e2e8f0 !important;
+  /* slate-200 */
+}
+
+/* Ensure medium-dark text becomes readable grey */
+.dark .text-slate-600,
+.dark .text-slate-500,
+.dark .text-gray-600,
+.dark .text-gray-500 {
+  color: #94a3b8 !important;
+  /* slate-400 */
+}
+
+/* Component Specific High-Contrast Overrides */
+
+/* Badges (Tasks) */
+.badge-strong {
+  background-color: #cbd5e1;
+  /* slate-300 */
+  color: #0f172a;
+  /* slate-900 */
+}
+
+.dark .badge-strong {
+  background-color: #475569;
+  /* slate-600 */
+  color: #f8fafc;
+  /* slate-50 */
+}
+
+/* Filter Chips (Transactions) */
+.filter-chip-default {
+  background-color: rgba(255, 255, 255, 0.5);
+  color: #475569;
+  /* slate-600 */
+  border: 1px solid transparent;
+}
+
+.dark .filter-chip-default {
+  background-color: rgba(30, 41, 59, 0.6);
+  /* slate-800/60 */
+  color: #cbd5e1;
+  /* slate-300 */
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Report Paper Card - Force Dark Mode Background */
+.paper-card {
+  --tw-bg-opacity: 1;
+  background-color: rgb(255 255 255 / var(--tw-bg-opacity));
+}
+
+.dark .paper-card {
+  background-color: #1e293b !important;
+  /* slate-800 forced */
+  border-color: #334155;
+  color: #f8fafc;
+}
+
+.dark .paper-card h1,
+.dark .paper-card h2,
+.dark .paper-card h3 {
+  color: #ffffff !important;
 }

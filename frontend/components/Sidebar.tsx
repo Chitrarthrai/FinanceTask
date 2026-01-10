@@ -1,20 +1,32 @@
-import React from 'react';
-import { LayoutDashboard, Wallet, CheckSquare, Settings, PieChart, LogOut, CreditCard } from 'lucide-react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import React from "react";
+import {
+  LayoutDashboard,
+  Wallet,
+  CheckSquare,
+  Settings,
+  PieChart,
+  LogOut,
+  CreditCard,
+  FileText,
+} from "lucide-react";
+import { NavLink, useNavigate } from "react-router-dom";
+import { useData } from "../contexts/DataContext";
 
 const Sidebar = () => {
   const navigate = useNavigate();
+  const { metrics } = useData();
   const navItems = [
-    { icon: LayoutDashboard, label: 'Dashboard', path: '/app' },
-    { icon: Wallet, label: 'Transactions', path: '/app/transactions' },
-    { icon: CheckSquare, label: 'Tasks', path: '/app/tasks' },
-    { icon: PieChart, label: 'Analytics', path: '/app/analytics' },
-    { icon: Settings, label: 'Settings', path: '/app/settings' },
+    { icon: LayoutDashboard, label: "Dashboard", path: "/app" },
+    { icon: Wallet, label: "Transactions", path: "/app/transactions" },
+    { icon: CheckSquare, label: "Tasks", path: "/app/tasks" },
+    { icon: PieChart, label: "Analytics", path: "/app/analytics" },
+    { icon: FileText, label: "Reports", path: "/app/reports" },
+    { icon: Settings, label: "Settings", path: "/app/settings" },
   ];
 
   const handleLogout = () => {
     // Clear any user session data here if needed
-    navigate('/');
+    navigate("/");
   };
 
   return (
@@ -32,27 +44,30 @@ const Sidebar = () => {
 
         <nav className="flex-1 px-4 space-y-2 overflow-y-auto pt-4">
           <div className="px-4 pb-2">
-            <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Main Menu</p>
+            <p className="text-xs font-semibold text-slate-400 dark:text-slate-400 uppercase tracking-wider">
+              Main Menu
+            </p>
           </div>
           {navItems.map((item) => (
             <NavLink
               key={item.path}
               to={item.path}
-              end={item.path === '/app'}
+              end={item.path === "/app"}
               className={({ isActive }) =>
                 `flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-200 group relative overflow-hidden ${
                   isActive
-                    ? 'bg-white/60 dark:bg-white/10 text-brand-600 dark:text-brand-400 shadow-sm font-semibold'
-                    : 'text-slate-500 dark:text-slate-400 hover:bg-white/40 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-slate-200 font-medium'
+                    ? "bg-white/60 dark:bg-white/10 text-brand-600 dark:text-brand-400 shadow-sm font-semibold"
+                    : "text-slate-500 dark:text-slate-300 hover:bg-white/40 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-slate-200 font-medium"
                 }`
-              }
-            >
+              }>
               {({ isActive }) => (
                 <>
                   <item.icon
                     className={`w-5 h-5 transition-transform duration-200 ${
-                      isActive ? 'text-brand-500 dark:text-brand-400' : 'text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300'
-                    } ${isActive ? 'scale-110' : 'group-hover:scale-110'}`}
+                      isActive
+                        ? "text-brand-500 dark:text-brand-400"
+                        : "text-slate-400 dark:text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300"
+                    } ${isActive ? "scale-110" : "group-hover:scale-110"}`}
                   />
                   <span>{item.label}</span>
                   {isActive && (
@@ -70,18 +85,34 @@ const Sidebar = () => {
               <div className="p-2 bg-white/10 rounded-lg">
                 <Wallet className="w-4 h-4 text-brand-300" />
               </div>
-              <span className="text-xs font-medium text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-full">+2.5%</span>
+              <span className="text-xs font-medium text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-full">
+                +2.5%
+              </span>
             </div>
             <p className="text-xs text-slate-400 mb-1">Total Balance</p>
-            <p className="text-2xl font-bold mb-3">$14,250.00</p>
+            <p className="text-2xl font-bold mb-3">
+              ${(metrics?.net_savings || 0).toLocaleString()}
+            </p>
             <div className="h-1.5 bg-slate-700/50 rounded-full overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-brand-400 to-brand-300 w-[75%] rounded-full" />
+              <div
+                className="h-full bg-gradient-to-r from-brand-400 to-brand-300 rounded-full transition-all duration-1000"
+                style={{
+                  width: `${Math.min(
+                    100,
+                    Math.max(
+                      0,
+                      ((metrics?.net_savings || 0) /
+                        (metrics?.total_income || 1)) *
+                        100
+                    )
+                  )}%`,
+                }}
+              />
             </div>
           </div>
-          <button 
+          <button
             onClick={handleLogout}
-            className="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 transition-colors w-full rounded-2xl hover:bg-rose-50/50 dark:hover:bg-rose-900/20"
-          >
+            className="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 transition-colors w-full rounded-2xl hover:bg-rose-50/50 dark:hover:bg-rose-900/20">
             <LogOut className="w-5 h-5" />
             <span className="font-medium">Log Out</span>
           </button>
@@ -94,15 +125,18 @@ const Sidebar = () => {
           <NavLink
             key={item.path}
             to={item.path}
-            end={item.path === '/app'}
+            end={item.path === "/app"}
             className={({ isActive }) =>
               `flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${
-                isActive ? 'text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/20' : 'text-slate-400 dark:text-slate-500'
+                isActive
+                  ? "text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/20"
+                  : "text-slate-400 dark:text-slate-500"
               }`
-            }
-          >
+            }>
             {({ isActive }) => (
-              <item.icon className={`w-6 h-6 ${isActive ? 'fill-current' : ''}`} />
+              <item.icon
+                className={`w-6 h-6 ${isActive ? "fill-current" : ""}`}
+              />
             )}
           </NavLink>
         ))}

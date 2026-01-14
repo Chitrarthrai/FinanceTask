@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   Search,
   Filter,
@@ -26,6 +27,7 @@ import { Transaction } from "../types";
 import { supabase } from "../lib/supabase";
 import CustomDatePicker from "../components/CustomDatePicker";
 
+// Force reload
 const Transactions = () => {
   const {
     transactions,
@@ -43,6 +45,15 @@ const Transactions = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
+
+  const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    const query = searchParams.get("search");
+    if (query) {
+      setSearchTerm(query);
+    }
+  }, [searchParams]);
 
   const handleViewReceipt = async (path: string) => {
     try {
@@ -262,22 +273,22 @@ const Transactions = () => {
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-end gap-6">
         <div>
-          <h1 className="text-3xl font-extrabold text-slate-800 dark:text-white tracking-tight mb-2">
+          <h1 className="text-3xl font-extrabold text-text-primary tracking-tight mb-2">
             Transactions
           </h1>
-          <p className="text-slate-500 dark:text-slate-400 font-medium">
+          <p className="text-text-muted font-medium">
             Manage and track your financial history.
           </p>
         </div>
         <div className="flex gap-3">
           <button
             onClick={handleExport}
-            className="flex items-center gap-2 px-5 py-2.5 bg-white/60 dark:bg-slate-800/60 backdrop-blur-md text-slate-700 dark:text-slate-200 font-bold rounded-full border border-white dark:border-slate-700 hover:bg-white dark:hover:bg-slate-800 transition-all shadow-sm hover:shadow-md">
+            className="flex items-center gap-2 px-5 py-2.5 backdrop-blur-md font-bold rounded-full border transition-all shadow-sm hover:shadow-md bg-bg-secondary/60 text-text-secondary border-border-primary hover:bg-bg-secondary hover:border-brand-300">
             <Download className="w-4 h-4" /> Export
           </button>
           <button
             onClick={() => setIsModalOpen(true)}
-            className="flex items-center gap-2 px-6 py-2.5 bg-brand-500 text-white font-bold rounded-full hover:bg-brand-600 transition-all shadow-lg shadow-brand-500/30 active:scale-95">
+            className="flex items-center gap-2 px-6 py-2.5 bg-brand-600 text-white font-bold rounded-full hover:bg-brand-700 transition-all shadow-lg shadow-brand-500/30 active:scale-95">
             <Plus className="w-5 h-5" /> Add Transaction
           </button>
         </div>
@@ -285,29 +296,25 @@ const Transactions = () => {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="glass-panel p-6 rounded-3xl flex items-center justify-between group hover:border-emerald-200 dark:hover:border-emerald-900 transition-all">
+        <div className="glass-panel p-6 rounded-3xl flex items-center justify-between group hover:border-emerald-300 dark:hover:border-emerald-900 transition-all shadow-sm hover:shadow-md bg-white/60 dark:bg-slate-800/60">
           <div>
-            <p className="text-slate-500 dark:text-slate-400 font-semibold mb-1">
-              Total Income
-            </p>
+            <p className="text-text-muted font-semibold mb-1">Total Income</p>
             <h3 className="text-3xl font-extrabold text-emerald-600 dark:text-emerald-400">
               ${totalIncome.toLocaleString()}
             </h3>
           </div>
-          <div className="w-14 h-14 bg-emerald-100 dark:bg-emerald-900/30 rounded-2xl flex items-center justify-center text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform shadow-sm">
+          <div className="w-14 h-14 bg-emerald-500 dark:bg-emerald-900/30 rounded-2xl flex items-center justify-center text-white dark:text-emerald-400 group-hover:scale-110 transition-transform shadow-sm">
             <ArrowDownRight className="w-8 h-8" />
           </div>
         </div>
-        <div className="glass-panel p-6 rounded-3xl flex items-center justify-between group hover:border-rose-200 dark:hover:border-rose-900 transition-all">
+        <div className="glass-panel p-6 rounded-3xl flex items-center justify-between group hover:border-rose-300 dark:hover:border-rose-900 transition-all shadow-sm hover:shadow-md bg-white/60 dark:bg-slate-800/60">
           <div>
-            <p className="text-slate-500 dark:text-slate-400 font-semibold mb-1">
-              Total Expenses
-            </p>
-            <h3 className="text-3xl font-extrabold text-slate-800 dark:text-white">
+            <p className="text-text-muted font-semibold mb-1">Total Expenses</p>
+            <h3 className="text-3xl font-extrabold text-text-primary">
               ${totalExpenses.toLocaleString()}
             </h3>
           </div>
-          <div className="w-14 h-14 bg-rose-100 dark:bg-rose-900/30 rounded-2xl flex items-center justify-center text-rose-500 dark:text-rose-400 group-hover:scale-110 transition-transform shadow-sm">
+          <div className="w-14 h-14 bg-rose-500 dark:bg-rose-900/30 rounded-2xl flex items-center justify-center text-white dark:text-rose-400 group-hover:scale-110 transition-transform shadow-sm">
             <ArrowUpRight className="w-8 h-8" />
           </div>
         </div>
@@ -326,10 +333,10 @@ const Transactions = () => {
                 <button
                   key={cat}
                   onClick={() => setFilter(cat)}
-                  className={`px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all ${
+                  className={`px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all border ${
                     filter === cat
-                      ? "bg-brand-500 text-white shadow-lg shadow-brand-500/20"
-                      : "filter-chip-default hover:bg-white dark:hover:bg-slate-700"
+                      ? "bg-brand-600 text-white shadow-lg shadow-brand-500/30 border-transparent"
+                      : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-brand-200 dark:hover:border-slate-600"
                   }`}>
                   {cat}
                 </button>
@@ -339,13 +346,13 @@ const Transactions = () => {
             {/* Search & Sort */}
             <div className="flex gap-3 w-full md:w-auto">
               <div className="relative flex-1 md:w-64">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
                 <input
                   type="text"
                   placeholder="Search..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 bg-white/50 dark:bg-slate-800/50 border border-white/50 dark:border-slate-700/50 rounded-xl focus:ring-2 focus:ring-brand-200 focus:bg-white dark:focus:bg-slate-900 outline-none transition-all text-sm font-medium text-slate-700 dark:text-slate-200"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm font-medium glass-input placeholder:text-text-muted"
                 />
               </div>
               <button
@@ -355,15 +362,15 @@ const Transactions = () => {
                   setStartDate(null);
                   setEndDate(null);
                 }}
-                className="p-2.5 bg-white/50 dark:bg-slate-800/50 rounded-xl border border-white/50 dark:border-slate-700/50 hover:bg-white dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 transition-all text-sm font-bold flex items-center gap-2">
+                className="p-2.5 bg-rose-500 rounded-xl border border-transparent hover:bg-rose-600 text-white transition-all text-sm font-bold flex items-center gap-2 shadow-sm hover:shadow-md hover:-translate-y-0.5">
                 <Filter className="w-4 h-4" /> Clear
               </button>
             </div>
           </div>
 
-          {/* Date Filters */}
-          <div className="flex gap-4 items-center mb-6 overflow-x-auto pb-2">
-            <div className="flex items-center gap-2 text-sm text-slate-500 font-bold whitespace-nowrap">
+          {/* Date Filters - Changed overflow to flex-wrap for visible dropdowns */}
+          <div className="flex flex-wrap gap-4 items-center mb-6 pb-2">
+            <div className="flex items-center gap-2 text-sm text-text-muted font-bold whitespace-nowrap">
               <span>From:</span>
               <div className="w-40">
                 <CustomDatePicker
@@ -372,7 +379,7 @@ const Transactions = () => {
                 />
               </div>
             </div>
-            <div className="flex items-center gap-2 text-sm text-slate-500 font-bold whitespace-nowrap">
+            <div className="flex items-center gap-2 text-sm text-text-muted font-bold whitespace-nowrap">
               <span>To:</span>
               <div className="w-40">
                 <CustomDatePicker
@@ -389,25 +396,25 @@ const Transactions = () => {
           {displayedData.map((t) => (
             <div
               key={t.id}
-              className="flex items-center justify-between p-4 rounded-2xl hover:bg-white/60 dark:hover:bg-white/5 transition-all group border border-transparent hover:border-white/60 dark:hover:border-white/10 group">
+              className="flex items-center justify-between p-4 rounded-2xl hover:bg-orange-50/60 dark:hover:bg-bg-secondary transition-all group border border-transparent hover:border-brand-200 dark:hover:border-border-primary hover:translate-x-1 cursor-default hover:shadow-sm">
               <div className="flex items-center gap-5">
                 <div
                   className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-105 shadow-sm ${
                     t.type === "expense"
-                      ? "bg-orange-50 dark:bg-orange-900/20 text-orange-500"
-                      : "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-500"
+                      ? "bg-orange-500 dark:bg-orange-900/30 text-white dark:text-orange-400"
+                      : "bg-emerald-500 dark:bg-emerald-900/30 text-white dark:text-emerald-400"
                   }`}>
                   {getIcon(t.category)}
                 </div>
                 <div>
-                  <p className="font-bold text-slate-800 dark:text-slate-200 text-lg">
+                  <p className="font-bold text-lg text-text-primary">
                     {t.title}
                   </p>
                   <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
+                    <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-bg-tertiary text-text-secondary">
                       {t.category}
                     </span>
-                    <span className="text-xs text-slate-400 font-medium">
+                    <span className="text-xs text-text-muted font-medium">
                       {t.date}
                     </span>
                   </div>
@@ -419,19 +426,19 @@ const Transactions = () => {
                   <span
                     className={`block font-bold text-xl ${
                       t.type === "expense"
-                        ? "text-slate-800 dark:text-slate-200"
-                        : "text-emerald-600 dark:text-emerald-400"
+                        ? "text-text-primary"
+                        : "text-emerald-500"
                     }`}>
                     {t.type === "expense" ? "-" : "+"}$
                     {Number(t.amount).toFixed(2)}
                   </span>
-                  <span className="text-xs text-slate-400 font-medium">
+                  <span className="text-xs text-text-muted font-medium">
                     {t.type === "expense" ? "Debit Card" : "Direct Deposit"}
                   </span>
                 </div>
 
                 {/* Actions (Visible on Hover) */}
-                <div className="hidden md:flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all bg-white/80 dark:bg-slate-800/80 p-1.5 rounded-xl backdrop-blur-sm shadow-sm border border-white/50 dark:border-slate-700/50">
+                <div className="hidden md:flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all p-1.5 rounded-xl backdrop-blur-sm shadow-sm border bg-bg-secondary/90 border-border-primary">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -441,7 +448,7 @@ const Transactions = () => {
                       });
                       setIsModalOpen(true);
                     }}
-                    className="p-1.5 hover:bg-brand-50 hover:text-brand-600 rounded-lg text-slate-400 transition-colors"
+                    className="p-1.5 hover:bg-brand-50 hover:text-brand-600 rounded-lg text-text-muted transition-colors"
                     title="Edit">
                     <Edit className="w-4 h-4" />
                   </button>
@@ -450,7 +457,7 @@ const Transactions = () => {
                       e.stopPropagation();
                       handleDelete(t.id);
                     }}
-                    className="p-1.5 hover:bg-rose-50 hover:text-rose-600 rounded-lg text-slate-400 transition-colors"
+                    className="p-1.5 hover:bg-rose-50 hover:text-rose-600 rounded-lg text-text-muted transition-colors"
                     title="Delete">
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -461,7 +468,7 @@ const Transactions = () => {
 
           {displayedData.length === 0 && (
             <div className="py-12 text-center">
-              <p className="text-slate-400 font-medium">
+              <p className="text-text-muted font-medium">
                 No transactions found.
               </p>
             </div>
@@ -486,7 +493,7 @@ const Transactions = () => {
         title="Add Transaction">
         <form onSubmit={handleAddTransaction} className="space-y-4">
           <div>
-            <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">
+            <label className="block text-sm font-bold text-text-primary mb-1">
               Title
             </label>
             <input
@@ -496,13 +503,13 @@ const Transactions = () => {
               onChange={(e) =>
                 setNewTrans({ ...newTrans, title: e.target.value })
               }
-              className="w-full px-4 py-3 rounded-xl glass-input font-medium"
+              className="w-full px-4 py-3 rounded-xl font-medium bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 placeholder:text-slate-400 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 transition-all shadow-sm"
               placeholder="e.g. Grocery Shopping"
             />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-sm font-bold text-text-primary mb-1">
                 Amount ($)
               </label>
               <input
@@ -516,12 +523,12 @@ const Transactions = () => {
                     amount: parseFloat(e.target.value),
                   })
                 }
-                className="w-full px-4 py-3 rounded-xl glass-input font-medium"
+                className="w-full px-4 py-3 rounded-xl font-medium bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 placeholder:text-slate-400 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 transition-all shadow-sm"
                 placeholder="0.00"
               />
             </div>
             <div>
-              <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-sm font-bold text-text-primary mb-1">
                 Type
               </label>
               <div className="relative">
@@ -530,17 +537,17 @@ const Transactions = () => {
                   onChange={(e) =>
                     setNewTrans({ ...newTrans, type: e.target.value as any })
                   }
-                  className="w-full px-4 py-3 rounded-xl glass-input font-medium appearance-none">
+                  className="w-full px-4 py-3 rounded-xl font-medium appearance-none bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 transition-all shadow-sm">
                   <option value="expense">Expense</option>
                   <option value="income">Income</option>
                 </select>
-                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
+                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted pointer-events-none" />
               </div>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-sm font-bold text-text-primary mb-1">
                 Date
               </label>
               <CustomDatePicker
@@ -558,7 +565,7 @@ const Transactions = () => {
               />
             </div>
             <div>
-              <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-sm font-bold text-text-primary mb-1">
                 Category
               </label>
               <div className="relative">
@@ -567,7 +574,7 @@ const Transactions = () => {
                   onChange={(e) =>
                     setNewTrans({ ...newTrans, category: e.target.value })
                   }
-                  className="w-full px-4 py-3 rounded-xl glass-input font-medium appearance-none">
+                  className="w-full px-4 py-3 rounded-xl font-medium appearance-none bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 transition-all shadow-sm">
                   {categoryNames
                     .filter((c) => c !== "All")
                     .map((c) => (
@@ -576,18 +583,18 @@ const Transactions = () => {
                       </option>
                     ))}
                 </select>
-                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
+                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted pointer-events-none" />
               </div>
             </div>
           </div>
 
           {/* Recurring Toggle */}
-          <div className="flex items-center gap-4 bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-100 dark:border-slate-700">
+          <div className="flex items-center gap-4 bg-bg-primary/50 p-4 rounded-xl border border-border-primary">
             <div className="flex-1">
-              <label className="text-sm font-bold text-slate-700 dark:text-slate-300">
+              <label className="text-sm font-bold text-text-primary">
                 Repeat Transaction
               </label>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-text-muted">
                 Automatically create this transaction?
               </p>
             </div>
@@ -597,21 +604,19 @@ const Transactions = () => {
                   <select
                     value={frequency}
                     onChange={(e) => setFrequency(e.target.value)}
-                    className="pl-3 pr-8 py-1.5 text-sm rounded-lg bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 focus:ring-2 focus:ring-brand-500 outline-none appearance-none font-medium">
+                    className="pl-3 pr-8 py-1.5 text-sm rounded-lg bg-bg-secondary border border-border-primary focus:ring-2 focus:ring-brand-500 outline-none appearance-none font-medium text-text-primary">
                     <option value="weekly">Weekly</option>
                     <option value="monthly">Monthly</option>
                     <option value="yearly">Yearly</option>
                   </select>
-                  <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400 pointer-events-none" />
+                  <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-text-muted pointer-events-none" />
                 </div>
               )}
               <button
                 type="button"
                 onClick={() => setIsRecurring(!isRecurring)}
                 className={`w-12 h-6 rounded-full transition-colors relative ${
-                  isRecurring
-                    ? "bg-brand-500"
-                    : "bg-slate-200 dark:bg-slate-600"
+                  isRecurring ? "bg-brand-500" : "bg-gray-300 dark:bg-gray-600"
                 }`}>
                 <div
                   className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform ${
@@ -625,7 +630,7 @@ const Transactions = () => {
           {/* Payment Method & Receipt */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-sm font-bold text-text-primary mb-1">
                 Payment Method
               </label>
               <div className="relative">
@@ -634,23 +639,23 @@ const Transactions = () => {
                   onChange={(e) =>
                     setNewTrans({ ...newTrans, paymentMethod: e.target.value })
                   }
-                  className="w-full px-4 py-3 rounded-xl glass-input font-medium appearance-none">
+                  className="w-full px-4 py-3 rounded-xl font-medium appearance-none bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 transition-all shadow-sm">
                   <option>Card</option>
                   <option>Cash</option>
                   <option>UPI</option>
                   <option>Bank Transfer</option>
                 </select>
-                <CreditCard className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
+                <CreditCard className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted pointer-events-none" />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-sm font-bold text-text-primary mb-1">
                 Receipt
               </label>
-              <label className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl glass-input font-medium cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 border-dashed border-2 border-slate-300 dark:border-slate-600 transition-colors">
-                <Receipt className="w-4 h-4 text-slate-500" />
-                <span className="text-xs text-slate-500">
+              <label className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl glass-input font-medium cursor-pointer hover:bg-bg-secondary border-dashed border-2 border-border-primary transition-colors">
+                <Receipt className="w-4 h-4 text-text-muted" />
+                <span className="text-xs text-text-muted">
                   {receiptFile
                     ? receiptFile.name.substring(0, 15) + "..."
                     : "Upload (Opt)"}

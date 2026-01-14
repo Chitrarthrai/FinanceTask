@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useOutletContext } from "react-router-dom";
 import {
   ChevronLeft,
   ChevronRight,
@@ -19,6 +20,7 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
   label,
   includeTime = false,
 }) => {
+  const { theme } = useOutletContext<{ theme: string }>();
   const [isOpen, setIsOpen] = useState(false);
   // Parse value to Date object safely
   const initialDate = value ? new Date(value) : new Date();
@@ -167,8 +169,13 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
       {/* Input Trigger */}
       <div
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between px-4 py-3 rounded-xl glass-input font-medium cursor-pointer hover:bg-white/60 dark:hover:bg-slate-800/60 transition-all border border-white/50 dark:border-slate-700/50">
-        <span className="text-slate-700 dark:text-slate-200">
+        className={`w-full flex items-center justify-between px-4 py-3 rounded-xl glass-input font-medium cursor-pointer transition-all border ${
+          theme === "dark"
+            ? "hover:bg-slate-800/60 border-slate-700/50"
+            : "hover:bg-white/60 border-white/50"
+        }`}>
+        <span
+          className={theme === "dark" ? "text-slate-200" : "text-slate-700"}>
           {selectedDate.toLocaleDateString("en-US", {
             month: "short",
             day: "numeric",
@@ -186,26 +193,41 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
       {/* Calendar Dropdown */}
       {isOpen && (
         <div
-          className={`absolute left-0 w-[320px] bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700 p-4 z-50 animate-fade-in flex flex-col gap-4 ${
+          className={`absolute left-0 w-[320px] rounded-2xl shadow-xl border p-4 z-50 animate-fade-in flex flex-col gap-4 ${
             dropdownPosition === "top" ? "bottom-full mb-2" : "top-full mt-2"
+          } ${
+            theme === "dark"
+              ? "bg-slate-800 border-slate-700"
+              : "bg-white border-slate-100"
           }`}>
           <div className="flex gap-4">
             {/* Calendar Section */}
             <div className="flex-1">
               {/* Header */}
               <div className="flex justify-between items-center mb-4">
-                <h3 className="font-bold text-slate-800 dark:text-white">
+                <h3
+                  className={`font-bold ${
+                    theme === "dark" ? "text-white" : "text-slate-800"
+                  }`}>
                   {monthNames[month]} {year}
                 </h3>
                 <div className="flex gap-1">
                   <button
                     onClick={handlePrevMonth}
-                    className="p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors">
+                    className={`p-1 rounded-lg transition-colors ${
+                      theme === "dark"
+                        ? "hover:bg-slate-700"
+                        : "hover:bg-slate-100"
+                    }`}>
                     <ChevronLeft className="w-5 h-5 text-slate-500" />
                   </button>
                   <button
                     onClick={handleNextMonth}
-                    className="p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors">
+                    className={`p-1 rounded-lg transition-colors ${
+                      theme === "dark"
+                        ? "hover:bg-slate-700"
+                        : "hover:bg-slate-100"
+                    }`}>
                     <ChevronRight className="w-5 h-5 text-slate-500" />
                   </button>
                 </div>
@@ -249,8 +271,12 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
                               isSelected
                                 ? "bg-brand-500 text-white shadow-lg shadow-brand-500/30"
                                 : isToday
-                                ? "bg-brand-50 dark:bg-brand-900/20 text-brand-600 dark:text-brand-400"
-                                : "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"
+                                ? theme === "dark"
+                                  ? "bg-brand-900/20 text-brand-400"
+                                  : "bg-brand-50 text-brand-600"
+                                : theme === "dark"
+                                ? "text-slate-300 hover:bg-slate-700"
+                                : "text-slate-700 hover:bg-slate-100"
                             }
                         `}>
                       {day}

@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useSearchParams, useOutletContext } from "react-router-dom";
 import {
   Plus,
   Search,
@@ -22,9 +23,18 @@ import TaskCalendar from "../components/TaskCalendar";
 import CustomDatePicker from "../components/CustomDatePicker";
 
 const Tasks = () => {
+  const { theme } = useOutletContext<{ theme: string }>();
   const { tasks, addTask, updateTaskStatus, deleteTask } = useData();
   const [view, setView] = useState<"board" | "list" | "calendar">("board");
   const [filter, setFilter] = useState("");
+
+  const [searchParams] = useSearchParams();
+  useEffect(() => {
+    const query = searchParams.get("search");
+    if (query) {
+      setFilter(query);
+    }
+  }, [searchParams]);
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -121,13 +131,21 @@ const Tasks = () => {
   const getPriorityColor = (p: string) => {
     switch (p) {
       case "high":
-        return "bg-rose-100 dark:bg-rose-900/40 text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-900";
+        return theme === "dark"
+          ? "bg-rose-900/40 text-rose-400 border-rose-900"
+          : "bg-rose-500 text-white border-rose-500 shadow-md shadow-rose-500/20"; // Vibrant High
       case "medium":
-        return "bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-900";
+        return theme === "dark"
+          ? "bg-amber-900/40 text-amber-400 border-amber-900"
+          : "bg-amber-500 text-white border-amber-500 shadow-md shadow-amber-500/20"; // Vibrant Medium
       case "low":
-        return "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900";
+        return theme === "dark"
+          ? "bg-emerald-900/40 text-emerald-400 border-emerald-900"
+          : "bg-emerald-500 text-white border-emerald-500 shadow-md shadow-emerald-500/20"; // Vibrant Low
       default:
-        return "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400";
+        return theme === "dark"
+          ? "bg-slate-800 text-slate-400"
+          : "bg-slate-100 text-slate-600 border-slate-200";
     }
   };
 
@@ -146,7 +164,10 @@ const Tasks = () => {
       onDrop={(e) => onDrop(e, status)}>
       <div className="flex justify-between items-center mb-4 px-2">
         <div className="flex items-center gap-2">
-          <h3 className="font-bold text-slate-700 dark:text-slate-200">
+          <h3
+            className={`font-bold ${
+              theme === "dark" ? "text-slate-200" : "text-slate-700"
+            }`}>
             {title}
           </h3>
           <span className="badge-strong px-2 py-0.5 rounded-full text-xs font-bold">
@@ -158,12 +179,21 @@ const Tasks = () => {
             setNewTask({ ...newTask, status });
             setIsAddModalOpen(true);
           }}
-          className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+          className={`transition-colors ${
+            theme === "dark"
+              ? "text-slate-400 hover:text-slate-200"
+              : "text-slate-400 hover:text-slate-600"
+          }`}>
           <Plus className="w-5 h-5" />
         </button>
       </div>
 
-      <div className="flex-1 rounded-3xl bg-white/20 dark:bg-slate-900/20 border border-white/30 dark:border-white/5 p-4 space-y-3 overflow-y-auto">
+      <div
+        className={`flex-1 rounded-3xl p-4 space-y-3 overflow-y-auto border ${
+          theme === "dark"
+            ? "bg-slate-900/40 border-white/5" // Dark mode slightly stronger
+            : "bg-slate-50/80 border-slate-200" // Light mode: stronger bg and border
+        }`}>
         {filteredTasks
           .filter((t) => t.status === status)
           .map((task) => (
@@ -172,7 +202,11 @@ const Tasks = () => {
               draggable
               onDragStart={(e) => onDragStart(e, task.id)}
               onClick={() => setSelectedTask(task)}
-              className="glass-panel p-4 rounded-2xl cursor-grab active:cursor-grabbing hover:border-brand-300 dark:hover:border-brand-500 transition-all group animate-slide-up">
+              className={`glass-panel p-4 rounded-2xl cursor-grab active:cursor-grabbing transition-all group animate-slide-up border hover:shadow-lg hover:-translate-y-1 ${
+                theme === "dark"
+                  ? "border-transparent hover:border-brand-500"
+                  : "border-slate-200 hover:border-brand-300 hover:bg-orange-50/50" // Light mode: visible border + tint hover
+              }`}>
               <div className="flex justify-between items-start mb-2">
                 <div className="flex gap-2">
                   <span
@@ -182,34 +216,66 @@ const Tasks = () => {
                     {task.priority}
                   </span>
                   {task.recurring && (
-                    <span className="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase border bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-900 flex items-center gap-1">
+                    <span
+                      className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase border flex items-center gap-1 ${
+                        theme === "dark"
+                          ? "bg-blue-900/40 text-blue-400 border-blue-900"
+                          : "bg-blue-100 text-blue-600 border-blue-200"
+                      }`}>
                       <Repeat className="w-3 h-3" /> Daily
                     </span>
                   )}
                   {task.category && task.category !== "Personal" && (
-                    <span className="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase border bg-purple-100 dark:bg-purple-900/40 text-purple-600 dark:text-purple-400 border-purple-200 dark:border-purple-900">
+                    <span
+                      className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase border ${
+                        theme === "dark"
+                          ? "bg-purple-900/40 text-purple-400 border-purple-900"
+                          : "bg-purple-100 text-purple-600 border-purple-200"
+                      }`}>
                       {task.category}
                     </span>
                   )}
                 </div>
-                <button className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
+                <button
+                  className={`opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-lg ${
+                    theme === "dark"
+                      ? "hover:bg-slate-800 bg-slate-800/50"
+                      : "hover:bg-brand-100 bg-white shadow-sm border border-slate-100" // Light mode: distinct button
+                  }`}>
                   <MoreHorizontal className="w-4 h-4 text-slate-400" />
                 </button>
               </div>
-              <h4 className="font-bold text-slate-800 dark:text-slate-200 mb-1">
+              <h4
+                className={`font-bold mb-1 ${
+                  theme === "dark" ? "text-slate-200" : "text-slate-800"
+                }`}>
                 {task.title}
               </h4>
-              <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-2 mb-3">
+              <p
+                className={`text-sm line-clamp-2 mb-3 ${
+                  theme === "dark" ? "text-slate-400" : "text-slate-500"
+                }`}>
                 {task.description}
               </p>
 
-              <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800">
+              <div
+                className={`flex items-center justify-between pt-3 border-t ${
+                  theme === "dark" ? "border-slate-800" : "border-slate-100"
+                }`}>
                 <div className="flex -space-x-2">
-                  <div className="w-6 h-6 rounded-full bg-brand-100 border-2 border-white dark:border-slate-800 flex items-center justify-center text-[10px] font-bold text-brand-600">
+                  <div
+                    className={`w-6 h-6 rounded-full bg-brand-100 border-2 flex items-center justify-center text-[10px] font-bold text-brand-600 ${
+                      theme === "dark" ? "border-slate-800" : "border-white"
+                    }`}>
                     AM
                   </div>
                 </div>
-                <div className="flex items-center gap-1.5 text-xs font-medium text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-900 px-2 py-1 rounded-lg">
+                <div
+                  className={`flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded-lg ${
+                    theme === "dark"
+                      ? "text-slate-500 bg-slate-900"
+                      : "text-slate-500 bg-slate-50"
+                  }`}>
                   <Clock className="w-3.5 h-3.5" />
                   {task.dueDate}
                 </div>
@@ -238,12 +304,12 @@ const Tasks = () => {
           </p>
         </div>
         <div className="flex gap-3">
-          <div className="flex bg-white/40 dark:bg-slate-800/40 rounded-xl p-1 border border-white/50 dark:border-slate-700/50 backdrop-blur-md">
+          <div className="flex bg-white dark:bg-slate-800/40 rounded-xl p-1 border border-slate-200 dark:border-slate-700/50 backdrop-blur-md">
             <button
               onClick={() => setView("board")}
               className={`p-2 rounded-lg transition-all ${
                 view === "board"
-                  ? "bg-white dark:bg-slate-700 shadow-sm text-brand-600 dark:text-brand-400"
+                  ? "bg-slate-100 dark:bg-slate-700 shadow-sm text-brand-600 dark:text-brand-400"
                   : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
               }`}
               title="Board View">
@@ -253,7 +319,7 @@ const Tasks = () => {
               onClick={() => setView("list")}
               className={`p-2 rounded-lg transition-all ${
                 view === "list"
-                  ? "bg-white dark:bg-slate-700 shadow-sm text-brand-600 dark:text-brand-400"
+                  ? "bg-slate-100 dark:bg-slate-700 shadow-sm text-brand-600 dark:text-brand-400"
                   : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
               }`}
               title="List View">
@@ -263,7 +329,7 @@ const Tasks = () => {
               onClick={() => setView("calendar")}
               className={`p-2 rounded-lg transition-all ${
                 view === "calendar"
-                  ? "bg-white dark:bg-slate-700 shadow-sm text-brand-600 dark:text-brand-400"
+                  ? "bg-slate-100 dark:bg-slate-700 shadow-sm text-brand-600 dark:text-brand-400"
                   : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
               }`}
               title="Calendar View">
@@ -272,7 +338,7 @@ const Tasks = () => {
           </div>
           <button
             onClick={() => setIsAddModalOpen(true)}
-            className="flex items-center gap-2 px-6 py-2.5 bg-brand-500 text-white font-bold rounded-full hover:bg-brand-600 transition-all shadow-lg shadow-brand-500/30 active:scale-95">
+            className="flex items-center gap-2 px-6 py-2.5 bg-brand-600 text-white font-bold rounded-full hover:bg-brand-700 transition-all shadow-lg shadow-brand-500/30 active:scale-95">
             <Plus className="w-5 h-5" /> Add Task
           </button>
         </div>
@@ -287,7 +353,11 @@ const Tasks = () => {
             onChange={(e) => setFilter(e.target.value)}
             type="text"
             placeholder="Search tasks..."
-            className="w-full pl-10 pr-4 py-2.5 bg-white/40 dark:bg-slate-800/40 border border-white/50 dark:border-slate-700/50 rounded-xl focus:ring-2 focus:ring-brand-200 focus:bg-white dark:focus:bg-slate-900 outline-none transition-all text-sm font-medium glass-input"
+            className={`w-full pl-10 pr-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-brand-200 outline-none transition-all text-sm font-medium glass-input ${
+              theme === "dark"
+                ? "bg-slate-800/40 border-slate-700/50 focus:bg-slate-900 text-white"
+                : "bg-white border-slate-200 focus:bg-white text-slate-800"
+            }`}
           />
         </div>
 
@@ -296,7 +366,11 @@ const Tasks = () => {
           <select
             value={priorityFilter}
             onChange={(e) => setPriorityFilter(e.target.value)}
-            className="appearance-none pl-10 pr-10 py-2.5 bg-white/40 dark:bg-slate-800/40 border border-white/50 dark:border-slate-700/50 rounded-xl font-bold text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-500/50">
+            className={`appearance-none pl-10 pr-10 py-2.5 border rounded-xl font-bold transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-500/50 ${
+              theme === "dark"
+                ? "bg-slate-800/40 border-slate-700/50 text-slate-300 hover:bg-slate-800"
+                : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
+            }`}>
             <option value="all">All Priorities</option>
             <option value="high">High Priority</option>
             <option value="medium">Medium Priority</option>
@@ -311,7 +385,11 @@ const Tasks = () => {
           <select
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
-            className="appearance-none pl-10 pr-10 py-2.5 bg-white/40 dark:bg-slate-800/40 border border-white/50 dark:border-slate-700/50 rounded-xl font-bold text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-500/50">
+            className={`appearance-none pl-10 pr-10 py-2.5 border rounded-xl font-bold transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-500/50 ${
+              theme === "dark"
+                ? "bg-slate-800/40 border-slate-700/50 text-slate-300 hover:bg-slate-800"
+                : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
+            }`}>
             <option value="all">All Categories</option>
             {TASK_CATEGORIES.map((cat) => (
               <option key={cat} value={cat}>
@@ -379,14 +457,20 @@ const Tasks = () => {
                   <tr
                     key={task.id}
                     onClick={() => setSelectedTask(task)}
-                    className="border-b border-white/10 dark:border-white/5 hover:bg-white/30 dark:hover:bg-white/5 transition-colors group cursor-pointer">
+                    className={`border-b transition-colors group cursor-pointer ${
+                      theme === "dark"
+                        ? "border-white/5 hover:bg-white/5"
+                        : "border-white/10 hover:bg-white/30"
+                    }`}>
                     <td className="py-4 px-6">
                       <div className="flex items-center gap-3">
                         <div
                           className={`w-5 h-5 rounded-md border-2 flex items-center justify-center ${
                             task.status === "completed"
                               ? "bg-brand-500 border-brand-500"
-                              : "border-slate-300 dark:border-slate-600"
+                              : theme === "dark"
+                              ? "border-slate-600"
+                              : "border-slate-300"
                           }`}>
                           {task.status === "completed" && (
                             <CheckCircle2 className="w-3.5 h-3.5 text-white" />
@@ -394,14 +478,24 @@ const Tasks = () => {
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
-                            <p className="font-bold text-slate-800 dark:text-slate-200">
+                            <p
+                              className={`font-bold ${
+                                theme === "dark"
+                                  ? "text-slate-200"
+                                  : "text-slate-800"
+                              }`}>
                               {task.title}
                             </p>
                             {task.recurring && (
                               <Repeat className="w-3 h-3 text-blue-500" />
                             )}
                           </div>
-                          <p className="text-xs text-slate-500 dark:text-slate-400 truncate max-w-[200px]">
+                          <p
+                            className={`text-xs truncate max-w-[200px] ${
+                              theme === "dark"
+                                ? "text-slate-400"
+                                : "text-slate-500"
+                            }`}>
                             {task.description}
                           </p>
                         </div>
@@ -411,10 +505,16 @@ const Tasks = () => {
                       <span
                         className={`px-2.5 py-1 rounded-full text-xs font-bold uppercase ${
                           task.status === "completed"
-                            ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400"
+                            ? theme === "dark"
+                              ? "bg-emerald-900/30 text-emerald-400"
+                              : "bg-emerald-500 text-white"
                             : task.status === "in-progress"
-                            ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400"
-                            : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
+                            ? theme === "dark"
+                              ? "bg-blue-900/30 text-blue-400"
+                              : "bg-blue-500 text-white"
+                            : theme === "dark"
+                            ? "bg-slate-800 text-slate-400"
+                            : "bg-slate-100 text-slate-600"
                         }`}>
                         {task.status.replace("-", " ")}
                       </span>
@@ -428,7 +528,10 @@ const Tasks = () => {
                       </span>
                     </td>
                     <td className="py-4 px-6">
-                      <div className="flex items-center gap-2 text-sm font-medium text-slate-500 dark:text-slate-400">
+                      <div
+                        className={`flex items-center gap-2 text-sm font-medium ${
+                          theme === "dark" ? "text-slate-400" : "text-slate-500"
+                        }`}>
                         <CalendarIcon className="w-4 h-4" />
                         <div className="flex flex-col">
                           <span>
@@ -449,7 +552,12 @@ const Tasks = () => {
                       </div>
                     </td>
                     <td className="py-4 px-6 text-right">
-                      <button className="p-2 hover:bg-white/50 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+                      <button
+                        className={`p-2 rounded-lg transition-colors ${
+                          theme === "dark"
+                            ? "hover:bg-slate-800 text-slate-400 hover:text-slate-200"
+                            : "hover:bg-white/50 text-slate-400 hover:text-slate-600"
+                        }`}>
                         <MoreHorizontal className="w-5 h-5" />
                       </button>
                     </td>
@@ -484,7 +592,11 @@ const Tasks = () => {
               onChange={(e) =>
                 setNewTask({ ...newTask, title: e.target.value })
               }
-              className="w-full px-4 py-3 rounded-xl glass-input font-medium"
+              className={`w-full px-4 py-3 rounded-xl glass-input font-medium ${
+                theme === "dark"
+                  ? "bg-slate-800/50 text-white placeholder:text-slate-500 border-slate-700"
+                  : "bg-white text-slate-800 placeholder:text-slate-400 border-slate-200"
+              }`}
               placeholder="Task title"
             />
           </div>
@@ -497,7 +609,11 @@ const Tasks = () => {
               onChange={(e) =>
                 setNewTask({ ...newTask, description: e.target.value })
               }
-              className="w-full px-4 py-3 rounded-xl glass-input font-medium"
+              className={`w-full px-4 py-3 rounded-xl glass-input font-medium ${
+                theme === "dark"
+                  ? "bg-slate-800/50 text-white placeholder:text-slate-500 border-slate-700"
+                  : "bg-white text-slate-800 placeholder:text-slate-400 border-slate-200"
+              }`}
               placeholder="Description"
             />
           </div>
@@ -516,7 +632,9 @@ const Tasks = () => {
                   className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
                     newTask.category === cat
                       ? "bg-brand-500 text-white shadow-md shadow-brand-500/20"
-                      : "bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700"
+                      : theme === "dark"
+                      ? "bg-slate-800 text-slate-500 hover:bg-slate-700"
+                      : "bg-slate-100 text-slate-500 hover:bg-slate-200"
                   }`}>
                   {cat}
                 </button>
@@ -535,7 +653,11 @@ const Tasks = () => {
                   onChange={(e) =>
                     setNewTask({ ...newTask, priority: e.target.value as any })
                   }
-                  className="w-full px-4 py-3 rounded-xl glass-input font-medium appearance-none">
+                  className={`w-full px-4 py-3 rounded-xl glass-input font-medium appearance-none ${
+                    theme === "dark"
+                      ? "bg-slate-800/50 text-white border-slate-700"
+                      : "bg-white text-slate-800 border-slate-200"
+                  }`}>
                   <option value="low">Low</option>
                   <option value="medium">Medium</option>
                   <option value="high">High</option>
@@ -565,7 +687,11 @@ const Tasks = () => {
               onChange={(e) =>
                 setNewTask({ ...newTask, recurring: e.target.checked })
               }
-              className="w-5 h-5 rounded text-brand-500 focus:ring-brand-500 border-gray-300 dark:border-gray-600 bg-white/50 dark:bg-slate-800"
+              className={`w-5 h-5 rounded text-brand-500 focus:ring-brand-500 border-gray-300 ${
+                theme === "dark"
+                  ? "bg-slate-800 border-gray-600"
+                  : "bg-white/50"
+              }`}
             />
             <label
               htmlFor="recurring"
@@ -577,7 +703,7 @@ const Tasks = () => {
 
           <button
             type="submit"
-            className="w-full py-3 bg-brand-500 text-white font-bold rounded-xl hover:bg-brand-600 transition-colors shadow-lg shadow-brand-500/30">
+            className="w-full py-3 bg-brand-600 text-white font-bold rounded-xl hover:bg-brand-700 transition-colors shadow-lg shadow-brand-500/30">
             Create Task
           </button>
         </form>
@@ -602,9 +728,9 @@ const Tasks = () => {
                 <span
                   className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${
                     selectedTask.status === "completed"
-                      ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400"
+                      ? "bg-emerald-500 text-white dark:bg-emerald-900/40 dark:text-emerald-400"
                       : selectedTask.status === "in-progress"
-                      ? "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400"
+                      ? "bg-blue-500 text-white dark:bg-blue-900/40 dark:text-blue-400"
                       : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400"
                   }`}>
                   {selectedTask.status.replace("-", " ")}

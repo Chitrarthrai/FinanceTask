@@ -1,7 +1,7 @@
-import { COLORS } from "../constants";
 import { useData } from "../contexts/DataContext";
 import { MonthlyMetrics, CategoryDistribution, SpendingTrend } from "../types";
 import { useState, useEffect } from "react";
+import { useThemeColors } from "../lib/theme"; // Added
 import {
   BarChart,
   Bar,
@@ -28,6 +28,7 @@ import {
 
 const Analytics = () => {
   const { getAnalyticsData } = useData();
+  const colors = useThemeColors(); // Added
   const [metrics, setMetrics] = useState<MonthlyMetrics | null>(null);
   const [distributions, setDistributions] = useState<CategoryDistribution[]>(
     []
@@ -35,6 +36,15 @@ const Analytics = () => {
   const [trend, setTrend] = useState<SpendingTrend[]>([]);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [loading, setLoading] = useState(true);
+
+  // Dynamic Chart Colors
+  const CHART_COLORS = [
+    colors.chart1,
+    colors.chart2,
+    colors.chart3,
+    colors.chart4,
+    colors.chart5,
+  ];
 
   useEffect(() => {
     const loadData = async () => {
@@ -54,7 +64,9 @@ const Analytics = () => {
 
   if (loading) {
     return (
-      <div className="p-8 text-center text-slate-500">Loading analytics...</div>
+      <div className="p-8 text-center text-text-muted">
+        Loading analytics...
+      </div>
     );
   }
 
@@ -100,22 +112,22 @@ const Analytics = () => {
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-end gap-6">
         <div>
-          <h1 className="text-3xl font-extrabold text-slate-800 dark:text-white tracking-tight mb-2">
+          <h1 className="text-3xl font-extrabold text-text-primary tracking-tight mb-2">
             Financial Analytics
           </h1>
-          <p className="text-slate-500 dark:text-slate-400 font-medium">
+          <p className="text-text-muted font-medium">
             Deep dive into your spending habits and trends.
           </p>
         </div>
         <div className="flex gap-3">
           <button
             onClick={() => setCurrentDate(new Date())}
-            className="flex items-center gap-2 px-5 py-2.5 bg-white/60 dark:bg-slate-800/60 backdrop-blur-md text-slate-700 dark:text-slate-200 font-bold rounded-full border border-white dark:border-slate-700 hover:bg-white dark:hover:bg-slate-800 transition-all shadow-sm hover:shadow-md">
+            className="flex items-center gap-2 px-5 py-2.5 bg-bg-primary/60 backdrop-blur-md text-text-secondary font-bold rounded-full border border-surface-glass-border hover:bg-bg-primary transition-all shadow-sm hover:shadow-md hover:border-brand-200 dark:hover:border-slate-700">
             <Calendar className="w-4 h-4" /> Current Month
           </button>
           <button
             onClick={handleExport}
-            className="flex items-center gap-2 px-6 py-2.5 bg-brand-500 text-white font-bold rounded-full hover:bg-brand-600 transition-all shadow-lg shadow-brand-500/30 active:scale-95">
+            className="flex items-center gap-2 px-6 py-2.5 bg-brand-600 text-text-inverted font-bold rounded-full hover:bg-brand-700 transition-all shadow-lg shadow-brand-500/30 active:scale-95 border border-transparent">
             <Download className="w-5 h-5" /> Export Report
           </button>
         </div>
@@ -128,15 +140,15 @@ const Analytics = () => {
             label: "Total Spent",
             value: `$${totalSpent.toLocaleString()}`,
             icon: DollarSign,
-            color: "text-slate-800 dark:text-white",
-            bg: "bg-white/40 dark:bg-slate-800/40",
+            color: "text-white",
+            bg: "bg-emerald-500 dark:bg-emerald-900/20",
           },
           {
             label: "Avg. Daily",
             value: `$${avgDaily.toFixed(2)}`,
             icon: Target,
-            color: "text-brand-600 dark:text-brand-400",
-            bg: "bg-brand-50 dark:bg-brand-900/20",
+            color: "text-white",
+            bg: "bg-brand-500 dark:bg-brand-900/20",
           },
           {
             label: "Highest Spend",
@@ -147,8 +159,8 @@ const Analytics = () => {
             sub:
               distributions.sort((a, b) => b.value - a.value)[0]?.name || "N/A",
             icon: TrendingUp,
-            color: "text-rose-500 dark:text-rose-400",
-            bg: "bg-rose-50 dark:bg-rose-900/20",
+            color: "text-white",
+            bg: "bg-rose-500 dark:bg-rose-900/20",
           },
           {
             label: "Savings Rate",
@@ -160,23 +172,23 @@ const Analytics = () => {
                 : 0
             }%`,
             icon: TrendingDown,
-            color: "text-emerald-500 dark:text-emerald-400",
-            bg: "bg-emerald-50 dark:bg-emerald-900/20",
+            color: "text-white",
+            bg: "bg-emerald-500 dark:bg-emerald-900/20",
           },
         ].map((stat, idx) => (
           <div
             key={idx}
-            className={`glass-panel p-5 rounded-2xl flex items-center justify-between animate-slide-up`}
+            className={`glass-panel p-5 rounded-2xl flex items-center justify-between animate-slide-up hover:border-brand-200 dark:hover:border-slate-700 transition-colors`}
             style={{ animationDelay: `${idx * 100}ms` }}>
             <div>
-              <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wide">
+              <p className="text-xs font-bold text-text-muted uppercase tracking-wide">
                 {stat.label}
               </p>
               <p className={`text-2xl font-extrabold ${stat.color} mt-1`}>
                 {stat.value}
               </p>
               {stat.sub && (
-                <p className="text-xs font-medium text-slate-400 dark:text-slate-500">
+                <p className="text-xs font-medium text-text-muted">
                   {stat.sub}
                 </p>
               )}
@@ -192,9 +204,9 @@ const Analytics = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Income vs Expense */}
         <div
-          className="glass-panel p-8 rounded-3xl animate-slide-up"
+          className="glass-panel p-8 rounded-3xl animate-slide-up hover:border-brand-200 dark:hover:border-slate-700 transition-colors"
           style={{ animationDelay: "400ms" }}>
-          <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-6">
+          <h3 className="text-xl font-bold text-text-primary mb-6">
             Income vs Expenses
           </h3>
           <div className="h-[300px]">
@@ -205,28 +217,35 @@ const Analytics = () => {
                 <CartesianGrid
                   strokeDasharray="3 3"
                   vertical={false}
-                  stroke="#e2e8f0"
+                  stroke={colors.muted}
                   strokeOpacity={0.2}
                 />
                 <XAxis
                   dataKey="name"
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fill: "#94a3b8", fontSize: 12 }}
+                  tick={{ fill: colors.muted, fontSize: 12 }}
                   dy={10}
                 />
                 <YAxis
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fill: "#94a3b8", fontSize: 12 }}
+                  tick={{ fill: colors.muted, fontSize: 12 }}
                 />
                 <Tooltip
-                  cursor={{ fill: "#f1f5f9", opacity: 0.1 }}
+                  cursor={{ fill: colors.secondary, opacity: 0.1 }}
                   contentStyle={{
-                    borderRadius: "12px",
-                    border: "none",
-                    boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
-                    backgroundColor: "rgba(255, 255, 255, 0.9)",
+                    borderRadius: "16px",
+                    border: "1px solid var(--surface-glass-border)",
+                    boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
+                    backgroundColor: "var(--surface-glass)",
+                    backdropFilter: "blur(12px)",
+                    color: "var(--text-primary)",
+                  }}
+                  itemStyle={{ color: "var(--text-primary)", fontWeight: 600 }}
+                  labelStyle={{
+                    color: "var(--text-muted)",
+                    marginBottom: "0.5rem",
                   }}
                 />
                 <Legend
@@ -236,14 +255,14 @@ const Analytics = () => {
                 <Bar
                   dataKey="value"
                   name="Income"
-                  fill="#14b8a6"
+                  fill={colors.chart2}
                   radius={[4, 4, 0, 0]}
                   barSize={20}
                 />
                 <Bar
                   dataKey="secondary"
                   name="Expenses"
-                  fill="#f43f5e"
+                  fill={colors.chart4}
                   radius={[4, 4, 0, 0]}
                   barSize={20}
                 />
@@ -254,9 +273,9 @@ const Analytics = () => {
 
         {/* Category Breakdown */}
         <div
-          className="glass-panel p-8 rounded-3xl animate-slide-up"
+          className="glass-panel p-8 rounded-3xl animate-slide-up hover:border-brand-200 dark:hover:border-slate-700 transition-colors"
           style={{ animationDelay: "500ms" }}>
-          <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-6">
+          <h3 className="text-xl font-bold text-text-primary mb-6">
             Spending by Category
           </h3>
           <div className="h-[300px] flex items-center justify-center">
@@ -273,17 +292,21 @@ const Analytics = () => {
                   {distributions.map((entry, index) => (
                     <Cell
                       key={`cell-${index}`}
-                      fill={COLORS[index % COLORS.length]}
+                      fill={CHART_COLORS[index % CHART_COLORS.length]}
                       stroke="none"
                     />
                   ))}
                 </Pie>
                 <Tooltip
                   contentStyle={{
-                    borderRadius: "12px",
-                    border: "none",
-                    backgroundColor: "rgba(255, 255, 255, 0.9)",
+                    borderRadius: "16px",
+                    border: "1px solid var(--surface-glass-border)",
+                    boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
+                    backgroundColor: "var(--surface-glass)",
+                    backdropFilter: "blur(12px)",
+                    color: "var(--text-primary)",
                   }}
+                  itemStyle={{ color: "var(--text-primary)", fontWeight: 600 }}
                 />
                 <Legend
                   layout="vertical"
@@ -298,10 +321,10 @@ const Analytics = () => {
 
       {/* Spending Trend Area Chart */}
       <div
-        className="glass-panel p-8 rounded-3xl animate-slide-up"
+        className="glass-panel p-8 rounded-3xl animate-slide-up hover:border-brand-200 dark:hover:border-slate-700 transition-colors"
         style={{ animationDelay: "600ms" }}>
         <div className="flex justify-between items-center mb-6">
-          <h3 className="text-xl font-bold text-slate-800 dark:text-white">
+          <h3 className="text-xl font-bold text-text-primary">
             Weekly Spending Trend
           </h3>
           <div className="flex gap-2">
@@ -322,40 +345,55 @@ const Analytics = () => {
                   y1="0"
                   x2="0"
                   y2="1">
-                  <stop offset="5%" stopColor="#f97316" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#f97316" stopOpacity={0} />
+                  <stop
+                    offset="5%"
+                    stopColor={colors.chart1}
+                    stopOpacity={0.3}
+                  />
+                  <stop
+                    offset="95%"
+                    stopColor={colors.chart1}
+                    stopOpacity={0}
+                  />
                 </linearGradient>
               </defs>
               <CartesianGrid
                 strokeDasharray="3 3"
                 vertical={false}
-                stroke="#e2e8f0"
+                stroke={colors.muted}
                 strokeOpacity={0.2}
               />
               <XAxis
                 dataKey="day_label"
                 axisLine={false}
                 tickLine={false}
-                tick={{ fill: "#94a3b8", fontSize: 12 }}
+                tick={{ fill: colors.muted, fontSize: 12 }}
                 dy={10}
               />
               <YAxis
                 axisLine={false}
                 tickLine={false}
-                tick={{ fill: "#94a3b8", fontSize: 12 }}
+                tick={{ fill: colors.muted, fontSize: 12 }}
               />
               <Tooltip
                 contentStyle={{
-                  borderRadius: "12px",
-                  border: "none",
-                  boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
-                  backgroundColor: "rgba(255, 255, 255, 0.9)",
+                  borderRadius: "16px",
+                  border: "1px solid var(--surface-glass-border)",
+                  boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
+                  backgroundColor: "var(--surface-glass)",
+                  backdropFilter: "blur(12px)",
+                  color: "var(--text-primary)",
+                }}
+                itemStyle={{ color: "var(--text-primary)", fontWeight: 600 }}
+                labelStyle={{
+                  color: "var(--text-muted)",
+                  marginBottom: "0.5rem",
                 }}
               />
               <Area
                 type="monotone"
                 dataKey="amount"
-                stroke="#f97316"
+                stroke={colors.chart1}
                 strokeWidth={3}
                 fillOpacity={1}
                 fill="url(#analyticsGradient)"
@@ -367,7 +405,7 @@ const Analytics = () => {
 
       {/* AI Insights Section */}
       <div
-        className="glass-panel p-8 rounded-3xl bg-gradient-to-br from-slate-800 to-slate-900 text-white animate-slide-up"
+        className="glass-panel p-8 rounded-3xl bg-gradient-to-br from-brand-600 to-amber-600 dark:from-slate-800 dark:to-slate-900 text-white animate-slide-up shadow-xl shadow-brand-900/20 dark:shadow-slate-900/20"
         style={{ animationDelay: "700ms" }}>
         <div className="flex items-center gap-3 mb-4">
           <div className="p-2 bg-white/10 rounded-lg backdrop-blur-md">

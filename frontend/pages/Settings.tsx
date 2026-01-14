@@ -10,9 +10,7 @@ import {
   Plus,
   Trash2,
   DollarSign,
-  PieChart,
   List,
-  Edit2,
   Lock,
 } from "lucide-react";
 import { useOutletContext } from "react-router-dom";
@@ -22,13 +20,12 @@ import { supabase } from "../lib/supabase";
 import { ExpenseItem } from "../types";
 
 const Settings = () => {
-  const { user, signOut } = useAuth(); // Added
+  const { user } = useAuth(); // Added
   const {
     budgetSettings,
     updateBudgetSettings,
     categories,
     addCategory,
-    updateCategory,
     deleteCategory,
   } = useData();
 
@@ -186,10 +183,10 @@ const Settings = () => {
   return (
     <div className="max-w-5xl mx-auto pb-20 animate-fade-in">
       <div className="mb-8">
-        <h1 className="text-3xl font-extrabold text-slate-800 dark:text-white tracking-tight mb-2">
+        <h1 className="text-3xl font-extrabold text-text-primary tracking-tight mb-2">
           Settings
         </h1>
-        <p className="text-slate-500 dark:text-slate-400 font-medium">
+        <p className="text-text-muted font-medium">
           Manage your account, budget, and application preferences.
         </p>
       </div>
@@ -204,8 +201,8 @@ const Settings = () => {
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-bold text-sm whitespace-nowrap ${
                   activeTab === tab.id
-                    ? "bg-brand-500 text-white shadow-lg shadow-brand-500/30"
-                    : "text-slate-500 dark:text-slate-400 hover:bg-white/50 dark:hover:bg-slate-700/50 hover:text-slate-800 dark:hover:text-slate-200"
+                    ? "bg-brand-500 text-white shadow-lg shadow-brand-500/30 ring-1 ring-brand-400"
+                    : "text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
                 }`}>
                 <tab.icon className="w-4 h-4" />
                 {tab.label}
@@ -220,19 +217,19 @@ const Settings = () => {
             {activeTab === "profile" && (
               <div className="space-y-6">
                 {/* Profile Content */}
-                <div className="flex items-center gap-6 pb-6 border-b border-white/20 dark:border-white/10">
+                <div className="flex items-center gap-6 pb-6 border-b border-border-primary">
                   <div className="relative">
                     <img
                       src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
                       alt="Profile"
-                      className="w-24 h-24 rounded-full object-cover ring-4 ring-white dark:ring-slate-700 shadow-lg"
+                      className="w-24 h-24 rounded-full object-cover ring-4 ring-bg-primary shadow-lg"
                     />
                   </div>
                   <div>
-                    <h3 className="text-2xl font-bold text-slate-800 dark:text-white">
+                    <h3 className="text-2xl font-bold text-text-primary">
                       Alex M.
                     </h3>
-                    <p className="text-slate-500 dark:text-slate-400 font-medium">
+                    <p className="text-text-muted font-medium">
                       alex.m@example.com
                     </p>
                   </div>
@@ -240,7 +237,7 @@ const Settings = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <label className="text-sm font-bold text-slate-700 dark:text-slate-300">
+                    <label className="text-sm font-bold text-text-secondary">
                       Full Name
                     </label>
                     <input
@@ -256,7 +253,7 @@ const Settings = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-bold text-slate-700 dark:text-slate-300">
+                    <label className="text-sm font-bold text-text-secondary">
                       Email Address
                     </label>
                     <input
@@ -268,10 +265,10 @@ const Settings = () => {
                   </div>
                 </div>
 
-                <div className="flex justify-end pt-6 border-t border-white/20 dark:border-white/10">
+                <div className="flex justify-end pt-6 border-t border-border-primary">
                   <button
                     onClick={handleSaveProfile}
-                    className="flex items-center gap-2 px-8 py-3 bg-brand-500 text-white font-bold rounded-full hover:bg-brand-600 transition-all shadow-lg active:scale-95">
+                    className="flex items-center gap-2 px-8 py-3 bg-brand-600 text-text-inverted font-bold rounded-full hover:bg-brand-700 transition-all shadow-lg active:scale-95">
                     <Save className="w-4 h-4" /> Save Profile
                   </button>
                 </div>
@@ -282,16 +279,16 @@ const Settings = () => {
               <div className="space-y-10">
                 {/* Income & Savings */}
                 <div>
-                  <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-6">
+                  <h3 className="text-xl font-bold text-text-primary mb-6">
                     Income & Savings
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <label className="text-sm font-bold text-slate-700 dark:text-slate-300">
+                      <label className="text-sm font-bold text-text-secondary">
                         Monthly Net Income
                       </label>
                       <div className="relative">
-                        <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                        <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
                         <input
                           type="number"
                           value={salaryInput}
@@ -302,7 +299,7 @@ const Settings = () => {
                     </div>
                     <div className="space-y-2">
                       <div className="flex justify-between">
-                        <label className="text-sm font-bold text-slate-700 dark:text-slate-300">
+                        <label className="text-sm font-bold text-text-secondary">
                           Target Savings Rate
                         </label>
                         <span className="text-sm font-bold text-brand-600">
@@ -315,25 +312,25 @@ const Settings = () => {
                         max="50"
                         value={savingsInput}
                         onChange={(e) => setSavingsInput(e.target.value)}
-                        className="w-full accent-brand-500 h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer mt-4"
+                        className="w-full accent-brand-500 h-2 bg-bg-tertiary rounded-lg appearance-none cursor-pointer mt-4"
                       />
                     </div>
                   </div>
                 </div>
 
                 {/* Fixed Expenses */}
-                <div className="border-t border-white/20 dark:border-white/10 pt-8">
+                <div className="border-t border-border-primary pt-8">
                   <div className="flex justify-between items-end mb-4">
                     <div>
-                      <h3 className="text-xl font-bold text-slate-800 dark:text-white">
+                      <h3 className="text-xl font-bold text-text-primary">
                         Fixed Expenses
                       </h3>
-                      <p className="text-slate-500 dark:text-slate-400 text-sm">
+                      <p className="text-text-muted text-sm">
                         Rent, Internet, Subscriptions
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-2xl font-extrabold text-rose-500 dark:text-rose-400">
+                      <p className="text-2xl font-extrabold text-rose-500">
                         ${totalFixed.toLocaleString()}
                       </p>
                     </div>
@@ -343,16 +340,16 @@ const Settings = () => {
                     {budgetSettings.fixedExpenses.map((expense) => (
                       <div
                         key={expense.id}
-                        className="flex items-center gap-4 p-3 bg-white/40 dark:bg-slate-800/40 rounded-2xl border border-white/50 dark:border-slate-700/50 group">
-                        <div className="flex-1 font-bold text-slate-800 dark:text-slate-200 ml-2">
+                        className="flex items-center gap-4 p-3 bg-bg-primary/40 rounded-2xl border border-border-subtle group">
+                        <div className="flex-1 font-bold text-text-primary ml-2">
                           {expense.name}
                         </div>
-                        <div className="font-bold text-slate-600 dark:text-slate-300">
+                        <div className="font-bold text-text-secondary">
                           ${expense.amount}
                         </div>
                         <button
                           onClick={() => removeFixedExpense(expense.id)}
-                          className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-xl transition-colors opacity-0 group-hover:opacity-100">
+                          className="p-2 text-text-muted hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-xl transition-colors opacity-0 group-hover:opacity-100">
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
@@ -377,25 +374,25 @@ const Settings = () => {
                     <button
                       onClick={addFixedExpense}
                       disabled={!newFixedName || !newFixedAmount}
-                      className="px-4 py-3 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-xl font-bold hover:bg-brand-500 hover:text-white transition-colors disabled:opacity-50">
+                      className="px-4 py-3 bg-bg-tertiary text-text-secondary rounded-xl font-bold hover:bg-brand-500 hover:text-text-inverted transition-colors disabled:opacity-50">
                       <Plus className="w-5 h-5" />
                     </button>
                   </div>
                 </div>
 
                 {/* Variable Expenses */}
-                <div className="border-t border-white/20 dark:border-white/10 pt-8">
+                <div className="border-t border-border-primary pt-8">
                   <div className="flex justify-between items-end mb-4">
                     <div>
-                      <h3 className="text-xl font-bold text-slate-800 dark:text-white">
+                      <h3 className="text-xl font-bold text-text-primary">
                         Variable (Estimated)
                       </h3>
-                      <p className="text-slate-500 dark:text-slate-400 text-sm">
+                      <p className="text-text-muted text-sm">
                         Groceries, Utilities, Transport
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-2xl font-extrabold text-amber-500 dark:text-amber-400">
+                      <p className="text-2xl font-extrabold text-amber-500">
                         ${totalVariable.toLocaleString()}
                       </p>
                     </div>
@@ -405,16 +402,16 @@ const Settings = () => {
                     {budgetSettings.variableExpenses.map((expense) => (
                       <div
                         key={expense.id}
-                        className="flex items-center gap-4 p-3 bg-white/40 dark:bg-slate-800/40 rounded-2xl border border-white/50 dark:border-slate-700/50 group">
-                        <div className="flex-1 font-bold text-slate-800 dark:text-slate-200 ml-2">
+                        className="flex items-center gap-4 p-3 bg-bg-primary/40 rounded-2xl border border-border-subtle group">
+                        <div className="flex-1 font-bold text-text-primary ml-2">
                           {expense.name}
                         </div>
-                        <div className="font-bold text-slate-600 dark:text-slate-300">
+                        <div className="font-bold text-text-secondary">
                           ~${expense.amount}
                         </div>
                         <button
                           onClick={() => removeVariableExpense(expense.id)}
-                          className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-xl transition-colors opacity-0 group-hover:opacity-100">
+                          className="p-2 text-text-muted hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-xl transition-colors opacity-0 group-hover:opacity-100">
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
@@ -439,17 +436,17 @@ const Settings = () => {
                     <button
                       onClick={addVariableExpense}
                       disabled={!newVarName || !newVarAmount}
-                      className="px-4 py-3 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-xl font-bold hover:bg-brand-500 hover:text-white transition-colors disabled:opacity-50">
+                      className="px-4 py-3 bg-bg-tertiary text-text-secondary rounded-xl font-bold hover:bg-brand-500 hover:text-text-inverted transition-colors disabled:opacity-50">
                       <Plus className="w-5 h-5" />
                     </button>
                   </div>
                 </div>
 
-                <div className="mt-8 pt-6 border-t border-white/20 dark:border-white/10 flex justify-end">
+                <div className="mt-8 pt-6 border-t border-border-primary flex justify-end">
                   <button
                     onClick={handleSave}
                     disabled={saveStatus !== "Save Changes"}
-                    className="flex items-center gap-2 px-8 py-3 bg-brand-500 text-white font-bold rounded-full hover:bg-brand-600 transition-all shadow-lg active:scale-95 disabled:opacity-80">
+                    className="flex items-center gap-2 px-8 py-3 bg-brand-600 text-text-inverted font-bold rounded-full hover:bg-brand-700 transition-all shadow-lg active:scale-95 disabled:opacity-80">
                     <Save className="w-4 h-4" /> {saveStatus}
                   </button>
                 </div>
@@ -458,22 +455,22 @@ const Settings = () => {
 
             {activeTab === "categories" && (
               <div>
-                <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-6">
+                <h3 className="text-xl font-bold text-text-primary mb-6">
                   Manage Categories
                 </h3>
                 <div className="space-y-2">
                   {categories.map((c) => (
                     <div
                       key={c.id}
-                      className="flex items-center justify-between p-3 bg-white/40 dark:bg-slate-800/40 rounded-xl border border-white/50">
+                      className="flex items-center justify-between p-3 bg-bg-primary/40 rounded-xl border border-border-subtle">
                       <div className="flex items-center gap-3">
                         <div
                           className="w-6 h-6 rounded-full"
                           style={{ backgroundColor: c.color }}></div>
-                        <span className="font-bold text-slate-700 dark:text-slate-200">
+                        <span className="font-bold text-text-primary">
                           {c.name}
                         </span>
-                        <span className="text-xs uppercase font-bold bg-slate-200 dark:bg-slate-700 px-2 py-0.5 rounded text-slate-500">
+                        <span className="text-xs uppercase font-bold bg-bg-tertiary px-2 py-0.5 rounded text-text-muted">
                           {c.type}
                         </span>
                       </div>
@@ -487,14 +484,14 @@ const Settings = () => {
                             deleteCategory(c.id);
                           }
                         }}
-                        className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-xl transition-colors">
+                        className="p-2 text-text-muted hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-xl transition-colors">
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
                   ))}
                 </div>
-                <div className="mt-6 pt-6 border-t border-white/20 dark:border-white/10">
-                  <h4 className="font-bold text-slate-700 dark:text-slate-300 mb-4">
+                <div className="mt-6 pt-6 border-t border-border-primary">
+                  <h4 className="font-bold text-text-secondary mb-4">
                     Add New Category
                   </h4>
                   <div className="flex gap-3">
@@ -506,7 +503,7 @@ const Settings = () => {
                     />
                     <select
                       id="new-category-type"
-                      className="px-4 py-3 rounded-xl glass-input font-medium text-sm bg-white/50 dark:bg-slate-800/50">
+                      className="px-4 py-3 rounded-xl glass-input font-medium text-sm bg-bg-primary/50">
                       <option value="expense">Expense</option>
                       <option value="income">Income</option>
                     </select>
@@ -537,7 +534,7 @@ const Settings = () => {
                           nameInput.value = "";
                         }
                       }}
-                      className="px-4 py-3 bg-brand-500 text-white rounded-xl font-bold hover:bg-brand-600 transition-colors">
+                      className="px-4 py-3 bg-brand-500 text-text-inverted rounded-xl font-bold hover:bg-brand-600 transition-colors">
                       <Plus className="w-5 h-5" />
                     </button>
                   </div>
@@ -548,7 +545,7 @@ const Settings = () => {
             {activeTab === "preferences" && (
               <div className="space-y-6">
                 <div>
-                  <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-4">
+                  <h3 className="text-xl font-bold text-text-primary mb-4">
                     Appearance
                   </h3>
                   <div className="flex gap-4">
@@ -557,7 +554,7 @@ const Settings = () => {
                       className={`flex-1 py-3 rounded-xl font-bold transition-all ${
                         theme === "dark"
                           ? "bg-slate-800 text-white ring-2 ring-brand-500"
-                          : "bg-slate-200 dark:bg-slate-700 text-slate-600"
+                          : "bg-bg-tertiary text-text-secondary"
                       }`}>
                       <Moon className="w-4 h-4 inline-block mr-2" />
                       Dark Mode
@@ -567,7 +564,7 @@ const Settings = () => {
                       className={`flex-1 py-3 rounded-xl font-bold transition-all ${
                         theme === "light"
                           ? "bg-white ring-2 ring-brand-500 text-brand-600"
-                          : "bg-slate-100 text-slate-500"
+                          : "bg-bg-tertiary text-text-secondary"
                       }`}>
                       <Sun className="w-4 h-4 inline-block mr-2" />
                       Light Mode
@@ -579,12 +576,12 @@ const Settings = () => {
 
             {activeTab === "security" && (
               <div className="space-y-6">
-                <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-6">
+                <h3 className="text-xl font-bold text-text-primary mb-6">
                   Security Settings
                 </h3>
 
-                <div className="bg-white/40 dark:bg-slate-800/40 p-6 rounded-2xl border border-white/50 dark:border-slate-700/50">
-                  <h4 className="font-bold text-lg text-slate-700 dark:text-slate-200 mb-4">
+                <div className="bg-bg-primary/40 p-6 rounded-2xl border border-border-subtle">
+                  <h4 className="font-bold text-lg text-text-primary mb-4">
                     Change Password
                   </h4>
                   <form
@@ -624,7 +621,7 @@ const Settings = () => {
                     }}
                     className="space-y-4 max-w-md">
                     <div>
-                      <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      <label className="block text-sm font-bold text-text-secondary mb-1">
                         New Password
                       </label>
                       <input
@@ -636,7 +633,7 @@ const Settings = () => {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      <label className="block text-sm font-bold text-text-secondary mb-1">
                         Confirm Password
                       </label>
                       <input
@@ -649,7 +646,7 @@ const Settings = () => {
                     </div>
                     <button
                       type="submit"
-                      className="w-full py-3 bg-brand-500 text-white font-bold rounded-xl hover:bg-brand-600 transition-colors shadow-lg active:scale-95">
+                      className="w-full py-3 bg-brand-500 text-text-inverted font-bold rounded-xl hover:bg-brand-600 transition-colors shadow-lg active:scale-95">
                       Update Password
                     </button>
                   </form>
@@ -659,7 +656,7 @@ const Settings = () => {
                   <h4 className="font-bold text-lg text-rose-600 dark:text-rose-400 mb-2">
                     Danger Zone
                   </h4>
-                  <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
+                  <p className="text-sm text-text-secondary mb-4">
                     Once you delete your account, there is no going back. Please
                     be certain.
                   </p>
@@ -668,7 +665,7 @@ const Settings = () => {
                     onClick={() =>
                       alert("Account deletion is disabled in this demo.")
                     }
-                    className="px-6 py-2.5 bg-white dark:bg-slate-800 text-rose-500 font-bold rounded-xl border-2 border-rose-100 dark:border-rose-900 hover:bg-rose-50 dark:hover:bg-rose-900/40 transition-colors">
+                    className="px-6 py-2.5 bg-bg-primary text-rose-500 font-bold rounded-xl border-2 border-rose-100 dark:border-rose-900 hover:bg-rose-50 dark:hover:bg-rose-900/40 transition-colors">
                     Delete Account
                   </button>
                 </div>

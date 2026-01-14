@@ -195,5 +195,3 @@ export const MONTHLY_COMPARISON_DATA: ChartData[] = [
   { name: "Jul", value: 3490, secondary: 4300 },
   { name: "Aug", value: 4200, secondary: 2400 },
 ];
-
-export const COLORS = ["#f97316", "#14b8a6", "#3b82f6", "#f43f5e", "#8b5cf6"];

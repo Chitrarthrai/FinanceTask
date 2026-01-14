@@ -10,13 +10,15 @@ import {
   Pie,
   Cell,
 } from "recharts";
-import { COLORS } from "../constants";
+import { useThemeColors } from "../lib/theme";
 
 interface SpendingOverviewProps {
   data: { name: string; value: number; secondary: number }[];
 }
 
 export const SpendingOverview = ({ data }: SpendingOverviewProps) => {
+  const colors = useThemeColors();
+
   return (
     <div className="h-[300px] w-full">
       <ResponsiveContainer width="100%" height="100%">
@@ -25,47 +27,59 @@ export const SpendingOverview = ({ data }: SpendingOverviewProps) => {
           margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
           <defs>
             <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#14b8a6" stopOpacity={0.3} />
-              <stop offset="95%" stopColor="#14b8a6" stopOpacity={0} />
+              <stop offset="5%" stopColor={colors.chart2} stopOpacity={0.3} />
+              <stop offset="95%" stopColor={colors.chart2} stopOpacity={0} />
             </linearGradient>
             <linearGradient id="colorSec" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#64748b" stopOpacity={0.2} />
-              <stop offset="95%" stopColor="#64748b" stopOpacity={0} />
+              <stop
+                offset="5%"
+                stopColor={colors.secondary}
+                stopOpacity={0.2}
+              />
+              <stop offset="95%" stopColor={colors.secondary} stopOpacity={0} />
             </linearGradient>
           </defs>
           <CartesianGrid
             strokeDasharray="3 3"
             vertical={false}
-            stroke="#e2e8f0"
+            stroke={colors.muted}
+            strokeOpacity={0.2}
           />
           <XAxis
             dataKey="name"
             axisLine={false}
             tickLine={false}
-            tick={{ fill: "#94a3b8", fontSize: 12 }}
+            tick={{ fill: colors.muted, fontSize: 12 }}
             dy={10}
           />
           <YAxis
             axisLine={false}
             tickLine={false}
-            tick={{ fill: "#94a3b8", fontSize: 12 }}
+            tick={{ fill: colors.muted, fontSize: 12 }}
           />
           <Tooltip
             contentStyle={{
               borderRadius: "12px",
               border: "none",
-              boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+              boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+              backgroundColor:
+                colors.primary === "#0f172a"
+                  ? "rgba(30, 41, 59, 0.9)"
+                  : "rgba(255, 255, 255, 0.9)",
+              color: colors.primary,
             }}
             cursor={{
-              stroke: "#cbd5e1",
+              stroke: colors.muted,
               strokeWidth: 1,
               strokeDasharray: "4 4",
             }}
+            itemStyle={{ color: colors.primary }}
+            labelStyle={{ color: colors.secondary }}
           />
           <Area
             type="monotone"
             dataKey="value"
-            stroke="#14b8a6"
+            stroke={colors.chart2}
             strokeWidth={3}
             fillOpacity={1}
             fill="url(#colorValue)"
@@ -85,6 +99,14 @@ interface CategoryDistributionProps {
 
 export const CategoryDistribution = ({ data }: CategoryDistributionProps) => {
   const total = data.reduce((acc, curr) => acc + curr.value, 0);
+  const colors = useThemeColors();
+  const CHART_COLORS = [
+    colors.chart1,
+    colors.chart2,
+    colors.chart3,
+    colors.chart4,
+    colors.chart5,
+  ];
 
   return (
     <div className="h-[300px] w-full flex items-center justify-center relative">
@@ -103,19 +125,32 @@ export const CategoryDistribution = ({ data }: CategoryDistributionProps) => {
             {data.map((entry, index) => (
               <Cell
                 key={`cell-${index}`}
-                fill={COLORS[index % COLORS.length]}
+                fill={CHART_COLORS[index % CHART_COLORS.length]}
                 stroke="none"
               />
             ))}
           </Pie>
-          <Tooltip contentStyle={{ borderRadius: "8px", border: "none" }} />
+          <Tooltip
+            contentStyle={{
+              borderRadius: "8px",
+              border: "none",
+              backgroundColor:
+                colors.primary === "#0f172a"
+                  ? "rgba(30, 41, 59, 0.9)"
+                  : "rgba(255, 255, 255, 0.9)",
+              color: colors.primary,
+            }}
+            itemStyle={{ color: colors.primary }}
+          />
         </PieChart>
       </ResponsiveContainer>
 
       {/* Center Text */}
       <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-        <span className="text-sm text-slate-400 font-medium">Total</span>
-        <span className="text-xl font-bold text-slate-700 dark:text-gray-200">
+        <span className="text-sm font-medium" style={{ color: colors.muted }}>
+          Total
+        </span>
+        <span className="text-xl font-bold" style={{ color: colors.primary }}>
           ${total.toLocaleString()}
         </span>
       </div>

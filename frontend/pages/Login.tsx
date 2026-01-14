@@ -51,8 +51,8 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900 p-4">
-      <div className="w-full max-w-md bg-white dark:bg-slate-800 rounded-3xl shadow-xl p-8 border border-white/50 dark:border-slate-700 overflow-hidden relative">
+    <div className="min-h-screen flex items-center justify-center bg-bg-primary p-4">
+      <div className="w-full max-w-md bg-bg-secondary rounded-3xl shadow-xl p-8 border border-border-subtle overflow-hidden relative">
         {/* Background blobs */}
         <div className="absolute top-0 right-0 w-32 h-32 bg-brand-500/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
         <div className="absolute bottom-0 left-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl -ml-16 -mb-16 pointer-events-none"></div>
@@ -61,10 +61,10 @@ const Login = () => {
           <div className="w-12 h-12 bg-gradient-to-tr from-brand-500 to-blue-600 rounded-xl mx-auto flex items-center justify-center shadow-lg shadow-brand-500/30 mb-4 text-white font-bold text-2xl">
             F
           </div>
-          <h1 className="text-3xl font-extrabold text-slate-800 dark:text-white mb-2">
+          <h1 className="text-3xl font-extrabold text-text-primary mb-2">
             {isSignUp ? "Create Account" : "Welcome Back"}
           </h1>
-          <p className="text-slate-500 dark:text-slate-400">
+          <p className="text-text-muted">
             {isSignUp
               ? "Sign up to start tracking your finances."
               : "Enter your credentials to access your account."}
@@ -84,34 +84,34 @@ const Login = () => {
 
         <form onSubmit={handleAuth} className="space-y-4 relative z-10">
           <div>
-            <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1 ml-1">
+            <label className="block text-sm font-bold text-text-primary mb-1 ml-1">
               Email Address
             </label>
             <div className="relative">
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-muted" />
               <input
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-12 pr-4 py-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all font-medium text-slate-800 dark:text-white"
+                className="w-full pl-12 pr-4 py-3.5 bg-bg-tertiary border border-border-primary rounded-xl focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all font-medium text-text-primary placeholder:text-text-muted"
                 placeholder="you@example.com"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1 ml-1">
+            <label className="block text-sm font-bold text-text-primary mb-1 ml-1">
               Password
             </label>
             <div className="relative">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-muted" />
               <input
                 type="password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-12 pr-4 py-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all font-medium text-slate-800 dark:text-white"
+                className="w-full pl-12 pr-4 py-3.5 bg-bg-tertiary border border-border-primary rounded-xl focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all font-medium text-text-primary placeholder:text-text-muted"
                 placeholder="••••••••"
                 minLength={6}
               />
@@ -139,7 +139,7 @@ const Login = () => {
               setIsSignUp(!isSignUp);
               setMessage(null);
             }}
-            className="text-sm font-bold text-slate-500 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 transition-colors">
+            className="text-sm font-bold text-text-muted hover:text-brand-600 transition-colors">
             {isSignUp
               ? "Already have an account? Sign In"
               : "Don't have an account? Sign Up"}

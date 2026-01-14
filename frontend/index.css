@@ -3,6 +3,15 @@
 @theme {
   --font-sans: 'Inter', 'sans-serif';
 
+  /* Animations */
+  --animate-fade-in: fadeIn 0.6s ease-out forwards;
+  --animate-slide-up: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  --animate-slide-in-right: slideInRight 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  --animate-float: float 6s ease-in-out infinite;
+}
+
+:root {
+  /* Brand Colors - Orange */
   --color-brand-50: #fff7ed;
   --color-brand-100: #ffedd5;
   --color-brand-200: #fed7aa;
@@ -13,13 +22,86 @@
   --color-brand-700: #c2410c;
   --color-brand-800: #9a3412;
   --color-brand-900: #7c2d12;
+  --color-brand-950: #431407;
 
-  --color-accent-500: #14b8a6;
+  /* Semantic - Light Mode */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8fafc;
+  /* slate-50 */
+  --bg-tertiary: #f1f5f9;
+  /* slate-100 */
 
-  --animate-fade-in: fadeIn 0.6s ease-out forwards;
-  --animate-slide-up: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  --animate-slide-in-right: slideInRight 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  --animate-float: float 6s ease-in-out infinite;
+  --text-primary: #0f172a;
+  /* slate-900 */
+  --text-secondary: #475569;
+  /* slate-600 */
+  --text-muted: #94a3b8;
+  /* slate-400 */
+  --text-inverted: #ffffff;
+
+  --border-primary: #e2e8f0;
+  /* slate-200 */
+  --border-subtle: #f1f5f9;
+  /* slate-100 */
+
+  /* Glass Surfaces */
+  --surface-glass: rgba(255, 255, 255, 0.85);
+  --surface-glass-border: rgba(203, 213, 225, 0.6);
+
+  /* Chart Colors */
+  --chart-1: #f97316;
+  /* Brand Orange */
+  --chart-2: #14b8a6;
+  /* Teal */
+  --chart-3: #3b82f6;
+  /* Blue */
+  --chart-4: #f43f5e;
+  /* Rose */
+  --chart-5: #8b5cf6;
+  /* Violet */
+
+  /* Status Colors */
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --info: #3b82f6;
+
+  --radius: 0.5rem;
+}
+
+.dark {
+  /* Semantic - Dark Mode */
+  --bg-primary: #0f172a;
+  /* slate-900 */
+  --bg-secondary: #1e293b;
+  /* slate-800 */
+  --bg-tertiary: #334155;
+  /* slate-700 */
+
+  --text-primary: #f8fafc;
+  /* slate-50 */
+  --text-secondary: #cbd5e1;
+  /* slate-300 */
+  --text-muted: #94a3b8;
+  /* slate-400 */
+  --text-inverted: #0f172a;
+
+  --border-primary: #334155;
+  /* slate-700 */
+  --border-subtle: #1e293b;
+  /* slate-800 */
+
+  /* Glass Surfaces */
+  --surface-glass: rgba(15, 23, 42, 0.8);
+  /* Darker, more opaque for better contrast */
+  --surface-glass-border: rgba(255, 255, 255, 0.08);
+
+  /* Chart Colors (Brightened for dark mode if needed) */
+  --chart-1: #fb923c;
+  --chart-2: #2dd4bf;
+  --chart-3: #60a5fa;
+  --chart-4: #fb7185;
+  --chart-5: #a78bfa;
 }
 
 @keyframes fadeIn {
@@ -70,24 +152,36 @@
 
 /* Background Setup */
 body {
-  /* Abstract 3D Gold/Money Background */
   background-image:
     linear-gradient(120deg, rgba(255, 247, 237, 0.85) 0%, rgba(255, 255, 255, 0.7) 100%),
     url('https://images.unsplash.com/photo-1639322537228-f710d846310a?q=80&w=2500&auto=format&fit=crop');
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
-  color: #1e293b;
+  color: var(--text-primary);
   min-height: 100vh;
-  transition: background-image 0.5s ease;
+  transition: background-image 0.5s ease, color 0.3s ease;
 }
 
-/* Dark Mode Background */
 .dark body {
   background-image:
     linear-gradient(120deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.9) 100%),
     url('https://images.unsplash.com/photo-1639322537228-f710d846310a?q=80&w=2500&auto=format&fit=crop');
-  color: #e2e8f0;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: var(--text-primary);
+}
+
+p,
+span,
+div {
+  color: inherit;
 }
 
 /* Custom Scrollbar */
@@ -101,44 +195,34 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.5);
+  background: var(--text-muted);
   border-radius: 10px;
+  opacity: 0.5;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(148, 163, 184, 0.8);
+  background: var(--text-secondary);
+  border-radius: 10px;
+  /* Ensure consistency */
 }
 
-/* Glassmorphism Classes - Warm & Premium */
+/* Glassmorphism Classes */
 .glass-panel {
-  background: rgba(255, 255, 255, 0.45);
+  background: var(--surface-glass);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  box-shadow:
-    0 4px 6px -1px rgba(0, 0, 0, 0.02),
-    0 2px 4px -1px rgba(0, 0, 0, 0.02),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.5);
-  transition: background-color 0.3s ease, border-color 0.3s ease;
-}
-
-.dark .glass-panel {
-  background: rgba(30, 41, 59, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--surface-glass-border);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  /* Softer shadow */
+  transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .glass-sidebar {
-  background: rgba(255, 255, 255, 0.35);
+  background: var(--surface-glass);
   backdrop-filter: blur(25px);
   -webkit-backdrop-filter: blur(25px);
-  border-right: 1px solid rgba(255, 255, 255, 0.6);
+  border-right: 1px solid var(--surface-glass-border);
   transition: background-color 0.3s ease, border-color 0.3s ease;
-}
-
-.dark .glass-sidebar {
-  background: rgba(15, 23, 42, 0.6);
-  border-right: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .glass-card-hover {
@@ -146,143 +230,78 @@ body {
 }
 
 .glass-card-hover:hover {
-  background: rgba(255, 255, 255, 0.65);
   transform: translateY(-4px);
+  /* Warm tint for better visibility in light mode */
+  background: rgba(255, 247, 237, 0.95);
+  border-color: rgba(251, 146, 60, 0.5);
+  /* Orange-400 weak */
   box-shadow: 0 20px 40px -15px rgba(251, 146, 60, 0.15);
-  border-color: rgba(255, 255, 255, 0.9);
 }
 
 .dark .glass-card-hover:hover {
-  background: rgba(30, 41, 59, 0.8);
-  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(30, 41, 59, 0.9);
+  /* Slightly more opaque */
+  border-color: rgba(255, 255, 255, 0.15);
   box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
 }
 
 .glass-input {
-  background: rgba(255, 255, 255, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.5);
+  background: var(--surface-glass);
+  border: 1px solid #e2e8f0;
+  /* Default slight border for light mode */
   backdrop-filter: blur(10px);
-  transition: background-color 0.3s ease, color 0.3s ease;
+  color: var(--text-primary);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .dark .glass-input {
-  background: rgba(15, 23, 42, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #f1f5f9;
+  border-color: var(--surface-glass-border);
+}
+
+.glass-input:hover {
+  border-color: var(--color-brand-300);
 }
 
 .glass-input:focus {
-  background: rgba(255, 255, 255, 0.8);
-  border-color: #fb923c;
-  box-shadow: 0 0 0 2px rgba(251, 146, 60, 0.2);
+  background: var(--bg-primary);
+  /* More solid on focus */
+  border-color: var(--color-brand-500);
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.25);
+  /* Stronger, nicer ring */
   outline: none;
-}
-
-.dark .glass-input:focus {
-  background: rgba(30, 41, 59, 0.9);
-  border-color: #fb923c;
 }
 
 /* Fix Select Option Backgrounds */
 option {
-  background-color: white;
-  color: #1e293b;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
 }
 
-.dark option {
-  background-color: #1e293b;
-  color: #f1f5f9;
-}
-
-/* Force KPI Text Color */
+/* KPI Text Color */
 .kpi-value-text {
-  color: #1e293b;
-  /* slate-800 */
+  color: var(--text-primary);
 }
 
-.dark .kpi-value-text {
-  color: #ffffff !important;
-}
-
-/* Global Dark Mode Text Overrides - The Nuclear Option */
-.dark h1,
-.dark h2,
-.dark h3,
-.dark h4,
-.dark h5,
-.dark h6 {
-  color: #f8fafc !important;
-  /* slate-50 */
-}
-
-/* Force standard dark text to be light in dark mode */
-.dark .text-slate-900,
-.dark .text-slate-800,
-.dark .text-slate-700,
-.dark .text-gray-900,
-.dark .text-gray-800,
-.dark .text-gray-700 {
-  color: #e2e8f0 !important;
-  /* slate-200 */
-}
-
-/* Ensure medium-dark text becomes readable grey */
-.dark .text-slate-600,
-.dark .text-slate-500,
-.dark .text-gray-600,
-.dark .text-gray-500 {
-  color: #94a3b8 !important;
-  /* slate-400 */
-}
-
-/* Component Specific High-Contrast Overrides */
-
-/* Badges (Tasks) */
+/* Badges */
 .badge-strong {
-  background-color: #cbd5e1;
-  /* slate-300 */
-  color: #0f172a;
-  /* slate-900 */
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
 }
 
-.dark .badge-strong {
-  background-color: #475569;
-  /* slate-600 */
-  color: #f8fafc;
-  /* slate-50 */
-}
-
-/* Filter Chips (Transactions) */
+/* Filter Chips */
 .filter-chip-default {
-  background-color: rgba(255, 255, 255, 0.5);
-  color: #475569;
-  /* slate-600 */
+  background-color: var(--bg-tertiary);
+  color: var(--text-secondary);
   border: 1px solid transparent;
 }
 
 .dark .filter-chip-default {
-  background-color: rgba(30, 41, 59, 0.6);
-  /* slate-800/60 */
-  color: #cbd5e1;
-  /* slate-300 */
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--surface-glass-border);
 }
 
-/* Report Paper Card - Force Dark Mode Background */
+/* Report Paper Card */
 .paper-card {
-  --tw-bg-opacity: 1;
-  background-color: rgb(255 255 255 / var(--tw-bg-opacity));
-}
-
-.dark .paper-card {
-  background-color: #1e293b !important;
-  /* slate-800 forced */
-  border-color: #334155;
-  color: #f8fafc;
-}
-
-.dark .paper-card h1,
-.dark .paper-card h2,
-.dark .paper-card h3 {
-  color: #ffffff !important;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-primary);
 }

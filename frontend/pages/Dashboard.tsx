@@ -17,8 +17,10 @@ import {
 import { useData } from "../contexts/DataContext";
 import { KPIData } from "../types";
 
+// Force reload
 const Dashboard = () => {
   const navigate = useNavigate();
+
   const { transactions, tasks, metrics } = useData();
   const [kpiData, setKpiData] = useState<KPIData[]>([]);
   const [timeRange, setTimeRange] = useState("Week");
@@ -190,10 +192,10 @@ const Dashboard = () => {
       {/* Hero Section */}
       <section className="flex flex-col md:flex-row justify-between items-end gap-6">
         <div>
-          <h1 className="text-4xl font-extrabold text-slate-800 dark:text-white mb-2 tracking-tight">
+          <h1 className="text-4xl font-extrabold text-text-primary mb-2 tracking-tight">
             Good Morning!
           </h1>
-          <p className="text-slate-500 dark:text-slate-300 text-lg font-medium">
+          <p className="text-text-muted text-lg font-medium">
             You have{" "}
             <span className="text-brand-600 dark:text-brand-400 font-bold">
               ${Math.max(0, metrics.remainingToday).toFixed(2)}
@@ -204,7 +206,7 @@ const Dashboard = () => {
         <div className="flex gap-3">
           <button
             onClick={() => navigate("/app/transactions")}
-            className="flex items-center gap-2 px-6 py-3 bg-brand-500 text-white font-bold rounded-full hover:bg-brand-600 transition-all shadow-lg shadow-brand-500/30 hover:shadow-brand-500/40 active:scale-95">
+            className="flex items-center gap-2 px-6 py-3 bg-brand-600 text-white font-bold rounded-full hover:bg-brand-700 transition-all shadow-lg shadow-brand-500/30 hover:shadow-brand-500/40 active:scale-95 border border-transparent">
             <Plus className="w-5 h-5" />
             Quick Add
           </button>
@@ -222,26 +224,26 @@ const Dashboard = () => {
       <section className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         {/* Main Chart */}
         <div
-          className="xl:col-span-2 glass-panel p-8 rounded-3xl animate-slide-up hover:border-white/80 dark:hover:border-white/20 transition-colors"
+          className="xl:col-span-2 glass-panel p-8 rounded-3xl animate-slide-up hover:border-brand-200 dark:hover:border-slate-700 transition-colors duration-300"
           style={{ animationDelay: "400ms" }}>
           <div className="flex justify-between items-center mb-8">
             <div>
-              <h3 className="text-xl font-bold text-slate-800 dark:text-white">
+              <h3 className="text-xl font-bold text-text-primary">
                 Spending Analysis
               </h3>
-              <p className="text-sm text-slate-500 dark:text-slate-400">
+              <p className="text-sm text-text-muted">
                 Your spending trend over time
               </p>
             </div>
-            <div className="flex bg-slate-100/50 dark:bg-slate-800/50 p-1 rounded-xl">
+            <div className="flex p-1 rounded-xl bg-bg-tertiary border border-border-subtle">
               {["Week", "Month", "Year"].map((period) => (
                 <button
                   key={period}
                   onClick={() => setTimeRange(period)}
                   className={`px-4 py-1.5 text-sm font-semibold rounded-lg transition-all ${
                     timeRange === period
-                      ? "bg-white dark:bg-slate-700 shadow-sm text-brand-600 dark:text-brand-400"
-                      : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+                      ? "bg-brand-500 text-white shadow-md shadow-brand-500/20"
+                      : "text-text-muted hover:text-text-primary hover:bg-bg-secondary/50"
                   }`}>
                   {period}
                 </button>
@@ -255,14 +257,16 @@ const Dashboard = () => {
         <div className="space-y-6">
           {/* Daily Goal Card */}
           <div
-            className="bg-gradient-to-br from-slate-800 to-slate-900 p-8 rounded-3xl text-white shadow-2xl shadow-slate-900/20 relative overflow-hidden animate-slide-up"
+            className="p-8 rounded-3xl shadow-xl relative overflow-hidden animate-slide-up border border-transparent bg-gradient-brand text-white shadow-slate-900/20"
             style={{ animationDelay: "600ms" }}>
             <div className="relative z-10">
               <div className="flex justify-between items-center mb-6">
                 <h3 className="font-bold text-xl">Daily Limit</h3>
                 <span
-                  className={`px-3 py-1 rounded-full text-xs font-bold backdrop-blur-md border border-white/10 ${
-                    percentUsed >= 100 ? "bg-rose-500/50" : "bg-white/10"
+                  className={`px-3 py-1 rounded-full text-xs font-bold backdrop-blur-md border ${
+                    percentUsed >= 100
+                      ? "bg-rose-500/50 text-white border-white/10"
+                      : "bg-white/10 text-white border-white/10"
                   }`}>
                   {percentUsed}% Used
                 </span>
@@ -271,25 +275,23 @@ const Dashboard = () => {
                 <span className="text-5xl font-extrabold tracking-tight">
                   ${metrics.spentToday.toFixed(0)}
                 </span>
-                <span className="text-slate-400 font-medium text-lg">
+                <span className="text-white/60 font-medium text-lg">
                   / ${metrics.dailyLimit.toFixed(0)}
                 </span>
               </div>
-              <div className="h-2.5 bg-slate-700/50 rounded-full overflow-hidden mb-4">
+              <div className="h-2.5 bg-black/20 rounded-full overflow-hidden mb-4">
                 <div
-                  className={`h-full rounded-full shadow-[0_0_15px_rgba(251,146,60,0.5)] transition-all duration-1000 ${
-                    percentUsed >= 100
-                      ? "bg-gradient-to-r from-rose-500 to-rose-400"
-                      : "bg-gradient-to-r from-brand-400 to-brand-300"
+                  className={`h-full rounded-full shadow-[0_0_15px_rgba(255,255,255,0.3)] transition-all duration-1000 ${
+                    percentUsed >= 100 ? "bg-rose-400" : "bg-white"
                   }`}
                   style={{ width: `${Math.min(100, percentUsed)}%` }}
                 />
               </div>
-              <p className="text-sm text-slate-300 font-medium">
+              <p className="text-sm font-medium text-white/80">
                 {metrics.remainingToday >= 0 ? (
                   <>
                     You have{" "}
-                    <span className="text-brand-300">
+                    <span className="text-white font-bold">
                       ${metrics.remainingToday.toFixed(2)} left
                     </span>{" "}
                     for today.
@@ -297,7 +299,7 @@ const Dashboard = () => {
                 ) : (
                   <>
                     You have overspent by{" "}
-                    <span className="text-rose-400">
+                    <span className="text-rose-200 font-bold">
                       ${Math.abs(metrics.remainingToday).toFixed(2)}
                     </span>
                     !
@@ -307,15 +309,15 @@ const Dashboard = () => {
             </div>
 
             {/* Abstract blobs */}
-            <div className="absolute top-[-20%] right-[-10%] w-48 h-48 bg-brand-500/20 rounded-full blur-3xl" />
-            <div className="absolute bottom-[-20%] left-[-10%] w-40 h-40 bg-indigo-500/20 rounded-full blur-3xl" />
+            <div className="absolute top-[-20%] right-[-10%] w-48 h-48 bg-white/10 rounded-full blur-3xl" />
+            <div className="absolute bottom-[-20%] left-[-10%] w-40 h-40 bg-black/10 rounded-full blur-3xl" />
           </div>
 
           {/* Category Chart */}
           <div
-            className="glass-panel p-8 rounded-3xl animate-slide-up flex flex-col justify-center min-h-[250px]"
+            className="glass-panel p-8 rounded-3xl animate-slide-up flex flex-col justify-center min-h-[250px] hover:border-brand-200 dark:hover:border-slate-700 transition-colors"
             style={{ animationDelay: "500ms" }}>
-            <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-2">
+            <h3 className="text-xl font-bold text-text-primary mb-2">
               Expenses by Category
             </h3>
             <CategoryDistribution data={categoryData} />
@@ -327,15 +329,15 @@ const Dashboard = () => {
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-8">
         {/* Recent Transactions */}
         <div
-          className="glass-panel p-8 rounded-3xl animate-slide-up"
+          className="glass-panel p-8 rounded-3xl animate-slide-up border border-surface-glass-border"
           style={{ animationDelay: "700ms" }}>
           <div className="flex justify-between items-center mb-6">
-            <h3 className="text-xl font-bold text-slate-800 dark:text-white">
+            <h3 className="text-xl font-bold text-text-primary">
               Recent Transactions
             </h3>
             <button
               onClick={() => navigate("/app/transactions")}
-              className="text-brand-600 dark:text-brand-400 text-sm font-bold hover:text-brand-700 flex items-center gap-1 px-3 py-1.5 rounded-lg hover:bg-brand-50 dark:hover:bg-brand-900/30 transition-colors">
+              className="text-brand-600 dark:text-brand-400 text-sm font-bold hover:text-brand-700 flex items-center gap-1 px-3 py-1.5 rounded-lg hover:bg-brand-50 dark:hover:bg-brand-900/30 transition-colors border border-transparent hover:border-brand-200 dark:hover:border-brand-800">
               View All <ArrowRight className="w-4 h-4" />
             </button>
           </div>
@@ -343,13 +345,13 @@ const Dashboard = () => {
             {recentTransactions.map((t) => (
               <div
                 key={t.id}
-                className="flex items-center justify-between p-4 rounded-2xl hover:bg-white/40 dark:hover:bg-white/5 transition-all group cursor-pointer border border-transparent hover:border-white/50 dark:hover:border-white/10">
+                className="flex items-center justify-between p-4 rounded-2xl hover:bg-bg-secondary transition-all group cursor-pointer border border-transparent hover:border-border-primary hover:translate-x-1">
                 <div className="flex items-center gap-4">
                   <div
                     className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-colors shadow-sm ${
                       t.type === "expense"
-                        ? "bg-rose-50 dark:bg-rose-900/20 text-rose-500 dark:text-rose-400"
-                        : "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-500 dark:text-emerald-400"
+                        ? "bg-rose-500 dark:bg-rose-900/20 text-white dark:text-rose-400"
+                        : "bg-emerald-500 dark:bg-emerald-900/20 text-white dark:text-emerald-400"
                     }`}>
                     {t.type === "expense" ? (
                       <ArrowUpRight className="w-6 h-6" />
@@ -358,10 +360,10 @@ const Dashboard = () => {
                     )}
                   </div>
                   <div>
-                    <p className="font-bold text-slate-800 dark:text-white text-base">
+                    <p className="font-bold text-text-primary text-base">
                       {t.title}
                     </p>
-                    <p className="text-xs font-medium text-slate-400 dark:text-slate-500 mt-0.5">
+                    <p className="text-xs font-medium text-text-muted mt-0.5">
                       {t.date} • {t.category}
                     </p>
                   </div>
@@ -369,7 +371,7 @@ const Dashboard = () => {
                 <span
                   className={`font-bold text-lg ${
                     t.type === "expense"
-                      ? "text-slate-800 dark:text-slate-200"
+                      ? "text-text-primary"
                       : "text-emerald-600 dark:text-emerald-400"
                   }`}>
                   {t.type === "expense" ? "-" : "+"}$
@@ -382,39 +384,39 @@ const Dashboard = () => {
 
         {/* Upcoming Tasks */}
         <div
-          className="glass-panel p-8 rounded-3xl animate-slide-up"
+          className="glass-panel p-8 rounded-3xl animate-slide-up border border-surface-glass-border"
           style={{ animationDelay: "800ms" }}>
           <div className="flex justify-between items-center mb-6">
-            <h3 className="text-xl font-bold text-slate-800 dark:text-white">
+            <h3 className="text-xl font-bold text-text-primary">
               Upcoming Tasks
             </h3>
             <button
               onClick={() => navigate("/app/tasks")}
-              className="p-2 hover:bg-white/50 dark:hover:bg-white/10 rounded-xl transition-colors">
-              <MoreVertical className="w-5 h-5 text-slate-400 dark:text-slate-500" />
+              className="p-2 hover:bg-bg-secondary rounded-xl transition-colors border border-transparent hover:border-border-primary">
+              <MoreVertical className="w-5 h-5 text-text-muted" />
             </button>
           </div>
           <div className="space-y-3">
             {upcomingTasks.map((task) => (
               <div
                 key={task.id}
-                className="flex items-center gap-4 p-4 border border-white/40 dark:border-white/10 rounded-2xl bg-white/20 dark:bg-white/5 hover:bg-white/60 dark:hover:bg-white/10 transition-all hover:shadow-md group cursor-pointer">
+                className="flex items-center gap-4 p-4 border border-border-subtle rounded-2xl bg-bg-secondary/50 hover:bg-bg-secondary transition-all hover:shadow-md group cursor-pointer hover:-translate-y-1">
                 <div className="flex-1">
-                  <p className="font-semibold text-slate-700 dark:text-slate-200 group-hover:text-slate-900 dark:group-hover:text-white transition-colors text-base">
+                  <p className="font-semibold text-text-secondary group-hover:text-text-primary transition-colors text-base">
                     {task.title}
                   </p>
                   <div className="flex items-center gap-2 mt-1.5">
                     <span
                       className={`text-[10px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wide ${
                         task.priority === "high"
-                          ? "bg-rose-100 dark:bg-rose-900/40 text-rose-600 dark:text-rose-400"
+                          ? "bg-rose-500 dark:bg-rose-900/40 text-white dark:text-rose-400"
                           : task.priority === "medium"
-                          ? "bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400"
+                          ? "bg-amber-500 dark:bg-amber-900/40 text-white dark:text-amber-400"
                           : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
                       }`}>
                       {task.priority}
                     </span>
-                    <div className="flex items-center gap-1 text-xs font-medium text-slate-400 dark:text-slate-500">
+                    <div className="flex items-center gap-1 text-xs font-medium text-text-muted">
                       <Clock className="w-3.5 h-3.5" />
                       {task.dueDate}
                     </div>
@@ -424,7 +426,7 @@ const Dashboard = () => {
             ))}
             <button
               onClick={() => navigate("/app/tasks")}
-              className="w-full py-4 border-2 border-dashed border-slate-300/50 dark:border-slate-600/50 rounded-2xl text-slate-400 dark:text-slate-500 text-sm font-bold hover:border-brand-300 hover:text-brand-500 hover:bg-brand-50/50 dark:hover:bg-brand-900/20 transition-all flex items-center justify-center gap-2 mt-4">
+              className="w-full py-4 border-2 border-dashed border-border-primary rounded-2xl text-text-muted text-sm font-bold hover:border-brand-300 hover:text-brand-500 hover:bg-brand-50/50 dark:hover:bg-brand-900/20 transition-all flex items-center justify-center gap-2 mt-4 hover:shadow-sm">
               <Plus className="w-5 h-5" /> Add New Task
             </button>
           </div>

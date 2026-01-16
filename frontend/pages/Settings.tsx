@@ -201,8 +201,8 @@ const Settings = () => {
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-bold text-sm whitespace-nowrap ${
                   activeTab === tab.id
-                    ? "bg-brand-500 text-white shadow-lg shadow-brand-500/30 ring-1 ring-brand-400"
-                    : "text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                    ? "bg-orange-600 dark:bg-brand-600 text-white shadow-lg shadow-orange-600/30"
+                    : "text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-200"
                 }`}>
                 <tab.icon className="w-4 h-4" />
                 {tab.label}
@@ -312,7 +312,7 @@ const Settings = () => {
                         max="50"
                         value={savingsInput}
                         onChange={(e) => setSavingsInput(e.target.value)}
-                        className="w-full accent-brand-500 h-2 bg-bg-tertiary rounded-lg appearance-none cursor-pointer mt-4"
+                        className="w-full accent-brand-500 h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer mt-4 border border-slate-300 dark:border-slate-600"
                       />
                     </div>
                   </div>

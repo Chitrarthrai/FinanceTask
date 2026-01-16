@@ -66,6 +66,15 @@
   --danger: #ef4444;
   --info: #3b82f6;
 
+  /* Tooltip & Overlay Backgrounds */
+  --tooltip-bg: rgba(255, 255, 255, 0.95);
+
+  /* Form Elements */
+  --input-bg: #f8fafc;
+  /* slate-50 */
+  --input-border: #e2e8f0;
+  /* slate-200 */
+
   --radius: 0.5rem;
 }
 
@@ -102,6 +111,15 @@
   --chart-3: #60a5fa;
   --chart-4: #fb7185;
   --chart-5: #a78bfa;
+
+  /* Tooltip & Overlay Backgrounds */
+  --tooltip-bg: rgba(30, 41, 59, 0.95);
+
+  /* Form Elements */
+  --input-bg: #1e293b;
+  /* slate-800 */
+  --input-border: #334155;
+  /* slate-700 */
 }
 
 @keyframes fadeIn {

@@ -348,10 +348,10 @@ const Dashboard = () => {
                 className="flex items-center justify-between p-4 rounded-2xl hover:bg-bg-secondary transition-all group cursor-pointer border border-transparent hover:border-border-primary hover:translate-x-1">
                 <div className="flex items-center gap-4">
                   <div
-                    className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-colors shadow-sm ${
+                    className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-colors shadow-lg ${
                       t.type === "expense"
-                        ? "bg-rose-500 dark:bg-rose-900/20 text-white dark:text-rose-400"
-                        : "bg-emerald-500 dark:bg-emerald-900/20 text-white dark:text-emerald-400"
+                        ? "bg-red-500 dark:bg-red-600 text-white shadow-red-500/30"
+                        : "bg-emerald-500 dark:bg-emerald-600 text-white shadow-emerald-500/30"
                     }`}>
                     {t.type === "expense" ? (
                       <ArrowUpRight className="w-6 h-6" />
@@ -409,10 +409,10 @@ const Dashboard = () => {
                     <span
                       className={`text-[10px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wide ${
                         task.priority === "high"
-                          ? "bg-rose-500 dark:bg-rose-900/40 text-white dark:text-rose-400"
+                          ? "bg-red-500 dark:bg-red-600 text-white shadow-sm"
                           : task.priority === "medium"
-                          ? "bg-amber-500 dark:bg-amber-900/40 text-white dark:text-amber-400"
-                          : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
+                          ? "bg-amber-500 dark:bg-amber-600 text-white shadow-sm"
+                          : "bg-blue-500 dark:bg-blue-600 text-white shadow-sm"
                       }`}>
                       {task.priority}
                     </span>

@@ -24,18 +24,35 @@ import {
   Target,
   TrendingUp,
   TrendingDown,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 
 const Analytics = () => {
-  const { getAnalyticsData } = useData();
+  const { getAnalyticsData, getSmartInsights } = useData();
   const colors = useThemeColors(); // Added
   const [metrics, setMetrics] = useState<MonthlyMetrics | null>(null);
   const [distributions, setDistributions] = useState<CategoryDistribution[]>(
     []
   );
   const [trend, setTrend] = useState<SpendingTrend[]>([]);
+  const [insights, setInsights] = useState<any[]>([]);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [loading, setLoading] = useState(true);
+  const [showMonthPicker, setShowMonthPicker] = useState(false);
+
+  // Generate list of last 24 months for quick selection
+  const generateMonthOptions = () => {
+    const options = [];
+    const today = new Date();
+    for (let i = 0; i < 24; i++) {
+      const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
+      options.push(date);
+    }
+    return options;
+  };
+
+  const monthOptions = generateMonthOptions();
 
   // Dynamic Chart Colors
   const CHART_COLORS = [
@@ -54,13 +71,33 @@ const Analytics = () => {
       ).padStart(2, "0")}-01`;
 
       const { metrics, distribution, trend } = await getAnalyticsData(monthStr);
+      const fetchedInsights = await getSmartInsights(monthStr);
       setMetrics(metrics);
       setDistributions(distribution);
       setTrend(trend);
+      setInsights(fetchedInsights);
       setLoading(false);
     };
     loadData();
   }, [currentDate]);
+
+  // Close month picker when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest(".month-picker-container")) {
+        setShowMonthPicker(false);
+      }
+    };
+
+    if (showMonthPicker) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showMonthPicker]);
 
   if (loading) {
     return (
@@ -120,11 +157,77 @@ const Analytics = () => {
           </p>
         </div>
         <div className="flex gap-3">
-          <button
-            onClick={() => setCurrentDate(new Date())}
-            className="flex items-center gap-2 px-5 py-2.5 bg-bg-primary/60 backdrop-blur-md text-text-secondary font-bold rounded-full border border-surface-glass-border hover:bg-bg-primary transition-all shadow-sm hover:shadow-md hover:border-brand-200 dark:hover:border-slate-700">
-            <Calendar className="w-4 h-4" /> Current Month
-          </button>
+          {/* Month Picker Dropdown */}
+          <div className="relative month-picker-container">
+            <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-bg-primary/60 backdrop-blur-md border border-surface-glass-border text-text-secondary">
+              <button
+                onClick={() =>
+                  setCurrentDate(
+                    new Date(
+                      currentDate.getFullYear(),
+                      currentDate.getMonth() - 1,
+                      1
+                    )
+                  )
+                }
+                className="p-1 rounded-full transition-colors hover:bg-bg-tertiary">
+                <ChevronLeft className="w-4 h-4 text-text-muted" />
+              </button>
+              <div
+                onClick={() => setShowMonthPicker(!showMonthPicker)}
+                className="flex items-center gap-2 min-w-[140px] justify-center cursor-pointer hover:bg-bg-tertiary px-2 py-1 rounded-lg transition-colors">
+                <Calendar className="w-4 h-4 text-text-muted" />
+                <span className="font-bold text-sm">
+                  {currentDate.toLocaleDateString("en-US", {
+                    month: "long",
+                    year: "numeric",
+                  })}
+                </span>
+              </div>
+              <button
+                onClick={() =>
+                  setCurrentDate(
+                    new Date(
+                      currentDate.getFullYear(),
+                      currentDate.getMonth() + 1,
+                      1
+                    )
+                  )
+                }
+                className="p-1 rounded-full transition-colors hover:bg-bg-tertiary">
+                <ChevronRight className="w-4 h-4 text-text-muted" />
+              </button>
+            </div>
+
+            {/* Month Picker Dropdown */}
+            {showMonthPicker && (
+              <div className="absolute top-full mt-2 left-0 w-64 max-h-80 overflow-y-auto bg-white/95 dark:bg-slate-800/95 backdrop-blur-lg border border-slate-200 dark:border-slate-700 rounded-2xl shadow-2xl z-50 p-2">
+                {monthOptions.map((date, idx) => {
+                  const isSelected =
+                    date.getMonth() === currentDate.getMonth() &&
+                    date.getFullYear() === currentDate.getFullYear();
+                  return (
+                    <button
+                      key={idx}
+                      onClick={() => {
+                        setCurrentDate(date);
+                        setShowMonthPicker(false);
+                      }}
+                      className={`w-full text-left px-4 py-2.5 rounded-xl font-medium transition-colors ${
+                        isSelected
+                          ? "bg-brand-500 text-white"
+                          : "text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700"
+                      }`}>
+                      {date.toLocaleDateString("en-US", {
+                        month: "long",
+                        year: "numeric",
+                      })}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
           <button
             onClick={handleExport}
             className="flex items-center gap-2 px-6 py-2.5 bg-brand-600 text-text-inverted font-bold rounded-full hover:bg-brand-700 transition-all shadow-lg shadow-brand-500/30 active:scale-95 border border-transparent">
@@ -414,18 +517,25 @@ const Analytics = () => {
           <h3 className="text-xl font-bold">Smart Insights</h3>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <p className="text-slate-300 leading-relaxed">
-            <strong className="text-white">Spending Alert:</strong> You've spent{" "}
-            <span className="text-rose-400 font-bold">15% more</span> on Food &
-            Dining compared to last week. Consider eating out less this weekend
-            to stay within budget.
-          </p>
-          <p className="text-slate-300 leading-relaxed">
-            <strong className="text-white">Savings Opportunity:</strong> Your
-            subscription costs are rising. Review your{" "}
-            <span className="text-brand-300 font-bold">Entertainment</span>{" "}
-            category to find unused services ($15.99 detected).
-          </p>
+          {insights.length > 0 ? (
+            insights.slice(0, 2).map((insight, idx) => (
+              <p
+                key={idx}
+                className="text-slate-700 dark:text-slate-300 leading-relaxed">
+                <strong className="text-brand-600 dark:text-brand-300 font-bold">
+                  {insight.title}:
+                </strong>{" "}
+                {insight.message}
+              </p>
+            ))
+          ) : (
+            <p className="text-slate-700 dark:text-slate-300 leading-relaxed col-span-2">
+              <strong className="text-brand-600 dark:text-brand-300 font-bold">
+                No Insights Available:
+              </strong>{" "}
+              Start tracking your expenses to see personalized insights here.
+            </p>
+          )}
         </div>
       </div>
     </div>

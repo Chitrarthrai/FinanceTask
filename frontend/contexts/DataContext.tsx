@@ -46,6 +46,7 @@ interface DataContextType {
     distribution: CategoryDistribution[];
     trend: SpendingTrend[];
   }>;
+  getSmartInsights: (month: string) => Promise<any[]>;
 }
 
 const defaultBudgetSettings: BudgetSettings = {
@@ -152,18 +153,28 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
       } else {
         // Initialize default categories if none exist
         const defaults = [
-          { name: "Food", type: "variable", color: "#f43f5e", icon: "Coffee" },
+          {
+            name: "Food",
+            type: "variable",
+            color: "var(--chart-4)",
+            icon: "Coffee",
+          },
           {
             name: "Transport",
             type: "variable",
-            color: "#f97316",
+            color: "var(--chart-1)",
             icon: "Car",
           },
-          { name: "Housing", type: "fixed", color: "#14b8a6", icon: "Home" },
+          {
+            name: "Housing",
+            type: "fixed",
+            color: "var(--chart-2)",
+            icon: "Home",
+          },
           {
             name: "Income",
             type: "income",
-            color: "#10b981",
+            color: "var(--chart-5)",
             icon: "DollarSign",
           },
         ];
@@ -565,6 +576,20 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
             distribution: distRes.data || [],
             trend: trendRes.data || [],
           };
+        },
+        getSmartInsights: async (monthStr: string) => {
+          if (!user) return [];
+
+          const { data, error } = await supabase.rpc("get_smart_insights", {
+            month_str: monthStr,
+          });
+
+          if (error) {
+            console.error("Error fetching insights:", error);
+            return [];
+          }
+
+          return data?.insights || [];
         },
       }}>
       {children}

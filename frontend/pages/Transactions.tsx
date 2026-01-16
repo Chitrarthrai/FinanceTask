@@ -303,18 +303,18 @@ const Transactions = () => {
               ${totalIncome.toLocaleString()}
             </h3>
           </div>
-          <div className="w-14 h-14 bg-emerald-500 dark:bg-emerald-900/30 rounded-2xl flex items-center justify-center text-white dark:text-emerald-400 group-hover:scale-110 transition-transform shadow-sm">
+          <div className="w-14 h-14 bg-emerald-500 dark:bg-emerald-600 rounded-2xl flex items-center justify-center text-white group-hover:scale-110 transition-transform shadow-lg shadow-emerald-500/30">
             <ArrowDownRight className="w-8 h-8" />
           </div>
         </div>
-        <div className="glass-panel p-6 rounded-3xl flex items-center justify-between group hover:border-rose-300 dark:hover:border-rose-900 transition-all shadow-sm hover:shadow-md bg-white/60 dark:bg-slate-800/60">
+        <div className="glass-panel p-6 rounded-3xl flex items-center justify-between group hover:border-red-300 dark:hover:border-red-700 transition-all shadow-sm hover:shadow-md bg-white/60 dark:bg-slate-800/60">
           <div>
             <p className="text-text-muted font-semibold mb-1">Total Expenses</p>
             <h3 className="text-3xl font-extrabold text-text-primary">
               ${totalExpenses.toLocaleString()}
             </h3>
           </div>
-          <div className="w-14 h-14 bg-rose-500 dark:bg-rose-900/30 rounded-2xl flex items-center justify-center text-white dark:text-rose-400 group-hover:scale-110 transition-transform shadow-sm">
+          <div className="w-14 h-14 bg-red-500 dark:bg-red-600 rounded-2xl flex items-center justify-center text-white group-hover:scale-110 transition-transform shadow-lg shadow-red-500/30">
             <ArrowUpRight className="w-8 h-8" />
           </div>
         </div>
@@ -333,10 +333,10 @@ const Transactions = () => {
                 <button
                   key={cat}
                   onClick={() => setFilter(cat)}
-                  className={`px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all border ${
+                  className={`px-5 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all border shadow-sm ${
                     filter === cat
-                      ? "bg-brand-600 text-white shadow-lg shadow-brand-500/30 border-transparent"
-                      : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-brand-200 dark:hover:border-slate-600"
+                      ? "bg-orange-500 dark:bg-brand-600 text-white shadow-lg shadow-orange-500/30 dark:shadow-brand-500/30 border-transparent"
+                      : "bg-slate-100 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-border-primary hover:bg-slate-200 dark:hover:bg-slate-800 hover:border-orange-300 dark:hover:border-brand-300"
                   }`}>
                   {cat}
                 </button>
@@ -362,7 +362,7 @@ const Transactions = () => {
                   setStartDate(null);
                   setEndDate(null);
                 }}
-                className="p-2.5 bg-rose-500 rounded-xl border border-transparent hover:bg-rose-600 text-white transition-all text-sm font-bold flex items-center gap-2 shadow-sm hover:shadow-md hover:-translate-y-0.5">
+                className="p-2.5 bg-red-500 dark:bg-red-600 rounded-xl border border-transparent hover:bg-red-600 dark:hover:bg-red-700 text-white transition-all text-sm font-bold flex items-center gap-2 shadow-sm hover:shadow-md hover:-translate-y-0.5">
                 <Filter className="w-4 h-4" /> Clear
               </button>
             </div>
@@ -399,10 +399,10 @@ const Transactions = () => {
               className="flex items-center justify-between p-4 rounded-2xl hover:bg-orange-50/60 dark:hover:bg-bg-secondary transition-all group border border-transparent hover:border-brand-200 dark:hover:border-border-primary hover:translate-x-1 cursor-default hover:shadow-sm">
               <div className="flex items-center gap-5">
                 <div
-                  className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-105 shadow-sm ${
+                  className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-105 shadow-lg ${
                     t.type === "expense"
-                      ? "bg-orange-500 dark:bg-orange-900/30 text-white dark:text-orange-400"
-                      : "bg-emerald-500 dark:bg-emerald-900/30 text-white dark:text-emerald-400"
+                      ? "bg-red-500 dark:bg-red-600 text-white shadow-red-500/50 dark:shadow-red-600/30"
+                      : "bg-emerald-500 dark:bg-emerald-600 text-white dark:text-emerald-400 shadow-emerald-500/40 dark:shadow-emerald-600/30"
                   }`}>
                   {getIcon(t.category)}
                 </div>
@@ -616,7 +616,9 @@ const Transactions = () => {
                 type="button"
                 onClick={() => setIsRecurring(!isRecurring)}
                 className={`w-12 h-6 rounded-full transition-colors relative ${
-                  isRecurring ? "bg-brand-500" : "bg-gray-300 dark:bg-gray-600"
+                  isRecurring
+                    ? "bg-brand-500"
+                    : "bg-slate-300 dark:bg-slate-600"
                 }`}>
                 <div
                   className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform ${

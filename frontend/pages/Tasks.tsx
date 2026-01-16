@@ -132,20 +132,20 @@ const Tasks = () => {
     switch (p) {
       case "high":
         return theme === "dark"
-          ? "bg-rose-900/40 text-rose-400 border-rose-900"
-          : "bg-rose-500 text-white border-rose-500 shadow-md shadow-rose-500/20"; // Vibrant High
+          ? "bg-red-600 text-white border-red-600 shadow-md shadow-red-600/20"
+          : "bg-red-500 text-white border-red-500 shadow-md shadow-red-500/20";
       case "medium":
         return theme === "dark"
-          ? "bg-amber-900/40 text-amber-400 border-amber-900"
-          : "bg-amber-500 text-white border-amber-500 shadow-md shadow-amber-500/20"; // Vibrant Medium
+          ? "bg-amber-600 text-white border-amber-600 shadow-md shadow-amber-600/20"
+          : "bg-amber-500 text-white border-amber-500 shadow-md shadow-amber-500/20";
       case "low":
         return theme === "dark"
-          ? "bg-emerald-900/40 text-emerald-400 border-emerald-900"
-          : "bg-emerald-500 text-white border-emerald-500 shadow-md shadow-emerald-500/20"; // Vibrant Low
+          ? "bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-600/20"
+          : "bg-blue-500 text-white border-blue-500 shadow-md shadow-blue-500/20";
       default:
         return theme === "dark"
-          ? "bg-slate-800 text-slate-400"
-          : "bg-slate-100 text-slate-600 border-slate-200";
+          ? "bg-slate-700 text-slate-300 border-slate-700"
+          : "bg-slate-200 text-slate-700 border-slate-300";
     }
   };
 

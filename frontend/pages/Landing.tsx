@@ -43,7 +43,7 @@ const Landing = () => {
           </button>
           <button
             onClick={() => navigate("/signup")}
-            className="hidden sm:block px-6 py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold rounded-full hover:bg-slate-800 dark:hover:bg-slate-100 hover:shadow-lg transition-all active:scale-95">
+            className="hidden sm:block px-6 py-2.5 bg-brand-600 dark:bg-brand-500 text-white font-bold rounded-full hover:bg-brand-700 dark:hover:bg-brand-600 hover:shadow-lg transition-all active:scale-95">
             Get Started
           </button>
         </div>
@@ -159,7 +159,7 @@ const Landing = () => {
       <footer className="relative z-10 border-t border-border-primary bg-bg-secondary/30 backdrop-blur-xl mt-20">
         <div className="max-w-7xl mx-auto px-6 py-12 flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 bg-slate-800 dark:bg-white rounded-md flex items-center justify-center text-white dark:text-slate-900 font-bold text-sm">
+            <div className="w-6 h-6 bg-brand-600 rounded-md flex items-center justify-center text-white font-bold text-sm">
               F
             </div>
             <span className="font-bold text-text-secondary">FinanceTask</span>

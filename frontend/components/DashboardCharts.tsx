@@ -62,10 +62,7 @@ export const SpendingOverview = ({ data }: SpendingOverviewProps) => {
               borderRadius: "12px",
               border: "none",
               boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
-              backgroundColor:
-                colors.primary === "#0f172a"
-                  ? "rgba(30, 41, 59, 0.9)"
-                  : "rgba(255, 255, 255, 0.9)",
+              backgroundColor: "var(--tooltip-bg)",
               color: colors.primary,
             }}
             cursor={{
@@ -134,10 +131,7 @@ export const CategoryDistribution = ({ data }: CategoryDistributionProps) => {
             contentStyle={{
               borderRadius: "8px",
               border: "none",
-              backgroundColor:
-                colors.primary === "#0f172a"
-                  ? "rgba(30, 41, 59, 0.9)"
-                  : "rgba(255, 255, 255, 0.9)",
+              backgroundColor: "var(--tooltip-bg)",
               color: colors.primary,
             }}
             itemStyle={{ color: colors.primary }}

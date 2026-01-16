@@ -10,6 +10,7 @@ import {
   TrendingUp,
   TrendingDown,
   DollarSign,
+  CreditCard,
 } from "lucide-react";
 import { useOutletContext } from "react-router-dom";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
@@ -128,8 +129,8 @@ const Reports = () => {
         {/* Report Header */}
         <div className="flex justify-between items-center border-b border-border-subtle pb-8 mb-8">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-brand-500 rounded-xl flex items-center justify-center text-white font-bold text-xl">
-              F
+            <div className="w-10 h-10 bg-gradient-to-tr from-brand-600 via-orange-500 to-amber-500 rounded-xl flex items-center justify-center shadow-lg shadow-brand-500/30">
+              <CreditCard className="w-5 h-5 text-white" />
             </div>
             <div>
               <h2 className="text-xl font-bold text-text-primary">

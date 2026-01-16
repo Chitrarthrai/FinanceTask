@@ -10,6 +10,7 @@ import Settings from "./pages/Settings";
 import Reports from "./pages/Reports";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
+import Signup from "./pages/Signup";
 import { DataProvider } from "./contexts/DataContext";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { Loader2 } from "lucide-react";
@@ -82,7 +83,11 @@ const App = () => {
       <HashRouter>
         <Routes>
           {/* Public Routes */}
-          <Route path="/" element={<Landing />} />
+          <Route
+            path="/"
+            element={<Landing theme={theme} setTheme={setTheme} />}
+          />
+          <Route path="/signup" element={<Signup />} />
           <Route path="/login" element={<Login />} />
 
           {/* Protected App Routes */}

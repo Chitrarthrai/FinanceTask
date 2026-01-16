@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { supabase } from "../lib/supabase";
 import { useNavigate } from "react-router-dom";
-import { Mail, Lock, Loader2, ArrowRight } from "lucide-react";
+import { Mail, Lock, Loader2, ArrowRight, CreditCard } from "lucide-react";
 
 const Login = () => {
   const [loading, setLoading] = useState(false);
@@ -58,8 +58,8 @@ const Login = () => {
         <div className="absolute bottom-0 left-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl -ml-16 -mb-16 pointer-events-none"></div>
 
         <div className="text-center mb-8 relative z-10">
-          <div className="w-12 h-12 bg-gradient-to-tr from-brand-500 to-blue-600 rounded-xl mx-auto flex items-center justify-center shadow-lg shadow-brand-500/30 mb-4 text-white font-bold text-2xl">
-            F
+          <div className="w-16 h-16 bg-gradient-to-tr from-brand-600 via-orange-500 to-amber-500 rounded-2xl mx-auto flex items-center justify-center shadow-lg shadow-brand-500/30 mb-6">
+            <CreditCard className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-3xl font-extrabold text-text-primary mb-2">
             {isSignUp ? "Create Account" : "Welcome Back"}
@@ -121,7 +121,7 @@ const Login = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-4 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl transition-all shadow-lg shadow-brand-500/20 flex items-center justify-center gap-2 active:scale-[0.98]">
+            className="w-full py-4 font-bold rounded-xl transition-all shadow-lg shadow-brand-500/10 flex items-center justify-center gap-2 active:scale-[0.98] border-2 border-brand-600 text-brand-600 bg-transparent hover:bg-brand-600 hover:text-white hover:shadow-brand-500/30">
             {loading ? (
               <Loader2 className="w-5 h-5 animate-spin" />
             ) : (
@@ -139,7 +139,7 @@ const Login = () => {
               setIsSignUp(!isSignUp);
               setMessage(null);
             }}
-            className="text-sm font-bold text-text-muted hover:text-brand-600 transition-colors">
+            className="w-full py-3 text-sm font-bold rounded-xl border border-border-primary text-text-muted hover:text-white hover:bg-brand-600 hover:border-brand-600 dark:hover:bg-brand-500 dark:hover:border-brand-500 transition-all hover:shadow-lg hover:shadow-brand-500/20 active:scale-[0.98]">
             {isSignUp
               ? "Already have an account? Sign In"
               : "Don't have an account? Sign Up"}

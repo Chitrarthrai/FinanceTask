@@ -100,10 +100,10 @@ const Settings = () => {
 
   // Local state for main config inputs to allow typing before commit
   const [salaryInput, setSalaryInput] = useState(
-    budgetSettings.monthlySalary.toString()
+    budgetSettings.monthlySalary.toString(),
   );
   const [savingsInput, setSavingsInput] = useState(
-    (budgetSettings.savingsTargetPercent || 0).toString()
+    (budgetSettings.savingsTargetPercent || 0).toString(),
   );
 
   const handleSave = () => {
@@ -158,18 +158,18 @@ const Settings = () => {
   const removeVariableExpense = (id: string) => {
     updateBudgetSettings({
       variableExpenses: budgetSettings.variableExpenses.filter(
-        (e) => e.id !== id
+        (e) => e.id !== id,
       ),
     });
   };
 
   const totalFixed = budgetSettings.fixedExpenses.reduce(
     (acc, curr) => acc + curr.amount,
-    0
+    0,
   );
   const totalVariable = budgetSettings.variableExpenses.reduce(
     (acc, curr) => acc + curr.amount,
-    0
+    0,
   );
 
   const tabs = [
@@ -199,7 +199,7 @@ const Settings = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-bold text-sm whitespace-nowrap ${
+                className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all font-medium text-sm whitespace-nowrap ${
                   activeTab === tab.id
                     ? "bg-orange-600 dark:bg-brand-600 text-white shadow-lg shadow-orange-600/30"
                     : "text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-200"
@@ -268,7 +268,7 @@ const Settings = () => {
                 <div className="flex justify-end pt-6 border-t border-border-primary">
                   <button
                     onClick={handleSaveProfile}
-                    className="flex items-center gap-2 px-8 py-3 bg-brand-600 text-text-inverted font-bold rounded-full hover:bg-brand-700 transition-all shadow-lg active:scale-95">
+                    className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium bg-brand-600 text-text-inverted rounded-lg hover:bg-brand-700 transition-all shadow-lg shadow-brand-500/30 hover:shadow-brand-500/40 active:scale-95 border border-transparent">
                     <Save className="w-4 h-4" /> Save Profile
                   </button>
                 </div>
@@ -349,7 +349,7 @@ const Settings = () => {
                         </div>
                         <button
                           onClick={() => removeFixedExpense(expense.id)}
-                          className="p-2 text-text-muted hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-xl transition-colors opacity-0 group-hover:opacity-100">
+                          className="p-2 text-text-muted hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-lg transition-colors opacity-0 group-hover:opacity-100">
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
@@ -374,7 +374,7 @@ const Settings = () => {
                     <button
                       onClick={addFixedExpense}
                       disabled={!newFixedName || !newFixedAmount}
-                      className="px-4 py-3 bg-bg-tertiary text-text-secondary rounded-xl font-bold hover:bg-brand-500 hover:text-text-inverted transition-colors disabled:opacity-50">
+                      className="px-4 py-2.5 bg-bg-tertiary text-text-secondary rounded-lg font-medium hover:bg-brand-500 hover:text-text-inverted transition-colors disabled:opacity-50">
                       <Plus className="w-5 h-5" />
                     </button>
                   </div>
@@ -411,7 +411,7 @@ const Settings = () => {
                         </div>
                         <button
                           onClick={() => removeVariableExpense(expense.id)}
-                          className="p-2 text-text-muted hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-xl transition-colors opacity-0 group-hover:opacity-100">
+                          className="p-2 text-text-muted hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-lg transition-colors opacity-0 group-hover:opacity-100">
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
@@ -436,7 +436,7 @@ const Settings = () => {
                     <button
                       onClick={addVariableExpense}
                       disabled={!newVarName || !newVarAmount}
-                      className="px-4 py-3 bg-bg-tertiary text-text-secondary rounded-xl font-bold hover:bg-brand-500 hover:text-text-inverted transition-colors disabled:opacity-50">
+                      className="px-4 py-2.5 bg-bg-tertiary text-text-secondary rounded-lg font-medium hover:bg-brand-500 hover:text-text-inverted transition-colors disabled:opacity-50">
                       <Plus className="w-5 h-5" />
                     </button>
                   </div>
@@ -446,7 +446,7 @@ const Settings = () => {
                   <button
                     onClick={handleSave}
                     disabled={saveStatus !== "Save Changes"}
-                    className="flex items-center gap-2 px-8 py-3 bg-brand-600 text-text-inverted font-bold rounded-full hover:bg-brand-700 transition-all shadow-lg active:scale-95 disabled:opacity-80">
+                    className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium bg-brand-600 text-text-inverted rounded-lg hover:bg-brand-700 transition-all shadow-lg shadow-brand-500/30 hover:shadow-brand-500/40 active:scale-95 border border-transparent disabled:opacity-80">
                     <Save className="w-4 h-4" /> {saveStatus}
                   </button>
                 </div>
@@ -478,13 +478,13 @@ const Settings = () => {
                         onClick={() => {
                           if (
                             window.confirm(
-                              `Are you sure you want to delete ${c.name}? Settings and transaction history might be affected.`
+                              `Are you sure you want to delete ${c.name}? Settings and transaction history might be affected.`,
                             )
                           ) {
                             deleteCategory(c.id);
                           }
                         }}
-                        className="p-2 text-text-muted hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-xl transition-colors">
+                        className="p-2 text-text-muted hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-lg transition-colors">
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
@@ -516,13 +516,13 @@ const Settings = () => {
                     <button
                       onClick={() => {
                         const nameInput = document.getElementById(
-                          "new-category-name"
+                          "new-category-name",
                         ) as HTMLInputElement;
                         const typeInput = document.getElementById(
-                          "new-category-type"
+                          "new-category-type",
                         ) as HTMLSelectElement;
                         const colorInput = document.getElementById(
-                          "new-category-color"
+                          "new-category-color",
                         ) as HTMLInputElement;
 
                         if (nameInput.value) {
@@ -534,7 +534,7 @@ const Settings = () => {
                           nameInput.value = "";
                         }
                       }}
-                      className="px-4 py-3 bg-brand-500 text-text-inverted rounded-xl font-bold hover:bg-brand-600 transition-colors">
+                      className="px-4 py-2.5 bg-brand-500 text-text-inverted rounded-lg font-medium hover:bg-brand-600 transition-colors">
                       <Plus className="w-5 h-5" />
                     </button>
                   </div>
@@ -551,7 +551,7 @@ const Settings = () => {
                   <div className="flex gap-4">
                     <button
                       onClick={() => setTheme("dark")}
-                      className={`flex-1 py-3 rounded-xl font-bold transition-all ${
+                      className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${
                         theme === "dark"
                           ? "bg-slate-800 text-white ring-2 ring-brand-500"
                           : "bg-bg-tertiary text-text-secondary"
@@ -561,7 +561,7 @@ const Settings = () => {
                     </button>
                     <button
                       onClick={() => setTheme("light")}
-                      className={`flex-1 py-3 rounded-xl font-bold transition-all ${
+                      className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${
                         theme === "light"
                           ? "bg-white ring-2 ring-brand-500 text-brand-600"
                           : "bg-bg-tertiary text-text-secondary"
@@ -590,12 +590,12 @@ const Settings = () => {
                       const form = e.target as HTMLFormElement;
                       const newPass = (
                         form.elements.namedItem(
-                          "newPassword"
+                          "newPassword",
                         ) as HTMLInputElement
                       ).value;
                       const confirmPass = (
                         form.elements.namedItem(
-                          "confirmPassword"
+                          "confirmPassword",
                         ) as HTMLInputElement
                       ).value;
 
@@ -646,7 +646,7 @@ const Settings = () => {
                     </div>
                     <button
                       type="submit"
-                      className="w-full py-3 bg-brand-500 text-text-inverted font-bold rounded-xl hover:bg-brand-600 transition-colors shadow-lg active:scale-95">
+                      className="w-full py-2.5 text-sm font-medium bg-brand-500 text-text-inverted rounded-lg hover:bg-brand-600 transition-colors shadow-lg shadow-brand-500/30 hover:shadow-brand-500/40 active:scale-95 border border-transparent">
                       Update Password
                     </button>
                   </form>
@@ -665,7 +665,7 @@ const Settings = () => {
                     onClick={() =>
                       alert("Account deletion is disabled in this demo.")
                     }
-                    className="px-6 py-2.5 bg-bg-primary text-rose-500 font-bold rounded-xl border-2 border-rose-100 dark:border-rose-900 hover:bg-rose-50 dark:hover:bg-rose-900/40 transition-colors">
+                    className="px-4 py-2.5 text-sm font-medium bg-bg-primary text-rose-500 rounded-lg border-2 border-rose-100 dark:border-rose-900 hover:bg-rose-50 dark:hover:bg-rose-900/40 transition-colors">
                     Delete Account
                   </button>
                 </div>

@@ -6,6 +6,7 @@ import {
   SpendingOverview,
   CategoryDistribution,
 } from "../components/DashboardCharts";
+import TransactionModal from "../components/TransactionModal";
 import {
   ArrowUpRight,
   ArrowRight,
@@ -24,6 +25,7 @@ const Dashboard = () => {
   const { transactions, tasks, metrics } = useData();
   const [kpiData, setKpiData] = useState<KPIData[]>([]);
   const [timeRange, setTimeRange] = useState("Week");
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Update KPIs based on Real Metrics
   useEffect(() => {
@@ -52,15 +54,15 @@ const Dashboard = () => {
           metrics.budgetHealth === "Critical"
             ? -10
             : metrics.budgetHealth === "At Risk"
-            ? -5
-            : 0,
+              ? -5
+              : 0,
         icon: "piggy-bank",
         color:
           metrics.budgetHealth === "Critical"
             ? "rose"
             : metrics.budgetHealth === "At Risk"
-            ? "amber"
-            : "blue",
+              ? "amber"
+              : "blue",
       },
       {
         label: "Daily Limit",
@@ -107,10 +109,13 @@ const Dashboard = () => {
   // Prepare Chart Data Locally from Transactions
   const categoryData = React.useMemo(() => {
     const expenseTrans = transactions.filter((t) => t.type === "expense");
-    const grouped = expenseTrans.reduce((acc, curr) => {
-      acc[curr.category] = (acc[curr.category] || 0) + curr.amount;
-      return acc;
-    }, {} as Record<string, number>);
+    const grouped = expenseTrans.reduce(
+      (acc, curr) => {
+        acc[curr.category] = (acc[curr.category] || 0) + curr.amount;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
 
     return Object.entries(grouped).map(([name, value]) => ({ name, value }));
   }, [transactions]);
@@ -205,8 +210,8 @@ const Dashboard = () => {
         </div>
         <div className="flex gap-3">
           <button
-            onClick={() => navigate("/app/transactions")}
-            className="flex items-center gap-2 px-6 py-3 bg-brand-600 text-white font-bold rounded-full hover:bg-brand-700 transition-all shadow-lg shadow-brand-500/30 hover:shadow-brand-500/40 active:scale-95 border border-transparent">
+            onClick={() => setIsModalOpen(true)}
+            className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition-all shadow-lg shadow-brand-500/30 hover:shadow-brand-500/40 active:scale-95 border border-transparent">
             <Plus className="w-5 h-5" />
             Quick Add
           </button>
@@ -240,7 +245,7 @@ const Dashboard = () => {
                 <button
                   key={period}
                   onClick={() => setTimeRange(period)}
-                  className={`px-4 py-1.5 text-sm font-semibold rounded-lg transition-all ${
+                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
                     timeRange === period
                       ? "bg-brand-500 text-white shadow-md shadow-brand-500/20"
                       : "text-text-muted hover:text-text-primary hover:bg-bg-secondary/50"
@@ -337,7 +342,7 @@ const Dashboard = () => {
             </h3>
             <button
               onClick={() => navigate("/app/transactions")}
-              className="text-brand-600 dark:text-brand-400 text-sm font-bold hover:text-brand-700 flex items-center gap-1 px-3 py-1.5 rounded-lg hover:bg-brand-50 dark:hover:bg-brand-900/30 transition-colors border border-transparent hover:border-brand-200 dark:hover:border-brand-800">
+              className="text-brand-600 dark:text-brand-400 text-sm font-medium hover:text-brand-700 flex items-center gap-1 px-3 py-2 rounded-lg hover:bg-brand-50 dark:hover:bg-brand-900/30 transition-colors border border-transparent hover:border-brand-200 dark:hover:border-brand-800">
               View All <ArrowRight className="w-4 h-4" />
             </button>
           </div>
@@ -392,7 +397,7 @@ const Dashboard = () => {
             </h3>
             <button
               onClick={() => navigate("/app/tasks")}
-              className="p-2 hover:bg-bg-secondary rounded-xl transition-colors border border-transparent hover:border-border-primary">
+              className="p-2 hover:bg-bg-secondary rounded-lg transition-colors border border-transparent hover:border-border-primary">
               <MoreVertical className="w-5 h-5 text-text-muted" />
             </button>
           </div>
@@ -411,8 +416,8 @@ const Dashboard = () => {
                         task.priority === "high"
                           ? "bg-red-500 dark:bg-red-600 text-white shadow-sm"
                           : task.priority === "medium"
-                          ? "bg-amber-500 dark:bg-amber-600 text-white shadow-sm"
-                          : "bg-blue-500 dark:bg-blue-600 text-white shadow-sm"
+                            ? "bg-amber-500 dark:bg-amber-600 text-white shadow-sm"
+                            : "bg-blue-500 dark:bg-blue-600 text-white shadow-sm"
                       }`}>
                       {task.priority}
                     </span>
@@ -426,12 +431,17 @@ const Dashboard = () => {
             ))}
             <button
               onClick={() => navigate("/app/tasks")}
-              className="w-full py-4 border-2 border-dashed border-border-primary rounded-2xl text-text-muted text-sm font-bold hover:border-brand-300 hover:text-brand-500 hover:bg-brand-50/50 dark:hover:bg-brand-900/20 transition-all flex items-center justify-center gap-2 mt-4 hover:shadow-sm">
+              className="w-full py-2.5 border-2 border-dashed border-border-primary rounded-lg text-text-muted text-sm font-medium hover:border-brand-300 hover:text-brand-500 hover:bg-brand-50/50 dark:hover:bg-brand-900/20 transition-all flex items-center justify-center gap-2 mt-4 hover:shadow-sm">
               <Plus className="w-5 h-5" /> Add New Task
             </button>
           </div>
         </div>
       </section>
+
+      <TransactionModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      />
     </div>
   );
 };

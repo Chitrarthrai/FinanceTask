@@ -18,6 +18,7 @@ import {
 } from "../types";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "./AuthContext";
+import { User } from "@supabase/supabase-js";
 
 interface DataContextType {
   transactions: Transaction[];
@@ -35,7 +36,7 @@ interface DataContextType {
   addCategory: (
     name: string,
     type: "income" | "expense",
-    color: string
+    color: string,
   ) => Promise<void>;
   updateCategory: (id: string, name: string) => Promise<void>;
   deleteCategory: (id: string) => Promise<void>;
@@ -47,6 +48,7 @@ interface DataContextType {
     trend: SpendingTrend[];
   }>;
   getSmartInsights: (month: string) => Promise<any[]>;
+  user: User | null;
 }
 
 const defaultBudgetSettings: BudgetSettings = {
@@ -68,7 +70,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [budgetSettings, setBudgetSettings] = useState<BudgetSettings>(
-    defaultBudgetSettings
+    defaultBudgetSettings,
   );
   const [categories, setCategories] = useState<Category[]>([]);
 
@@ -148,7 +150,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
             color: c.color,
             icon: c.icon,
             budgetedAmount: 0,
-          }))
+          })),
         );
       } else {
         // Initialize default categories if none exist
@@ -206,7 +208,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
               year: "numeric",
             }),
             paymentMethod: t.payment_method,
-          }))
+          })),
         );
       }
 
@@ -236,14 +238,14 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
             recurring: t.recurring,
             tags: t.tags || [],
             category: t.category || "Personal",
-          }))
+          })),
         );
       }
 
       // 5. Fetch Global Metrics for Sidebar (Current Month)
       const dateForMetrics = new Date();
       const monthStr = `${dateForMetrics.getFullYear()}-${String(
-        dateForMetrics.getMonth() + 1
+        dateForMetrics.getMonth() + 1,
       ).padStart(2, "0")}-01`;
 
       // We can reuse the getAnalyticsData logic, but we need to define it or import it.
@@ -251,8 +253,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
       // We will duplicate the simple fetch call here or move the logic to a helper.
       // For simplicity and safety, we call the RPC directly here as we did in getAnalyticsData.
       const { data: metricsData } = await supabase.rpc("get_monthly_metrics", {
-        month_date: monthStr,
-        user_id: user.id,
+        month_str: monthStr,
       });
 
       if (metricsData && metricsData.length > 0) {
@@ -288,7 +289,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     const daysInMonth = new Date(
       today.getFullYear(),
       today.getMonth() + 1,
-      0
+      0,
     ).getDate();
     const daysRemaining = Math.max(1, daysInMonth - today.getDate());
 
@@ -296,12 +297,12 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
 
     const totalFixedExpenses = budgetSettings.fixedExpenses.reduce(
       (acc, curr) => acc + curr.amount,
-      0
+      0,
     );
 
     const totalVariableExpenses = budgetSettings.variableExpenses.reduce(
       (acc, curr) => acc + curr.amount,
-      0
+      0,
     );
 
     const totalSavings =
@@ -309,7 +310,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
 
     const pocketMoneyPool = Math.max(
       0,
-      totalIncome - totalFixedExpenses - totalVariableExpenses - totalSavings
+      totalIncome - totalFixedExpenses - totalVariableExpenses - totalSavings,
     );
 
     const todayStr = today.toLocaleDateString("en-US", {
@@ -387,7 +388,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     if (!user) return;
     try {
       setTransactions((prev) =>
-        prev.map((t) => (t.id === transaction.id ? transaction : t))
+        prev.map((t) => (t.id === transaction.id ? transaction : t)),
       );
 
       const dateObj = new Date(transaction.date);
@@ -499,7 +500,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
 
     if (data) {
       setCategories((prev) =>
-        prev.map((c) => (c.id === tempId ? { ...c, id: data.id } : c))
+        prev.map((c) => (c.id === tempId ? { ...c, id: data.id } : c)),
       );
     }
   };
@@ -507,7 +508,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
   const updateCategory = async (category: Category) => {
     if (!user) return;
     setCategories((prev) =>
-      prev.map((c) => (c.id === category.id ? category : c))
+      prev.map((c) => (c.id === category.id ? category : c)),
     );
     await supabase
       .from("categories")
@@ -546,6 +547,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     <DataContext.Provider
       value={{
         transactions,
+        user,
         tasks,
         budgetSettings,
         categories,

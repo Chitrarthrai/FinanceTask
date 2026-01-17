@@ -121,7 +121,7 @@ const Login = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-4 font-bold rounded-xl transition-all shadow-lg shadow-brand-500/10 flex items-center justify-center gap-2 active:scale-[0.98] border-2 border-brand-600 text-brand-600 bg-transparent hover:bg-brand-600 hover:text-white hover:shadow-brand-500/30">
+            className="w-full py-2.5 text-sm font-medium rounded-lg transition-all shadow-lg shadow-brand-500/30 flex items-center justify-center gap-2 active:scale-[0.98] border-2 border-brand-600 text-brand-600 bg-transparent hover:bg-brand-600 hover:text-white hover:shadow-brand-500/40">
             {loading ? (
               <Loader2 className="w-5 h-5 animate-spin" />
             ) : (
@@ -139,7 +139,7 @@ const Login = () => {
               setIsSignUp(!isSignUp);
               setMessage(null);
             }}
-            className="w-full py-3 text-sm font-bold rounded-xl border border-border-primary text-text-muted hover:text-white hover:bg-brand-600 hover:border-brand-600 dark:hover:bg-brand-500 dark:hover:border-brand-500 transition-all hover:shadow-lg hover:shadow-brand-500/20 active:scale-[0.98]">
+            className="w-full py-2.5 text-sm font-medium rounded-lg border border-border-primary text-text-muted hover:text-white hover:bg-brand-600 hover:border-brand-600 dark:hover:bg-brand-500 dark:hover:border-brand-500 transition-all hover:shadow-lg hover:shadow-brand-500/20 active:scale-[0.98]">
             {isSignUp
               ? "Already have an account? Sign In"
               : "Don't have an account? Sign Up"}

@@ -14,6 +14,7 @@ import {
   CreditCard,
   Sun,
   Moon,
+  Mail,
 } from "lucide-react";
 
 interface LandingProps {
@@ -53,7 +54,7 @@ const Landing: React.FC<LandingProps> = ({
         <div className="flex items-center gap-4">
           <button
             onClick={toggleTheme}
-            className={`p-2.5 rounded-xl border transition-all hover:shadow-lg hover:shadow-brand-500/10 group backdrop-blur-md ${
+            className={`p-2.5 rounded-lg border transition-all hover:shadow-lg hover:shadow-brand-500/10 group backdrop-blur-md ${
               theme === "dark"
                 ? "bg-slate-800/50 hover:bg-slate-700/80 border-slate-700/50 text-slate-300"
                 : "bg-white/40 hover:bg-white/80 border-white/50 text-slate-600"
@@ -67,12 +68,12 @@ const Landing: React.FC<LandingProps> = ({
           </button>
           <button
             onClick={() => navigate("/login")}
-            className="px-6 py-2.5 font-bold rounded-full border border-border-primary bg-bg-secondary/30 backdrop-blur-sm text-text-secondary hover:text-white hover:bg-brand-600 dark:hover:bg-brand-500 hover:border-brand-600 dark:hover:border-brand-500 transition-all active:scale-95 shadow-sm hover:shadow-brand-500/25">
+            className="px-4 py-2.5 text-sm font-medium rounded-lg border border-border-primary bg-bg-secondary/30 backdrop-blur-sm text-text-secondary hover:text-white hover:bg-brand-600 dark:hover:bg-brand-500 hover:border-brand-600 dark:hover:border-brand-500 transition-all active:scale-95 shadow-sm hover:shadow-brand-500/25">
             Log In
           </button>
           <button
             onClick={() => navigate("/signup")}
-            className="hidden sm:block px-6 py-2.5 font-bold rounded-full border border-border-primary bg-bg-secondary/30 backdrop-blur-sm text-text-secondary hover:text-white hover:bg-brand-600 dark:hover:bg-brand-500 hover:border-brand-600 dark:hover:border-brand-500 transition-all active:scale-95 shadow-sm hover:shadow-brand-500/25">
+            className="hidden sm:block px-4 py-2.5 text-sm font-medium rounded-lg border border-border-primary bg-bg-secondary/30 backdrop-blur-sm text-text-secondary hover:text-white hover:bg-brand-600 dark:hover:bg-brand-500 hover:border-brand-600 dark:hover:border-brand-500 transition-all active:scale-95 shadow-sm hover:shadow-brand-500/25">
             Get Started
           </button>
         </div>
@@ -110,13 +111,13 @@ const Landing: React.FC<LandingProps> = ({
           style={{ animationDelay: "200ms" }}>
           <button
             onClick={() => navigate("/signup")}
-            className="group px-8 py-4 font-bold rounded-full border-2 border-brand-600 text-brand-600 bg-transparent hover:bg-brand-600 hover:text-white transition-all shadow-lg shadow-brand-500/10 hover:shadow-brand-500/30 flex items-center justify-center gap-2 active:scale-[0.98]">
+            className="group px-6 py-3 text-sm font-medium rounded-lg border-2 border-brand-600 text-brand-600 bg-transparent hover:bg-brand-600 hover:text-white transition-all shadow-lg shadow-brand-500/30 hover:shadow-brand-500/40 flex items-center justify-center gap-2 active:scale-[0.98]">
             Start Free Trial
             <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
           </button>
           <button
             onClick={() => navigate("/login")}
-            className="px-8 py-4 font-bold rounded-full border-2 border-border-primary bg-bg-secondary/30 backdrop-blur-md text-text-primary hover:text-white hover:bg-brand-600 hover:border-brand-600 transition-all shadow-lg hover:shadow-xl active:scale-[0.98]">
+            className="px-6 py-3 text-sm font-medium rounded-lg border-2 border-border-primary bg-bg-secondary/30 backdrop-blur-md text-text-primary hover:text-white hover:bg-brand-600 hover:border-brand-600 transition-all shadow-lg hover:shadow-xl active:scale-[0.98]">
             View Live Demo
           </button>
         </div>
@@ -185,6 +186,25 @@ const Landing: React.FC<LandingProps> = ({
           ))}
         </div>
       </main>
+
+      {/* Contact Section */}
+      <div className="container mx-auto px-6 pb-24">
+        <div className="max-w-4xl mx-auto text-center glass-panel p-12 rounded-[2.5rem] shadow-2xl shadow-brand-500/10 animate-slide-up">
+          <h2 className="text-4xl font-bold mb-6 bg-gradient-to-r from-slate-800 to-slate-600 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">
+            Still have questions?
+          </h2>
+          <p className="text-xl text-text-secondary mb-8 max-w-2xl mx-auto">
+            We're here to help you on your financial journey. Reach out to us
+            directly.
+          </p>
+          <a
+            href="mailto:chitrarthrai@gmail.com"
+            className="inline-flex items-center gap-2 px-6 py-3 text-sm font-medium rounded-lg border-2 border-brand-600 text-brand-600 bg-transparent hover:bg-brand-600 hover:text-white transition-all shadow-lg shadow-brand-500/30 hover:shadow-brand-500/40 active:scale-[0.98]">
+            <Mail className="w-5 h-5" />
+            Get in Touch
+          </a>
+        </div>
+      </div>
 
       {/* Footer */}
       <footer className="relative z-10 border-t border-border-primary bg-bg-secondary/30 backdrop-blur-xl mt-20">

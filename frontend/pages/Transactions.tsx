@@ -12,39 +12,30 @@ import {
   Home,
   Car,
   DollarSign,
-  ChevronDown,
   Edit,
   Trash2,
-  Receipt,
-  CreditCard,
   Briefcase,
   Zap,
   Music,
 } from "lucide-react";
 import { useData } from "../contexts/DataContext";
-import Modal from "../components/Modal";
+import TransactionModal from "../components/TransactionModal";
 import { Transaction } from "../types";
 import { supabase } from "../lib/supabase";
-import CustomDatePicker from "../components/CustomDatePicker";
+import CustomDatePicker from "../components/CustomDatePicker"; // Kept if used in filters? Yes, lines 378, 387.
 
 // Force reload
 const Transactions = () => {
-  const {
-    transactions,
-    addTransaction,
-    updateTransaction,
-    deleteTransaction,
-    categories,
-    user,
-  } = useData();
+  const { transactions, deleteTransaction, categories, user } = useData();
   const [filter, setFilter] = useState("All");
   const [searchTerm, setSearchTerm] = useState("");
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [limit, setLimit] = useState(6);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [receiptFile, setReceiptFile] = useState<File | null>(null);
+  const [selectedTransaction, setSelectedTransaction] = useState<
+    Partial<Transaction> | undefined
+  >(undefined);
 
   const [searchParams] = useSearchParams();
 
@@ -54,42 +45,6 @@ const Transactions = () => {
       setSearchTerm(query);
     }
   }, [searchParams]);
-
-  const handleViewReceipt = async (path: string) => {
-    try {
-      if (!path) return;
-      const { data, error } = await supabase.storage
-        .from("receipts")
-        .createSignedUrl(path, 60); // Valid for 60 seconds
-      if (error) throw error;
-      if (data) {
-        window.open(data.signedUrl, "_blank");
-      }
-    } catch (err) {
-      console.error("Error opening receipt:", err);
-      alert("Could not open receipt.");
-    }
-  };
-
-  // Form State
-  const [newTrans, setNewTrans] = useState<
-    Partial<Transaction> & { paymentMethod?: string }
-  >({
-    title: "",
-    amount: 0,
-    category: "Food",
-    type: "expense",
-    date: new Date().toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    }),
-    paymentMethod: "Card",
-    id: undefined, // Add ID field for updates
-  });
-  const [isRecurring, setIsRecurring] = useState(false);
-  const [frequency, setFrequency] = useState("monthly");
-  const { addRecurringRule } = useData();
 
   // Extract category names for UI, adding "All" and "Income" if missing
   const categoryNames = ["All", ...new Set(categories.map((c) => c.name))];
@@ -171,94 +126,20 @@ const Transactions = () => {
     document.body.removeChild(link);
   };
 
-  const handleAddTransaction = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setUploading(true);
-    let receiptPath = "";
-
-    try {
-      if (receiptFile && user) {
-        const fileExt = receiptFile.name.split(".").pop();
-        const fileName = `${user.id}/${Date.now()}.${fileExt}`;
-        const { error: uploadError } = await supabase.storage
-          .from("receipts")
-          .upload(fileName, receiptFile);
-
-        if (uploadError) throw uploadError;
-        receiptPath = fileName;
-      }
-
-      if (newTrans.id) {
-        // Update existing
-        await updateTransaction({
-          id: newTrans.id,
-          title: newTrans.title || "Untitled",
-          category: newTrans.category || "Others",
-          amount: Number(newTrans.amount),
-          date: newTrans.date || "Today",
-          type: newTrans.type as "income" | "expense",
-          receipt_url: receiptPath || newTrans.receipt_url, // Keep existing if not replaced
-          paymentMethod: newTrans.paymentMethod,
-        });
-      } else {
-        // Create new
-        await addTransaction({
-          id: Math.random().toString(36).substr(2, 9),
-          title: newTrans.title || "Untitled",
-          category: newTrans.category || "Others",
-          amount: Number(newTrans.amount),
-          date: newTrans.date || "Today",
-          type: newTrans.type as "income" | "expense",
-          receipt_url: receiptPath,
-          paymentMethod: newTrans.paymentMethod,
-        });
-      }
-
-      if (isRecurring) {
-        let nextDate = new Date(newTrans.date || new Date());
-        if (frequency === "weekly") nextDate.setDate(nextDate.getDate() + 7);
-        if (frequency === "monthly") nextDate.setMonth(nextDate.getMonth() + 1);
-        if (frequency === "yearly")
-          nextDate.setFullYear(nextDate.getFullYear() + 1);
-
-        await addRecurringRule({
-          title: newTrans.title,
-          amount: Number(newTrans.amount),
-          category: newTrans.category,
-          type: newTrans.type,
-          frequency: frequency,
-          start_date: new Date(newTrans.date || new Date()).toISOString(),
-          next_due_date: nextDate.toISOString(),
-        });
-      }
-
-      setIsModalOpen(false);
-      setNewTrans({
-        title: "",
-        amount: 0,
-        category: "Food",
-        type: "expense",
-        paymentMethod: "Card",
-        id: undefined,
-        date: new Date().toLocaleDateString("en-US", {
-          month: "short",
-          day: "numeric",
-          year: "numeric",
-        }),
-      });
-      setReceiptFile(null);
-    } catch (error) {
-      console.error("Error saving transaction:", error);
-      alert("Failed to save transaction. Please try again.");
-    } finally {
-      setUploading(false);
-    }
-  };
-
   const handleDelete = (id: string) => {
     if (window.confirm("Are you sure you want to delete this transaction?")) {
       deleteTransaction(id);
     }
+  };
+
+  const openAddModal = () => {
+    setSelectedTransaction(undefined);
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (t: Transaction) => {
+    setSelectedTransaction(t);
+    setIsModalOpen(true);
   };
 
   const totalIncome = transactions
@@ -283,12 +164,12 @@ const Transactions = () => {
         <div className="flex gap-3">
           <button
             onClick={handleExport}
-            className="flex items-center gap-2 px-5 py-2.5 backdrop-blur-md font-bold rounded-full border transition-all shadow-sm hover:shadow-md bg-bg-secondary/60 text-text-secondary border-border-primary hover:bg-bg-secondary hover:border-brand-300">
+            className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium backdrop-blur-md rounded-lg border transition-all shadow-sm hover:shadow-md bg-bg-secondary/60 text-text-secondary border-border-primary hover:bg-bg-secondary hover:border-brand-300">
             <Download className="w-4 h-4" /> Export
           </button>
           <button
-            onClick={() => setIsModalOpen(true)}
-            className="flex items-center gap-2 px-6 py-2.5 bg-brand-600 text-white font-bold rounded-full hover:bg-brand-700 transition-all shadow-lg shadow-brand-500/30 active:scale-95">
+            onClick={openAddModal}
+            className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition-all shadow-lg shadow-brand-500/30 hover:shadow-brand-500/40 active:scale-95 border border-transparent">
             <Plus className="w-5 h-5" /> Add Transaction
           </button>
         </div>
@@ -333,7 +214,7 @@ const Transactions = () => {
                 <button
                   key={cat}
                   onClick={() => setFilter(cat)}
-                  className={`px-5 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all border shadow-sm ${
+                  className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all border shadow-sm ${
                     filter === cat
                       ? "bg-orange-500 dark:bg-brand-600 text-white shadow-lg shadow-orange-500/30 dark:shadow-brand-500/30 border-transparent"
                       : "bg-slate-100 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-border-primary hover:bg-slate-200 dark:hover:bg-slate-800 hover:border-orange-300 dark:hover:border-brand-300"
@@ -362,7 +243,7 @@ const Transactions = () => {
                   setStartDate(null);
                   setEndDate(null);
                 }}
-                className="p-2.5 bg-red-500 dark:bg-red-600 rounded-xl border border-transparent hover:bg-red-600 dark:hover:bg-red-700 text-white transition-all text-sm font-bold flex items-center gap-2 shadow-sm hover:shadow-md hover:-translate-y-0.5">
+                className="px-4 py-2.5 text-sm font-medium bg-red-500 dark:bg-red-600 rounded-lg border border-transparent hover:bg-red-600 dark:hover:bg-red-700 text-white transition-all flex items-center gap-2 shadow-sm hover:shadow-md hover:-translate-y-0.5">
                 <Filter className="w-4 h-4" /> Clear
               </button>
             </div>
@@ -442,11 +323,7 @@ const Transactions = () => {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      setNewTrans({
-                        ...t,
-                        paymentMethod: t.paymentMethod || "Card",
-                      });
-                      setIsModalOpen(true);
+                      openEditModal(t);
                     }}
                     className="p-1.5 hover:bg-brand-50 hover:text-brand-600 rounded-lg text-text-muted transition-colors"
                     title="Edit">
@@ -480,217 +357,19 @@ const Transactions = () => {
           <div className="flex justify-center mt-8">
             <button
               onClick={() => setLimit((prev) => prev + 5)}
-              className="text-sm font-bold text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 transition-colors">
+              className="text-sm font-medium text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 transition-colors">
               Load More
             </button>
           </div>
         )}
       </div>
 
-      <Modal
+      <TransactionModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title="Add Transaction">
-        <form onSubmit={handleAddTransaction} className="space-y-4">
-          <div>
-            <label className="block text-sm font-bold text-text-primary mb-1">
-              Title
-            </label>
-            <input
-              required
-              type="text"
-              value={newTrans.title}
-              onChange={(e) =>
-                setNewTrans({ ...newTrans, title: e.target.value })
-              }
-              className="w-full px-4 py-3 rounded-xl font-medium bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 placeholder:text-slate-400 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 transition-all shadow-sm"
-              placeholder="e.g. Grocery Shopping"
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-bold text-text-primary mb-1">
-                Amount ($)
-              </label>
-              <input
-                required
-                type="number"
-                step="0.01"
-                value={newTrans.amount}
-                onChange={(e) =>
-                  setNewTrans({
-                    ...newTrans,
-                    amount: parseFloat(e.target.value),
-                  })
-                }
-                className="w-full px-4 py-3 rounded-xl font-medium bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 placeholder:text-slate-400 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 transition-all shadow-sm"
-                placeholder="0.00"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-bold text-text-primary mb-1">
-                Type
-              </label>
-              <div className="relative">
-                <select
-                  value={newTrans.type}
-                  onChange={(e) =>
-                    setNewTrans({ ...newTrans, type: e.target.value as any })
-                  }
-                  className="w-full px-4 py-3 rounded-xl font-medium appearance-none bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 transition-all shadow-sm">
-                  <option value="expense">Expense</option>
-                  <option value="income">Income</option>
-                </select>
-                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted pointer-events-none" />
-              </div>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-bold text-text-primary mb-1">
-                Date
-              </label>
-              <CustomDatePicker
-                value={newTrans.date || new Date().toDateString()}
-                onChange={(date) =>
-                  setNewTrans({
-                    ...newTrans,
-                    date: date.toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                      year: "numeric",
-                    }),
-                  })
-                }
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-bold text-text-primary mb-1">
-                Category
-              </label>
-              <div className="relative">
-                <select
-                  value={newTrans.category}
-                  onChange={(e) =>
-                    setNewTrans({ ...newTrans, category: e.target.value })
-                  }
-                  className="w-full px-4 py-3 rounded-xl font-medium appearance-none bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 transition-all shadow-sm">
-                  {categoryNames
-                    .filter((c) => c !== "All")
-                    .map((c) => (
-                      <option key={c} value={c}>
-                        {c}
-                      </option>
-                    ))}
-                </select>
-                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted pointer-events-none" />
-              </div>
-            </div>
-          </div>
-
-          {/* Recurring Toggle */}
-          <div className="flex items-center gap-4 bg-bg-primary/50 p-4 rounded-xl border border-border-primary">
-            <div className="flex-1">
-              <label className="text-sm font-bold text-text-primary">
-                Repeat Transaction
-              </label>
-              <p className="text-xs text-text-muted">
-                Automatically create this transaction?
-              </p>
-            </div>
-            <div className="flex items-center gap-3">
-              {isRecurring && (
-                <div className="relative">
-                  <select
-                    value={frequency}
-                    onChange={(e) => setFrequency(e.target.value)}
-                    className="pl-3 pr-8 py-1.5 text-sm rounded-lg bg-bg-secondary border border-border-primary focus:ring-2 focus:ring-brand-500 outline-none appearance-none font-medium text-text-primary">
-                    <option value="weekly">Weekly</option>
-                    <option value="monthly">Monthly</option>
-                    <option value="yearly">Yearly</option>
-                  </select>
-                  <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-text-muted pointer-events-none" />
-                </div>
-              )}
-              <button
-                type="button"
-                onClick={() => setIsRecurring(!isRecurring)}
-                className={`w-12 h-6 rounded-full transition-colors relative ${
-                  isRecurring
-                    ? "bg-brand-500"
-                    : "bg-slate-300 dark:bg-slate-600"
-                }`}>
-                <div
-                  className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform ${
-                    isRecurring ? "translate-x-6" : "translate-x-0"
-                  }`}
-                />
-              </button>
-            </div>
-          </div>
-
-          {/* Payment Method & Receipt */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-bold text-text-primary mb-1">
-                Payment Method
-              </label>
-              <div className="relative">
-                <select
-                  value={newTrans.paymentMethod}
-                  onChange={(e) =>
-                    setNewTrans({ ...newTrans, paymentMethod: e.target.value })
-                  }
-                  className="w-full px-4 py-3 rounded-xl font-medium appearance-none bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 transition-all shadow-sm">
-                  <option>Card</option>
-                  <option>Cash</option>
-                  <option>UPI</option>
-                  <option>Bank Transfer</option>
-                </select>
-                <CreditCard className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted pointer-events-none" />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-bold text-text-primary mb-1">
-                Receipt
-              </label>
-              <label className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl glass-input font-medium cursor-pointer hover:bg-bg-secondary border-dashed border-2 border-border-primary transition-colors">
-                <Receipt className="w-4 h-4 text-text-muted" />
-                <span className="text-xs text-text-muted">
-                  {receiptFile
-                    ? receiptFile.name.substring(0, 15) + "..."
-                    : "Upload (Opt)"}
-                </span>
-                <input
-                  type="file"
-                  className="hidden"
-                  accept="image/*,application/pdf"
-                  onChange={(e) => {
-                    if (e.target.files && e.target.files[0]) {
-                      setReceiptFile(e.target.files[0]);
-                    }
-                  }}
-                />
-              </label>
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            disabled={uploading}
-            className="w-full py-3 bg-brand-500 text-white font-bold rounded-xl hover:bg-brand-600 transition-colors shadow-lg shadow-brand-500/30 disabled:opacity-50 flex items-center justify-center gap-2">
-            {uploading ? (
-              <>
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                Saving...
-              </>
-            ) : (
-              "Save Transaction"
-            )}
-          </button>
-        </form>
-      </Modal>
+        initialData={selectedTransaction}
+        isEditMode={!!selectedTransaction}
+      />
     </div>
   );
 };

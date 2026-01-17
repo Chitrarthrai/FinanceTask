@@ -33,7 +33,7 @@ const Reports = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [metrics, setMetrics] = useState<MonthlyMetrics | null>(null);
   const [distributions, setDistributions] = useState<CategoryDistribution[]>(
-    []
+    [],
   );
   const [loading, setLoading] = useState(true);
   const [notes, setNotes] = useState("");
@@ -45,13 +45,13 @@ const Reports = () => {
 
   const handlePrevMonth = () => {
     setCurrentDate(
-      new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1)
+      new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1),
     );
   };
 
   const handleNextMonth = () => {
     setCurrentDate(
-      new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1)
+      new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1),
     );
   };
 
@@ -65,7 +65,7 @@ const Reports = () => {
       setLoading(true);
       // Format as YYYY-MM-01 for API
       const monthStr = `${currentDate.getFullYear()}-${String(
-        currentDate.getMonth() + 1
+        currentDate.getMonth() + 1,
       ).padStart(2, "0")}-01`;
 
       const { metrics, distribution } = await getAnalyticsData(monthStr);
@@ -108,17 +108,17 @@ const Reports = () => {
         <div className="flex gap-3">
           <button
             onClick={handlePrint}
-            className="p-2.5 bg-white/60 dark:bg-slate-800/60 backdrop-blur-md text-slate-700 dark:text-slate-200 rounded-full border border-white dark:border-slate-700 hover:bg-white dark:hover:bg-slate-800 transition-all shadow-sm">
+            className="p-2.5 bg-white/60 dark:bg-slate-800/60 backdrop-blur-md text-slate-700 dark:text-slate-200 rounded-lg border border-white dark:border-slate-700 hover:bg-white dark:hover:bg-slate-800 transition-all shadow-sm">
             <Printer className="w-5 h-5" />
           </button>
           <button
             onClick={handleShare}
-            className="p-2.5 bg-white/60 dark:bg-slate-800/60 backdrop-blur-md text-slate-700 dark:text-slate-200 rounded-full border border-white dark:border-slate-700 hover:bg-white dark:hover:bg-slate-800 transition-all shadow-sm">
+            className="p-2.5 bg-white/60 dark:bg-slate-800/60 backdrop-blur-md text-slate-700 dark:text-slate-200 rounded-lg border border-white dark:border-slate-700 hover:bg-white dark:hover:bg-slate-800 transition-all shadow-sm">
             <Share2 className="w-5 h-5" />
           </button>
           <button
             onClick={handlePrint}
-            className="flex items-center gap-2 px-6 py-2.5 bg-brand-600 text-white font-bold rounded-full hover:bg-brand-700 transition-all shadow-lg shadow-brand-500/30 active:scale-95">
+            className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition-all shadow-lg shadow-brand-500/30 hover:shadow-brand-500/40 active:scale-95 border border-transparent">
             <Download className="w-5 h-5" /> Download PDF
           </button>
         </div>
@@ -142,10 +142,10 @@ const Reports = () => {
             </div>
           </div>
           <div className="text-right">
-            <div className="flex items-center gap-2 px-4 py-2 rounded-xl transition-all border bg-bg-secondary border-border-primary text-text-secondary">
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all border bg-bg-secondary border-border-primary text-text-secondary">
               <button
                 onClick={handlePrevMonth}
-                className="p-1 rounded-full transition-colors hover:bg-bg-tertiary">
+                className="p-1.5 rounded-lg transition-colors hover:bg-bg-tertiary">
                 <ChevronLeft className="w-4 h-4 text-text-muted" />
               </button>
               <div className="flex items-center gap-2 min-w-[140px] justify-center">
@@ -156,7 +156,7 @@ const Reports = () => {
               </div>
               <button
                 onClick={handleNextMonth}
-                className="p-1 rounded-full transition-colors hover:bg-bg-tertiary">
+                className="p-1.5 rounded-lg transition-colors hover:bg-bg-tertiary">
                 <ChevronRight className="w-4 h-4 text-text-muted" />
               </button>
             </div>
@@ -259,7 +259,7 @@ const Reports = () => {
                       (
                       {metrics?.total_expenses
                         ? Math.round(
-                            (item.value / metrics.total_expenses) * 100
+                            (item.value / metrics.total_expenses) * 100,
                           )
                         : 0}
                       %)
@@ -283,7 +283,7 @@ const Reports = () => {
               setNotes(e.target.value);
               localStorage.setItem(
                 `report_notes_${selectedMonth}`,
-                e.target.value
+                e.target.value,
               );
             }}
             className="w-full h-32 glass-input resize-none text-sm leading-relaxed font-medium p-4 text-text-secondary placeholder:text-text-muted"

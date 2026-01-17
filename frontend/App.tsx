@@ -13,6 +13,7 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import { DataProvider } from "./contexts/DataContext";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { AIChatBot } from "./components/AIChatBot";
 import { Loader2 } from "lucide-react";
 
 // Layout for the main authenticated application
@@ -31,6 +32,7 @@ const AppLayout = ({
         <main className="px-6 py-4">
           <Outlet context={{ theme, setTheme }} />
         </main>
+        <AIChatBot />
       </div>
     </div>
   );

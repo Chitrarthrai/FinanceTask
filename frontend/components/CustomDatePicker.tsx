@@ -25,10 +25,10 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
   // Parse value to Date object safely
   const initialDate = value ? new Date(value) : new Date();
   const [selectedDate, setSelectedDate] = useState<Date>(
-    isNaN(initialDate.getTime()) ? new Date() : initialDate
+    isNaN(initialDate.getTime()) ? new Date() : initialDate,
   );
   const [viewDate, setViewDate] = useState<Date>(
-    isNaN(initialDate.getTime()) ? new Date() : initialDate
+    isNaN(initialDate.getTime()) ? new Date() : initialDate,
   );
 
   // Time State
@@ -36,15 +36,15 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
     initialDate.getHours() > 12
       ? initialDate.getHours() - 12
       : initialDate.getHours() === 0
-      ? 12
-      : initialDate.getHours()
+        ? 12
+        : initialDate.getHours(),
   );
   const [minutes, setMinutes] = useState(initialDate.getMinutes());
   const [ampm, setAmpm] = useState<"AM" | "PM">(
-    initialDate.getHours() >= 12 ? "PM" : "AM"
+    initialDate.getHours() >= 12 ? "PM" : "AM",
   );
   const [dropdownPosition, setDropdownPosition] = useState<"bottom" | "top">(
-    "bottom"
+    "bottom",
   );
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -87,8 +87,8 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
         d.getHours() > 12
           ? d.getHours() - 12
           : d.getHours() === 0
-          ? 12
-          : d.getHours()
+            ? 12
+            : d.getHours(),
       );
       setMinutes(d.getMinutes());
       setAmpm(d.getHours() >= 12 ? "PM" : "AM");
@@ -169,7 +169,7 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
       {/* Input Trigger */}
       <div
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full flex items-center justify-between px-4 py-3 rounded-xl glass-input font-medium cursor-pointer transition-all border ${
+        className={`w-full flex items-center justify-between px-4 py-3 rounded-lg glass-input font-medium cursor-pointer transition-all border ${
           theme === "dark"
             ? "hover:bg-slate-800/60 border-slate-700/50"
             : "hover:bg-white/60 border-white/50"
@@ -271,12 +271,12 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
                               isSelected
                                 ? "bg-brand-500 text-white shadow-lg shadow-brand-500/30"
                                 : isToday
-                                ? theme === "dark"
-                                  ? "bg-brand-900/20 text-brand-400"
-                                  : "bg-brand-50 text-brand-600"
-                                : theme === "dark"
-                                ? "text-slate-300 hover:bg-slate-700"
-                                : "text-slate-700 hover:bg-slate-100"
+                                  ? theme === "dark"
+                                    ? "bg-brand-900/20 text-brand-400"
+                                    : "bg-brand-50 text-brand-600"
+                                  : theme === "dark"
+                                    ? "text-slate-300 hover:bg-slate-700"
+                                    : "text-slate-700 hover:bg-slate-100"
                             }
                         `}>
                       {day}
@@ -330,7 +330,7 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
                       setAmpm(newAp);
                       updateTime(hours, minutes, newAp);
                     }}
-                    className="text-xs font-bold bg-white dark:bg-slate-800 px-2 py-1 rounded border border-slate-200 dark:border-slate-600 text-brand-600 dark:text-brand-400">
+                    className="text-xs font-bold bg-white dark:bg-slate-800 px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-600 text-brand-600 dark:text-brand-400">
                     {ampm}
                   </button>
                 </div>

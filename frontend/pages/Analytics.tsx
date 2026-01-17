@@ -33,7 +33,7 @@ const Analytics = () => {
   const colors = useThemeColors(); // Added
   const [metrics, setMetrics] = useState<MonthlyMetrics | null>(null);
   const [distributions, setDistributions] = useState<CategoryDistribution[]>(
-    []
+    [],
   );
   const [trend, setTrend] = useState<SpendingTrend[]>([]);
   const [insights, setInsights] = useState<any[]>([]);
@@ -67,7 +67,7 @@ const Analytics = () => {
     const loadData = async () => {
       setLoading(true);
       const monthStr = `${currentDate.getFullYear()}-${String(
-        currentDate.getMonth() + 1
+        currentDate.getMonth() + 1,
       ).padStart(2, "0")}-01`;
 
       const { metrics, distribution, trend } = await getAnalyticsData(monthStr);
@@ -159,18 +159,18 @@ const Analytics = () => {
         <div className="flex gap-3">
           {/* Month Picker Dropdown */}
           <div className="relative month-picker-container">
-            <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-bg-primary/60 backdrop-blur-md border border-surface-glass-border text-text-secondary">
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-bg-primary/60 backdrop-blur-md border border-surface-glass-border text-text-secondary">
               <button
                 onClick={() =>
                   setCurrentDate(
                     new Date(
                       currentDate.getFullYear(),
                       currentDate.getMonth() - 1,
-                      1
-                    )
+                      1,
+                    ),
                   )
                 }
-                className="p-1 rounded-full transition-colors hover:bg-bg-tertiary">
+                className="p-1.5 rounded-lg transition-colors hover:bg-bg-tertiary">
                 <ChevronLeft className="w-4 h-4 text-text-muted" />
               </button>
               <div
@@ -190,11 +190,11 @@ const Analytics = () => {
                     new Date(
                       currentDate.getFullYear(),
                       currentDate.getMonth() + 1,
-                      1
-                    )
+                      1,
+                    ),
                   )
                 }
-                className="p-1 rounded-full transition-colors hover:bg-bg-tertiary">
+                className="p-1.5 rounded-lg transition-colors hover:bg-bg-tertiary">
                 <ChevronRight className="w-4 h-4 text-text-muted" />
               </button>
             </div>
@@ -213,7 +213,7 @@ const Analytics = () => {
                         setCurrentDate(date);
                         setShowMonthPicker(false);
                       }}
-                      className={`w-full text-left px-4 py-2.5 rounded-xl font-medium transition-colors ${
+                      className={`w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                         isSelected
                           ? "bg-brand-500 text-white"
                           : "text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700"
@@ -230,7 +230,7 @@ const Analytics = () => {
           </div>
           <button
             onClick={handleExport}
-            className="flex items-center gap-2 px-6 py-2.5 bg-brand-600 text-text-inverted font-bold rounded-full hover:bg-brand-700 transition-all shadow-lg shadow-brand-500/30 active:scale-95 border border-transparent">
+            className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium bg-brand-600 text-text-inverted rounded-lg hover:bg-brand-700 transition-all shadow-lg shadow-brand-500/30 hover:shadow-brand-500/40 active:scale-95 border border-transparent">
             <Download className="w-5 h-5" /> Export Report
           </button>
         </div>
@@ -257,7 +257,7 @@ const Analytics = () => {
             label: "Highest Spend",
             value: `$${Math.max(
               0,
-              ...distributions.map((d) => d.value)
+              ...distributions.map((d) => d.value),
             ).toLocaleString()}`,
             sub:
               distributions.sort((a, b) => b.value - a.value)[0]?.name || "N/A",
@@ -270,7 +270,7 @@ const Analytics = () => {
             value: `${
               metrics?.total_income
                 ? ((metrics.net_savings / metrics.total_income) * 100).toFixed(
-                    1
+                    1,
                   )
                 : 0
             }%`,

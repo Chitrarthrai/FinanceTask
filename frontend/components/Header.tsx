@@ -7,6 +7,7 @@ import {
   Moon,
   Settings as SettingsIcon,
   LogOut,
+  Settings,
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
@@ -43,7 +44,7 @@ const Header: React.FC<HeaderProps> = ({ theme, setTheme }) => {
    * Default to 'transactions' but switch if we are on the tasks page
    */
   const [searchScope, setSearchScope] = useState<"transactions" | "tasks">(
-    "transactions"
+    "transactions",
   );
 
   // Auto-detect scope based on current URL
@@ -209,7 +210,7 @@ const Header: React.FC<HeaderProps> = ({ theme, setTheme }) => {
                     navigate("/app/settings");
                   }}
                   className="flex items-center gap-2 w-full px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50 rounded-lg transition-colors">
-                  <SettingsIcon className="w-4 h-4" /> Settings
+                  <Settings className="w-4 h-4" /> Settings
                 </button>
                 <div className="h-px bg-slate-100 dark:bg-slate-700 my-1" />
                 <button

@@ -8,7 +8,9 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { supabase } from "../lib/supabase";
-import { styled } from "nativewind";
+
+import { ScreenWrapper } from "../components/ui/ScreenWrapper";
+import { GlassView } from "../components/ui/GlassView";
 
 const LoginScreen = () => {
   const [email, setEmail] = useState("");
@@ -26,49 +28,71 @@ const LoginScreen = () => {
   };
 
   return (
-    <View className="flex-1 justify-center px-8 bg-slate-900">
-      <View className="mb-10">
-        <Text className="text-3xl font-bold text-white mb-2">Welcome Back</Text>
-        <Text className="text-slate-400">Sign in to FinanceTask</Text>
-      </View>
-
-      <View className="space-y-4">
-        <View>
-          <Text className="text-slate-300 mb-2 font-medium">Email</Text>
-          <TextInput
-            className="w-full bg-slate-800 text-white p-4 rounded-xl border border-slate-700"
-            placeholder="entry.stack@gmail.com"
-            placeholderTextColor="#64748b"
-            value={email}
-            onChangeText={setEmail}
-            autoCapitalize="none"
-          />
+    <ScreenWrapper className="justify-center px-6">
+      <GlassView
+        intensity={50}
+        className="p-8 rounded-3xl border border-black/5 dark:border-white/20 bg-white/40 dark:bg-black/20">
+        <View className="mb-8">
+          <Text className="text-4xl font-bold text-slate-900 dark:text-white mb-2 text-center">
+            Welcome Back
+          </Text>
+          <Text className="text-slate-600 dark:text-slate-300 text-center text-lg">
+            Sign in to FinanceTask
+          </Text>
         </View>
 
-        <View>
-          <Text className="text-slate-300 mb-2 font-medium">Password</Text>
-          <TextInput
-            className="w-full bg-slate-800 text-white p-4 rounded-xl border border-slate-700"
-            placeholder="••••••••"
-            placeholderTextColor="#64748b"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-          />
-        </View>
+        <View className="space-y-6">
+          <View>
+            <Text className="text-slate-700 dark:text-white/80 mb-2 font-medium ml-1">
+              Email
+            </Text>
+            <GlassView
+              intensity={30}
+              className="rounded-xl overflow-hidden border border-black/5 dark:border-white/30 bg-white/50 dark:bg-white/5">
+              <TextInput
+                className="w-full text-slate-900 dark:text-white p-4 text-lg"
+                placeholder="entry.stack@gmail.com"
+                placeholderTextColor="rgba(148,163,184,0.6)"
+                value={email}
+                onChangeText={setEmail}
+                autoCapitalize="none"
+              />
+            </GlassView>
+          </View>
 
-        <TouchableOpacity
-          onPress={handleSignIn}
-          disabled={loading}
-          className="w-full bg-indigo-600 p-4 rounded-xl items-center mt-6">
-          {loading ? (
-            <ActivityIndicator color="white" />
-          ) : (
-            <Text className="text-white font-bold text-lg">Sign In</Text>
-          )}
-        </TouchableOpacity>
-      </View>
-    </View>
+          <View>
+            <Text className="text-slate-700 dark:text-white/80 mb-2 font-medium ml-1">
+              Password
+            </Text>
+            <GlassView
+              intensity={30}
+              className="rounded-xl overflow-hidden border border-black/5 dark:border-white/30 bg-white/50 dark:bg-white/5">
+              <TextInput
+                className="w-full text-slate-900 dark:text-white p-4 text-lg"
+                placeholder="••••••••"
+                placeholderTextColor="rgba(148,163,184,0.6)"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+              />
+            </GlassView>
+          </View>
+
+          <TouchableOpacity
+            onPress={handleSignIn}
+            disabled={loading}
+            className="w-full bg-indigo-500 p-4 rounded-xl items-center mt-6 shadow-lg shadow-indigo-500/30 border border-indigo-400/50">
+            {loading ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <Text className="text-white font-bold text-xl tracking-wide">
+                Sign In
+              </Text>
+            )}
+          </TouchableOpacity>
+        </View>
+      </GlassView>
+    </ScreenWrapper>
   );
 };
 

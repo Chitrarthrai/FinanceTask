@@ -17,6 +17,7 @@
 [![React](https://img.shields.io/badge/React-19.0-blue?style=flat-square&logo=react)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.0-38B2AC?style=flat-square&logo=tailwind-css)](https://tailwindcss.com)
+[![Expo](https://img.shields.io/badge/Expo-50.0-black?style=flat-square&logo=expo)](https://expo.dev)
 [![Status](https://img.shields.io/badge/Status-Active_Development-success?style=flat-square)]()
 
   <br />
@@ -36,36 +37,57 @@ By integrating **Advanced Financial Analytics** with **Kanban-style Task Managem
 
 ---
 
-## 🎨 Key Features
+## 🎨 Feature Deep Dive
 
-<table width="100%">
-  <tr>
-    <td width="50%" valign="top">
-      <h3>💵 Next-Gen Money Management</h3>
-      <ul>
-        <li><strong>Smart Dashboard</strong>: Real-time KPIs for Salary, Fix/Var Expenses.</li>
-        <li><strong>Daily Pocket Money</strong>: Dynamic algorithms calculate your safe-to-spend daily limit.</li>
-        <li><strong>Visual Analytics</strong>: Interactive Recharts for deep spending insights.</li>
-        <li><strong>Receipt AI</strong>: Auto-scan receipts using Gemini Vision (Coming Soon).</li>
-      </ul>
-    </td>
-    <td width="50%" valign="top">
-      <h3>✅ Integrated Productivity</h3>
-      <ul>
-        <li><strong>Kanban Boards</strong>: Visualize workflows (To Do → In Progress → Done).</li>
-        <li><strong>Calendar Sync</strong>: Schedule payment reminders and tasks.</li>
-        <li><strong>Priority Matrix</strong>: Urgent/High/Medium/Low markers.</li>
-        <li><strong>Cross-Platform</strong>: Seamless sync between Web and Mobile.</li>
-      </ul>
-    </td>
-  </tr>
-</table>
+### 🤖 AI Financial Assistant (Powered by Gemini)
 
-### 💎 Premium UX/UI
+Your personal financial advisor, available 24/7.
 
-- **Glassmorphism**: A modern, translucent aesthetic with vibrant gradients.
-- **Dark Mode Native**: First-class support for dark themes.
-- **Gemini AI Assistant**: Chat with your finance data ("How much did I spend on Coffee?").
+- **Natural Language Chat**: Ask questions directly to your data.
+  - _"How much did I spend on coffee last month?"_
+  - _"What is my remaining budget for the week?"_
+  - _"Can I afford a new laptop right now?"_
+- **Smart Insights**: The AI pro-actively suggests budget adjustments based on your spending habits.
+- **Context Aware**: Understands your past transactions and future recurring payments.
+
+### 📊 Advanced Analytics & Visualization
+
+Turn raw data into actionable wisdom.
+
+- **Interactive Spending Graphs**: Zoomable line charts to track spending velocity over Days, Weeks, Months, and Years.
+- **Category Breakdown**: Dynamic pie charts that visualize exactly where your money is going (e.g., 40% Housing, 20% Food).
+- **Trend Analysis**: Bar charts that compare your current spending against previous months to spot lifestyle inflation.
+- **Custom Filters**: Slice and dice your data by date range, category, or payment method.
+
+### 📄 Professional Reporting & Exports
+
+Data freedom at your fingertips.
+
+- **One-Click PDF Generation**: Create polished, high-resolution PDF statements from your mobile device.
+- **Detailed Statements**: Includes transaction history, category summaries, and saving rates.
+- **Seamless Sharing**: Instantly share reports via WhatsApp, Email, or Slack directly from the app.
+- **Excel/CSV Support**: (Web) Export raw data for use in external tools like Excel or Google Sheets.
+
+### 🧾 AI Receipt Scanning (Vision)
+
+Stop manual data entry forever.
+
+- **Instant Capture**: Snap a photo of any physical receipt.
+- **Intelligent Extraction**: Google Gemini Vision API automatically identifies the **Merchant**, **Date**, **Total Amount**, and matches it to a **Category**.
+- **Hybrid Workflow**: Review and edit scanned details before saving them to your ledger.
+
+### 📱 Productive Mobile Experience
+
+- **Glassmorphism UI**: A stunning, modern interface with real-time blur effects and vibrant gradients.
+- **Secure Access**: native integration with FaceID and Fingerprint sensors.
+- **Offline Mode**: View your dashboard and recent transactions even without an internet connection.
+- **Smart Dashboard**: See your "Safe to Spend" daily limit instantly upon launch.
+
+### 📅 Integrated Productivity System
+
+- **Kanban Task Management**: Visualize financial tasks (e.g., "Call Bank", "Pay Utility Bill") on a drag-and-drop board.
+- **Priority Matrix**: Automatically sort tasks by urgency and importance.
+- **Calendar Sync**: View upcoming bill due dates and paydays on a unified calendar view.
 
 ---
 
@@ -73,16 +95,47 @@ By integrating **Advanced Financial Analytics** with **Kanban-style Task Managem
 
 We utilize the latest edge technologies to ensure performance, type safety, and developer experience.
 
-| Layer          | Technologies                                |
-| :------------- | :------------------------------------------ |
-| **Frontend**   | React 19, TypeScript, Vite, Tailwind CSS v4 |
-| **Components** | Radix UI (Headless), Lucide Icons, Recharts |
-| **Backend**    | Supabase (PostgreSQL, Auth, Realtime)       |
-| **AI Engine**  | Google Gemini 2.5 Flash                     |
+| Layer          | Technologies                                     |
+| :------------- | :----------------------------------------------- |
+| **Frontend**   | React 19, TypeScript, Vite, Tailwind CSS v4      |
+| **Mobile**     | React Native, Expo, NativeWind, Expo Router      |
+| **Components** | Radix UI (Web), GlassView (Mobile), Lucide Icons |
+| **Backend**    | Supabase (PostgreSQL, Auth, Realtime)            |
+| **AI Engine**  | Google Gemini 2.5 Flash                          |
 
 ---
 
-## 📸 Screenshots
+## � Security & Privacy
+
+We take your financial data security seriously.
+
+- **Row Level Security (RLS)**: PostgreSQL policies ensure that database queries can _only_ return data that belongs to your authenticated User ID. Even if an API endpoint is exposed, your data remains isolated.
+- **Encrypted Storage**: Sensitive keys and tokens are stored using platform-native secure storage (Keychain on iOS, Keystore on Android).
+- **Zero-Knowledge Receipt Processing**: Receipt images sent to Gemini AI are processed in-memory and governed by Google Cloud's enterprise data privacy standards.
+- **JWT Authentication**: Stateless, secure token-based authentication with automatic refresh mechanisms.
+
+## ⚡ Performance Architecture
+
+Built for speed and reliability.
+
+- **Optimistic UI Updates**: The interface updates instantly when you add a task or transaction, syncing with the background quietly.
+- **Smart Caching**: `React Query` manages server state, eliminating redundant network requests and enabling offline-first capabilities.
+- **Edge Computing**: Heavy computations (like budget forecasting) run on Supabase Edge Functions to keep the mobile app lightweight.
+- **Native Compilation**: The mobile app is compiled to native ARM64 code, ensuring 60fps scrolling and instant startup times.
+
+## 🗺️ Roadmap
+
+Exciting features currently in development:
+
+- [ ] **Recurring Transactions**: Set it and forget it for monthly subscriptions and rent.
+- [ ] **Goal Tracking**: Specialized "Buckets" for saving towards a Vacation, Car, or House.
+- [ ] **Gamification**: Earn badges and "Financial Health Points" for staying under budget.
+- [ ] **Multi-Currency Support**: Perfect for digital nomads and travelers.
+- [ ] **Stock Market Integration**: View your investment portfolio alongside your daily spending.
+
+---
+
+## �📸 Screenshots
 
 <details>
 <summary>Click to view Project Screenshots</summary>
@@ -138,7 +191,30 @@ We utilize the latest edge technologies to ensure performance, type safety, and 
     ```bash
     npm run dev
     ```
+    ```
     Visit `http://localhost:5173` to see the magic.
+    ```
+
+### 📱 Mobile Setup
+
+1.  **Navigate to Mobile folder**
+
+    ```bash
+    cd ../mobile
+    ```
+
+2.  **Install dependencies**
+
+    ```bash
+    npm install
+    ```
+
+3.  **Start the App**
+    ```bash
+    npx expo run:android
+    # or
+    npx expo run:ios
+    ```
 
 ---
 

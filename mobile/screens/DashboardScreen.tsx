@@ -14,6 +14,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { ScreenWrapper } from "../components/ui/ScreenWrapper";
 import { GlassView } from "../components/ui/GlassView";
+import { useColorScheme } from "nativewind";
 import {
   Settings,
   LayoutDashboard,
@@ -96,6 +97,7 @@ const DashboardScreen = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [timeRange, setTimeRange] = useState("Week");
+  const { colorScheme } = useColorScheme();
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -305,12 +307,28 @@ const DashboardScreen = () => {
               onPress={() => navigation.navigate("Settings")}
               style={{
                 padding: 12,
-                backgroundColor: "rgba(255,255,255,0.4)",
+                backgroundColor:
+                  colorScheme === "dark" ? "rgba(255,255,255,0.1)" : "#ffffff",
                 borderRadius: 9999,
                 borderWidth: 1,
-                borderColor: "rgba(0,0,0,0.05)",
+                borderColor:
+                  colorScheme === "dark"
+                    ? "rgba(255,255,255,0.2)"
+                    : "rgba(0,0,0,0.05)",
+                ...(colorScheme !== "dark"
+                  ? {
+                      shadowColor: "#000",
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: 0.05,
+                      shadowRadius: 4,
+                      elevation: 2,
+                    }
+                  : {}),
               }}>
-              <Settings size={22} color="#64748b" />
+              <Settings
+                size={22}
+                color={colorScheme === "dark" ? "#94a3b8" : "#64748b"}
+              />
             </TouchableOpacity>
           </View>
         </View>
@@ -319,7 +337,8 @@ const DashboardScreen = () => {
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          className="mb-6 -mx-6 px-6">
+          className="mb-6 -mx-6"
+          contentContainerStyle={{ paddingHorizontal: 24 }}>
           {kpiData.map((kpi, index) => (
             <KPICard key={index} data={kpi} />
           ))}

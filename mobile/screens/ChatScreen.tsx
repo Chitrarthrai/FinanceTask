@@ -9,6 +9,7 @@ import {
   Platform,
   Animated,
   Easing,
+  Keyboard,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ScreenWrapper } from "../components/ui/ScreenWrapper";
@@ -88,6 +89,27 @@ const ChatScreen = () => {
   const [inputText, setInputText] = useState("");
   const [loading, setLoading] = useState(false);
   const flatListRef = useRef<FlatList>(null);
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener(
+      "keyboardDidShow",
+      () => {
+        setIsKeyboardVisible(true);
+      },
+    );
+    const keyboardDidHideListener = Keyboard.addListener(
+      "keyboardDidHide",
+      () => {
+        setIsKeyboardVisible(false);
+      },
+    );
+
+    return () => {
+      keyboardDidHideListener.remove();
+      keyboardDidShowListener.remove();
+    };
+  }, []);
 
   useEffect(() => {
     setMessages([
@@ -273,60 +295,62 @@ const ChatScreen = () => {
 
   return (
     <ScreenWrapper>
-      <GlassView
-        intensity={30}
-        className="px-4 py-3 flex-row items-center z-10">
-        <View
-          style={{
-            width: 32,
-            height: 32,
-            borderRadius: 16,
-            backgroundColor: "rgba(99,102,241,0.2)",
-            alignItems: "center",
-            justifyContent: "center",
-            marginRight: 12,
-            borderWidth: 1,
-            borderColor: "rgba(99,102,241,0.3)",
-          }}>
-          <Bot size={18} color="#6366f1" />
-        </View>
-        <Text className="text-lg font-bold text-slate-800 dark:text-white flex-1 tracking-wide">
-          Financial Assistant
-        </Text>
-      </GlassView>
-
-      <FlatList
-        ref={flatListRef}
-        data={messages}
-        keyExtractor={(item) => item.id}
-        renderItem={renderItem}
-        contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
-        onContentSizeChange={() =>
-          flatListRef.current?.scrollToEnd({ animated: true })
-        }
-        ListFooterComponent={
-          loading ? (
-            <View className="flex-row items-center mb-4 ml-10">
-              <GlassView
-                intensity={10}
-                className="px-4 py-3 rounded-2xl rounded-tl-none border-white/10">
-                <TypingIndicator />
-              </GlassView>
-            </View>
-          ) : null
-        }
-      />
-
       <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
-        className="mb-[90px]">
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}>
+        <GlassView
+          intensity={30}
+          className="px-4 py-3 flex-row items-center z-10">
+          <View
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: 16,
+              backgroundColor: "rgba(99,102,241,0.2)",
+              alignItems: "center",
+              justifyContent: "center",
+              marginRight: 12,
+              borderWidth: 1,
+              borderColor: "rgba(99,102,241,0.3)",
+            }}>
+            <Bot size={18} color="#6366f1" />
+          </View>
+          <Text className="text-lg font-bold text-slate-800 dark:text-white flex-1 tracking-wide">
+            Financial Assistant
+          </Text>
+        </GlassView>
+
+        <FlatList
+          ref={flatListRef}
+          data={messages}
+          keyExtractor={(item) => item.id}
+          renderItem={renderItem}
+          contentContainerStyle={{ padding: 16, paddingBottom: 8 }}
+          style={{ flex: 1 }}
+          onContentSizeChange={() =>
+            flatListRef.current?.scrollToEnd({ animated: true })
+          }
+          onLayout={() => flatListRef.current?.scrollToEnd({ animated: false })}
+          ListFooterComponent={
+            loading ? (
+              <View className="flex-row items-center mb-4 ml-10">
+                <GlassView
+                  intensity={10}
+                  className="px-4 py-3 rounded-2xl rounded-tl-none">
+                  <TypingIndicator />
+                </GlassView>
+              </View>
+            ) : null
+          }
+        />
+
         <View
           style={{
             padding: 12,
+            paddingBottom:
+              Platform.OS === "android" ? (isKeyboardVisible ? 12 : 90) : 4,
             backgroundColor: "rgba(0,0,0,0.2)",
-            borderBottomLeftRadius: 24,
-            borderBottomRightRadius: 24,
           }}>
           <GlassView
             intensity={20}
@@ -337,6 +361,8 @@ const ChatScreen = () => {
               placeholderTextColor="#94a3b8"
               value={inputText}
               onChangeText={setInputText}
+              onSubmitEditing={handleSend}
+              returnKeyType="send"
             />
             <TouchableOpacity
               onPress={handleSend}

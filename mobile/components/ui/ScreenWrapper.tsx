@@ -61,7 +61,9 @@ export const ScreenWrapper: React.FC<ScreenWrapperProps> = ({
         }}
       />
 
-      <SafeAreaView className={`flex-1 ${className}`}>{children}</SafeAreaView>
+      <SafeAreaView className={`flex-1 pt-4 ${className}`}>
+        {children}
+      </SafeAreaView>
     </View>
   );
 };

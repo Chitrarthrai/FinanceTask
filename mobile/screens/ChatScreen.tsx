@@ -212,13 +212,43 @@ const ChatScreen = () => {
       <View
         className={`flex-row mb-4 ${isUser ? "justify-end" : "justify-start"}`}>
         {!isUser && (
-          <View className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 items-center justify-center mr-2 shadow-lg shadow-indigo-500/30 border border-white/20">
+          <View
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: 16,
+              backgroundColor: "#6366f1",
+              alignItems: "center",
+              justifyContent: "center",
+              marginRight: 8,
+              shadowColor: "#6366f1",
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.3,
+              shadowRadius: 8,
+              elevation: 8,
+              borderWidth: 1,
+              borderColor: "rgba(255,255,255,0.2)",
+            }}>
             <Bot size={16} color="white" />
           </View>
         )}
 
         {isUser ? (
-          <View className="max-w-[85%] p-3.5 rounded-2xl rounded-tr-none bg-indigo-500 shadow-lg shadow-indigo-500/30 border border-white/20">
+          <View
+            style={{
+              maxWidth: "85%",
+              padding: 14,
+              borderRadius: 16,
+              borderTopRightRadius: 0,
+              backgroundColor: "#6366f1",
+              shadowColor: "#6366f1",
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.3,
+              shadowRadius: 8,
+              elevation: 8,
+              borderWidth: 1,
+              borderColor: "rgba(255,255,255,0.2)",
+            }}>
             <Text className="text-[15px] leading-5 text-white font-medium">
               {item.text}
             </Text>
@@ -226,11 +256,12 @@ const ChatScreen = () => {
         ) : (
           <GlassView
             intensity={20}
-            className={`max-w-[85%] p-3.5 rounded-2xl rounded-tl-none border border-black/5 dark:border-white/10 ${
+            className="max-w-[85%] p-3.5 rounded-2xl rounded-tl-none"
+            style={
               isTool
-                ? "bg-white/40 dark:bg-white/5 border-l-4 border-l-indigo-500 dark:border-l-indigo-400"
-                : "bg-white/40 dark:bg-white/10"
-            }`}>
+                ? { borderLeftWidth: 4, borderLeftColor: "#6366f1" }
+                : undefined
+            }>
             <Text className="text-[15px] leading-5 text-slate-800 dark:text-slate-100">
               {item.text}
             </Text>
@@ -244,8 +275,19 @@ const ChatScreen = () => {
     <ScreenWrapper>
       <GlassView
         intensity={30}
-        className="px-4 py-3 border-b border-black/5 dark:border-white/10 flex-row items-center z-10 bg-white/40 dark:bg-white/5">
-        <View className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-500/20 items-center justify-center mr-3 border border-indigo-200 dark:border-indigo-500/30">
+        className="px-4 py-3 flex-row items-center z-10">
+        <View
+          style={{
+            width: 32,
+            height: 32,
+            borderRadius: 16,
+            backgroundColor: "rgba(99,102,241,0.2)",
+            alignItems: "center",
+            justifyContent: "center",
+            marginRight: 12,
+            borderWidth: 1,
+            borderColor: "rgba(99,102,241,0.3)",
+          }}>
           <Bot size={18} color="#6366f1" />
         </View>
         <Text className="text-lg font-bold text-slate-800 dark:text-white flex-1 tracking-wide">
@@ -279,10 +321,16 @@ const ChatScreen = () => {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
         className="mb-[90px]">
-        <View className="p-3 border-t border-black/5 dark:border-white/10 bg-white/10 dark:bg-black/20 rounded-b-3xl">
+        <View
+          style={{
+            padding: 12,
+            backgroundColor: "rgba(0,0,0,0.2)",
+            borderBottomLeftRadius: 24,
+            borderBottomRightRadius: 24,
+          }}>
           <GlassView
             intensity={20}
-            className="flex-row items-center rounded-full px-1 border border-black/5 dark:border-white/20 bg-white/40 dark:bg-white/5">
+            className="flex-row items-center rounded-full px-1">
             <TextInput
               className="flex-1 text-slate-800 dark:text-white px-4 py-3.5 text-base"
               placeholder="Type a message..."
@@ -293,11 +341,23 @@ const ChatScreen = () => {
             <TouchableOpacity
               onPress={handleSend}
               disabled={loading || !inputText.trim()}
-              className={`m-1 p-2.5 rounded-full ${
-                !inputText.trim()
-                  ? "bg-slate-200 dark:bg-white/10"
-                  : "bg-indigo-500 shadow-lg shadow-indigo-500/40"
-              }`}>
+              style={{
+                margin: 4,
+                padding: 10,
+                borderRadius: 9999,
+                backgroundColor: !inputText.trim()
+                  ? "rgba(255,255,255,0.1)"
+                  : "#6366f1",
+                ...(inputText.trim()
+                  ? {
+                      shadowColor: "#6366f1",
+                      shadowOffset: { width: 0, height: 4 },
+                      shadowOpacity: 0.4,
+                      shadowRadius: 8,
+                      elevation: 8,
+                    }
+                  : {}),
+              }}>
               <Send size={18} color="white" />
             </TouchableOpacity>
           </GlassView>

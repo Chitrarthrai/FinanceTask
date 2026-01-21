@@ -61,13 +61,13 @@ const AppNavigator = () => {
 export default function App() {
   return (
     <SafeAreaProvider>
-      <NavigationContainer>
-        <AuthProvider>
-          <DataProvider>
+      <AuthProvider>
+        <DataProvider>
+          <NavigationContainer>
             <AppNavigator />
-          </DataProvider>
-        </AuthProvider>
-      </NavigationContainer>
+          </NavigationContainer>
+        </DataProvider>
+      </AuthProvider>
     </SafeAreaProvider>
   );
 }

@@ -66,16 +66,17 @@ const KPICard = ({ data }: { data: any }) => {
   return (
     <GlassView
       intensity={30}
-      className={`p-4 rounded-3xl mb-4 mr-4 w-[160px] overflow-hidden border-white/20`}>
+      className="p-4 rounded-3xl mb-4 mr-4 w-[160px] overflow-hidden">
       {/* Background tint based on color, but subtle */}
       <View
-        className={`absolute inset-0 opacity-20 dark:opacity-20 ${getColor(
-          data.color,
-        )}`}
+        className={`absolute inset-0 ${getColor(data.color)}`}
+        style={{ opacity: 0.2 }}
       />
 
       <Icon size={28} color="white" className="mb-3" />
-      <Text className="text-white/80 text-xs font-medium mb-1 uppercase tracking-wider">
+      <Text
+        style={{ color: "rgba(255,255,255,0.8)" }}
+        className="text-xs font-medium mb-1 uppercase tracking-wider">
         {data.label}
       </Text>
       <Text className="text-white text-2xl font-bold">
@@ -286,12 +287,29 @@ const DashboardScreen = () => {
           <View className="flex-row gap-3">
             <TouchableOpacity
               onPress={() => setIsModalOpen(true)}
-              className="p-3 bg-indigo-500 rounded-full shadow-lg shadow-indigo-500/40 border border-white/20">
+              style={{
+                padding: 12,
+                backgroundColor: "#6366f1",
+                borderRadius: 9999,
+                shadowColor: "#6366f1",
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.4,
+                shadowRadius: 8,
+                elevation: 8,
+                borderWidth: 1,
+                borderColor: "rgba(255,255,255,0.2)",
+              }}>
               <Plus size={24} color="white" />
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => navigation.navigate("Settings")}
-              className="p-3 bg-white/40 dark:bg-white/10 rounded-full border border-black/5 dark:border-white/20 backdrop-blur-md">
+              style={{
+                padding: 12,
+                backgroundColor: "rgba(255,255,255,0.4)",
+                borderRadius: 9999,
+                borderWidth: 1,
+                borderColor: "rgba(0,0,0,0.05)",
+              }}>
               <Settings size={22} color="#64748b" />
             </TouchableOpacity>
           </View>
@@ -310,17 +328,17 @@ const DashboardScreen = () => {
         {/* Daily Limit Progress */}
         <GlassView
           intensity={40}
-          className="p-6 rounded-3xl mb-8 relative overflow-hidden bg-white/40 dark:bg-black/20">
+          className="p-6 rounded-3xl mb-8 relative overflow-hidden">
           <View className="flex-row justify-between items-center mb-4 relative z-10">
             <Text className="text-slate-800 dark:text-white text-lg font-bold">
               Daily Limit
             </Text>
             <View
-              className={`px-3 py-1 rounded-full ${
-                percentUsed >= 100
-                  ? "bg-rose-500"
-                  : "bg-indigo-100 dark:bg-white/20"
-              }`}>
+              className="px-3 py-1 rounded-full"
+              style={{
+                backgroundColor:
+                  percentUsed >= 100 ? "#f43f5e" : "rgba(255,255,255,0.2)",
+              }}>
               <Text
                 className={`text-xs font-bold ${
                   percentUsed >= 100
@@ -335,29 +353,41 @@ const DashboardScreen = () => {
             <Text className="text-5xl font-extrabold text-slate-900 dark:text-white tracking-tighter">
               ${metrics.spentToday.toFixed(0)}
             </Text>
-            <Text className="text-slate-500 dark:text-white/50 text-xl font-medium">
+            <Text
+              style={{ color: "rgba(255,255,255,0.5)" }}
+              className="text-xl font-medium">
               / ${metrics.dailyLimit.toFixed(0)}
             </Text>
           </View>
-          <View className="h-3 bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden relative z-10">
+          <View
+            style={{ backgroundColor: "rgba(255,255,255,0.1)" }}
+            className="h-3 rounded-full overflow-hidden relative z-10">
             <View
-              style={{ width: `${Math.min(100, percentUsed)}%` }}
-              className={`h-full rounded-full ${
+              style={[
+                { width: `${Math.min(100, percentUsed)}%` },
                 percentUsed >= 100
-                  ? "bg-rose-500"
-                  : "bg-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.6)]"
-              }`}
+                  ? { backgroundColor: "#f43f5e" }
+                  : {
+                      backgroundColor: "#6366f1",
+                      shadowColor: "#6366f1",
+                      shadowOffset: { width: 0, height: 0 },
+                      shadowOpacity: 0.6,
+                      shadowRadius: 15,
+                    },
+              ]}
+              className="h-full rounded-full"
             />
           </View>
 
           {/* Decor */}
-          <View className="absolute top-[-30] right-[-30] w-40 h-40 bg-indigo-500/10 dark:bg-indigo-500/30 rounded-full blur-3xl opacity-50" />
+          <View
+            style={{ backgroundColor: "rgba(99,102,241,0.3)", opacity: 0.5 }}
+            className="absolute top-[-30] right-[-30] w-40 h-40 rounded-full"
+          />
         </GlassView>
 
         {/* Spending Chart */}
-        <GlassView
-          intensity={40}
-          className="mb-8 p-5 rounded-3xl bg-white/40 dark:bg-black/10">
+        <GlassView intensity={40} className="mb-8 p-5 rounded-3xl">
           <View className="flex-row justify-between items-center mb-6 ml-2 mr-2">
             <View>
               <Text className="text-xl font-bold text-slate-800 dark:text-white">
@@ -367,7 +397,9 @@ const DashboardScreen = () => {
                 Your spending trend over time
               </Text>
             </View>
-            <View className="flex-row bg-slate-200 dark:bg-white/10 rounded-lg p-1">
+            <View
+              style={{ backgroundColor: "rgba(255,255,255,0.1)" }}
+              className="flex-row rounded-lg p-1">
               {["Week", "Month", "Year"].map((range) => (
                 <TouchableOpacity
                   key={range}
@@ -375,11 +407,21 @@ const DashboardScreen = () => {
                     console.log("Filter Pressed:", range);
                     setTimeRange(range);
                   }}
-                  className={`px-3 py-1.5 rounded-md ${
-                    timeRange === range
-                      ? "bg-white dark:bg-white/20 shadow-sm"
-                      : "transparent"
-                  }`}>
+                  style={{
+                    paddingHorizontal: 12,
+                    paddingVertical: 6,
+                    borderRadius: 6,
+                    ...(timeRange === range
+                      ? {
+                          backgroundColor: "rgba(255,255,255,0.2)",
+                          shadowColor: "#000",
+                          shadowOffset: { width: 0, height: 1 },
+                          shadowOpacity: 0.05,
+                          shadowRadius: 2,
+                          elevation: 1,
+                        }
+                      : {}),
+                  }}>
                   <Text
                     className={`text-xs font-semibold ${
                       timeRange === range
@@ -413,9 +455,7 @@ const DashboardScreen = () => {
         </GlassView>
 
         {/* Category Pie Chart */}
-        <GlassView
-          intensity={40}
-          className="mb-8 p-5 rounded-3xl bg-white/40 dark:bg-black/10">
+        <GlassView intensity={40} className="mb-8 p-5 rounded-3xl">
           <Text className="text-xl font-bold text-slate-800 dark:text-white mb-6 ml-2">
             Categories
           </Text>
@@ -476,13 +516,15 @@ const DashboardScreen = () => {
               <GlassView
                 key={task.id}
                 intensity={20}
-                className="p-4 rounded-2xl flex-row items-center gap-3 mb-3 border-white/10">
+                className="p-4 rounded-2xl flex-row items-center gap-3 mb-3">
                 <View
-                  className={`p-2 rounded-xl ${
-                    task.priority === "high"
-                      ? "bg-rose-500/20"
-                      : "bg-indigo-500/20"
-                  }`}>
+                  className="p-2 rounded-xl"
+                  style={{
+                    backgroundColor:
+                      task.priority === "high"
+                        ? "rgba(244,63,94,0.2)"
+                        : "rgba(99,102,241,0.2)",
+                  }}>
                   <CheckSquare
                     size={20}
                     color={task.priority === "high" ? "#fb7185" : "#818cf8"}
@@ -525,8 +567,19 @@ const DashboardScreen = () => {
           )}
 
           <TouchableOpacity
-            onPress={() => setIsModalOpen(true)} // Or navigate to Tasks and open modal there? For now let's reuse Quick Add or just Add Task
-            className="mt-4 border-2 border-dashed border-slate-300 dark:border-white/20 rounded-xl p-3 flex-row justify-center items-center gap-2 active:bg-slate-100 dark:active:bg-white/5">
+            onPress={() => setIsModalOpen(true)}
+            style={{
+              marginTop: 16,
+              borderWidth: 2,
+              borderStyle: "dashed",
+              borderColor: "rgba(255,255,255,0.2)",
+              borderRadius: 12,
+              padding: 12,
+              flexDirection: "row",
+              justifyContent: "center",
+              alignItems: "center",
+              gap: 8,
+            }}>
             <Plus size={18} color="#94a3b8" />
             <Text className="text-slate-500 dark:text-slate-400 font-medium">
               Add New Task
@@ -551,14 +604,16 @@ const DashboardScreen = () => {
             <GlassView
               key={t.id}
               intensity={25}
-              className="flex-row items-center justify-between p-4 rounded-2xl mb-2 border-white/10">
+              className="flex-row items-center justify-between p-4 rounded-2xl mb-2">
               <View className="flex-row items-center gap-4">
                 <View
-                  className={`w-12 h-12 rounded-2xl flex items-center justify-center ${
-                    t.type === "expense"
-                      ? "bg-rose-500/20"
-                      : "bg-emerald-500/20"
-                  }`}>
+                  className="w-12 h-12 rounded-2xl flex items-center justify-center"
+                  style={{
+                    backgroundColor:
+                      t.type === "expense"
+                        ? "rgba(244,63,94,0.2)"
+                        : "rgba(16,185,129,0.2)",
+                  }}>
                   {t.type === "expense" ? (
                     <ArrowUpRight
                       size={20}

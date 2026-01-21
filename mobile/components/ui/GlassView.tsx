@@ -1,5 +1,5 @@
 import React from "react";
-import { View, ViewProps, Platform } from "react-native";
+import { View, ViewProps, Platform, StyleSheet } from "react-native";
 import { BlurView } from "expo-blur";
 import { cssInterop, useColorScheme } from "nativewind";
 
@@ -41,30 +41,32 @@ export const GlassView: React.FC<GlassViewProps> = ({
   // We want "light" tint in light mode and "dark" tint in dark mode for standard glass
   const adaptiveTint = tint === "dark" && !isDark ? "light" : tint;
 
-  // Adapt border and background fallback for themes:
-  // Dark: border-white/20
-  // Light: border-black/10 (or slate-200)
-  const containerClasses = `overflow-hidden rounded-2xl border ${
-    isDark ? "border-white/20" : "border-black/5"
-  } ${className}`;
+  // Use safe classes only - no opacity in class names
+  const containerClasses = `overflow-hidden rounded-2xl ${className}`;
+
+  // Inline styles for opacity-based colors to avoid NativeWind CSS race condition
+  const themeStyles = isDark
+    ? {
+        backgroundColor: "rgba(0, 0, 0, 0.4)",
+        borderWidth: 1,
+        borderColor: "rgba(255, 255, 255, 0.2)",
+      }
+    : {
+        backgroundColor: "rgba(255, 255, 255, 0.4)",
+        borderWidth: 1,
+        borderColor: "rgba(0, 0, 0, 0.05)",
+      };
 
   if (Platform.OS === "android") {
-    // Android BlurView support can be tricky or less performant,
-    // sometimes a simple translucent background is safer or cleaner if blur is buggy.
-    // However, expo-blur works on Android.
-    // We add a fallback background color for better readability on top of the blur
     return (
       <View
-        className={`${containerClasses} ${isDark ? "bg-black/40" : "bg-white/40"}`}
-        style={style}
+        className={containerClasses}
+        style={[themeStyles, style]}
         {...props}>
-        {/* Note: Android might need an absolute BlurView inside to work perfectly, 
-                 or we just stick to high-quality translucent visuals. 
-                 Let's try nesting BlurView for maximum effect. */}
         <BlurView
           intensity={intensity}
           tint={adaptiveTint}
-          style={{ position: "absolute", top: 0, left: 0, bottom: 0, right: 0 }}
+          style={StyleSheet.absoluteFill}
         />
         {children}
       </View>
@@ -76,9 +78,8 @@ export const GlassView: React.FC<GlassViewProps> = ({
       intensity={intensity}
       tint={adaptiveTint}
       className={containerClasses}
-      style={style}
+      style={[themeStyles, style]}
       {...props}>
-      {/* iOS BlurView acts as a container naturally */}
       {children}
     </BlurView>
   );

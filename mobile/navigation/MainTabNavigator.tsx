@@ -1,4 +1,5 @@
 import React from "react";
+import { Platform } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import {
   LayoutDashboard,
@@ -9,8 +10,9 @@ import {
   FileText,
 } from "lucide-react-native";
 import { useColorScheme } from "nativewind";
-import { GlassView } from "../components/ui/GlassView";
+import CustomTabBar from "./CustomTabBar";
 import DashboardScreen from "../screens/DashboardScreen";
+import { useData } from "../context/DataContext";
 
 // Screens
 import TransactionsScreen from "../screens/TransactionsScreen";
@@ -22,42 +24,15 @@ import AnalyticsScreen from "../screens/AnalyticsScreen"; // The "Deep Dive" cha
 
 const Tab = createBottomTabNavigator();
 
-const MainTabNavigator = () => {
-  const { colorScheme } = useColorScheme();
-  const isDark = colorScheme === "dark";
+const renderTabBar = (props: any) => <CustomTabBar {...props} />;
 
+const MainTabNavigator = () => {
   return (
     <Tab.Navigator
       id="MainTab"
+      tabBar={renderTabBar}
       screenOptions={{
         headerShown: false,
-        tabBarStyle: {
-          position: "absolute",
-          bottom: 20,
-          left: 20,
-          right: 20,
-          elevation: 0,
-          backgroundColor: "transparent",
-          borderTopWidth: 0,
-          height: 70,
-          borderRadius: 35,
-          paddingBottom: 0,
-        },
-        tabBarBackground: () => (
-          <GlassView
-            intensity={80}
-            className="absolute inset-0 rounded-[35px] overflow-hidden border border-black/5 dark:border-white/20 bg-white/80 dark:bg-black/30"
-            style={{ borderRadius: 35 }}
-          />
-        ),
-        tabBarActiveTintColor: isDark ? "#fbbf24" : "#4f46e5", // Amber for dark, Indigo for light
-        tabBarInactiveTintColor: isDark
-          ? "rgba(255,255,255,0.6)"
-          : "rgba(71,85,105,0.6)",
-        tabBarShowLabel: false, // Cleaner glass look often hides labels or keeps them minimal
-        tabBarItemStyle: {
-          paddingVertical: 10,
-        },
       }}>
       <Tab.Screen
         name="DashboardTab"

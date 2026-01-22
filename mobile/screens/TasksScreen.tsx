@@ -7,7 +7,9 @@ import {
   ActivityIndicator,
   TextInput,
   ScrollView,
+  Platform,
 } from "react-native";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ScreenWrapper } from "../components/ui/ScreenWrapper";
 import { GlassView } from "../components/ui/GlassView";
@@ -29,18 +31,77 @@ import {
 } from "lucide-react-native";
 import AddTaskModal from "../components/AddTaskModal";
 
-const TasksScreen = () => {
+const TasksScreen = (props: any) => {
   const { tasks, updateTaskStatus, deleteTask } = useData();
   const [activeTab, setActiveTab] = useState<TaskStatus>("todo");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
+  // Initialize from params
+  React.useEffect(() => {
+    if ((props.route.params as any)?.search) {
+      setSearchQuery((props.route.params as any).search);
+    }
+  }, [props.route.params]);
+
+  const [startDate, setStartDate] = useState<Date | null>(new Date());
+  const [endDate, setEndDate] = useState<Date | null>(new Date());
+  const [showDatePicker, setShowDatePicker] = useState<"start" | "end" | null>(
+    null,
+  );
+
+  const onDateChange = (event: any, selectedDate?: Date) => {
+    const currentMode = showDatePicker;
+    setShowDatePicker(null); // Close picker on selection (Android behavior mostly)
+
+    if (event.type === "dismissed") return;
+
+    if (selectedDate && currentMode) {
+      if (currentMode === "start") {
+        setStartDate(selectedDate);
+        // Auto-adjust end date if it's before start date
+        if (endDate && endDate < selectedDate) {
+          setEndDate(null);
+        }
+      } else {
+        setEndDate(selectedDate);
+        // Auto-adjust start date if it's after end date
+        if (startDate && startDate > selectedDate) {
+          setStartDate(null);
+        }
+      }
+    }
+  };
+
   const filteredTasks = useMemo(() => {
     return tasks
       .filter((t) => t.status === activeTab)
-      .filter((t) => t.title.toLowerCase().includes(searchQuery.toLowerCase()));
-  }, [tasks, activeTab, searchQuery]);
+      .filter((t) => t.title.toLowerCase().includes(searchQuery.toLowerCase()))
+      .filter((t) => {
+        // Custom Date Range Filter
+        // If neither start nor end is selected, show all (return true)
+        if (!startDate && !endDate) return true;
+
+        if (!t.dueDate) return false;
+        const due = new Date(t.dueDate);
+        due.setHours(0, 0, 0, 0);
+
+        if (startDate) {
+          const start = new Date(startDate);
+          start.setHours(0, 0, 0, 0);
+          if (due < start) return false;
+        }
+
+        if (endDate) {
+          const end = new Date(endDate);
+          end.setHours(23, 59, 59, 999); // End of the day
+          if (due > end) return false;
+        }
+
+        return true;
+      });
+  }, [tasks, activeTab, searchQuery, startDate, endDate]);
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -196,14 +257,90 @@ const TasksScreen = () => {
         </GlassView>
       </View>
 
+      {/* Date Filters */}
+      <View className="px-4 pb-4 -mt-2">
+        <View className="flex-row items-center justify-between mb-2">
+          <Text className="text-slate-500 dark:text-slate-400 font-bold text-xs uppercase tracking-wider">
+            Filter by Date
+          </Text>
+          {(startDate || endDate) && (
+            <TouchableOpacity
+              onPress={() => {
+                setStartDate(null);
+                setEndDate(null);
+              }}
+              className="bg-rose-500/10 dark:bg-rose-500/20 px-2 py-1 rounded-md">
+              <Text className="text-rose-500 dark:text-rose-400 text-[10px] font-bold">
+                Clear Filter
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
+        <View className="flex-row gap-3">
+          <TouchableOpacity
+            onPress={() => setShowDatePicker("start")}
+            className="flex-1">
+            <GlassView
+              intensity={20}
+              className={`flex-row items-center justify-between px-3 py-2.5 rounded-xl border ${
+                startDate
+                  ? "bg-indigo-500/20 border-indigo-500/50"
+                  : "bg-white/40 dark:bg-white/5 border-black/5 dark:border-white/10"
+              }`}>
+              <View>
+                <Text className="text-[10px] font-bold text-slate-400 uppercase">
+                  From
+                </Text>
+                <Text
+                  className={`text-xs font-bold ${
+                    startDate
+                      ? "text-indigo-600 dark:text-indigo-400"
+                      : "text-slate-700 dark:text-slate-300"
+                  }`}>
+                  {startDate ? startDate.toLocaleDateString() : "Select Date"}
+                </Text>
+              </View>
+              <Calendar size={16} color={startDate ? "#6366f1" : "#94a3b8"} />
+            </GlassView>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => setShowDatePicker("end")}
+            className="flex-1">
+            <GlassView
+              intensity={20}
+              className={`flex-row items-center justify-between px-3 py-2.5 rounded-xl border ${
+                endDate
+                  ? "bg-indigo-500/20 border-indigo-500/50"
+                  : "bg-white/40 dark:bg-white/5 border-black/5 dark:border-white/10"
+              }`}>
+              <View>
+                <Text className="text-[10px] font-bold text-slate-400 uppercase">
+                  To
+                </Text>
+                <Text
+                  className={`text-xs font-bold ${
+                    endDate
+                      ? "text-indigo-600 dark:text-indigo-400"
+                      : "text-slate-700 dark:text-slate-300"
+                  }`}>
+                  {endDate ? endDate.toLocaleDateString() : "Select Date"}
+                </Text>
+              </View>
+              <Calendar size={16} color={endDate ? "#6366f1" : "#94a3b8"} />
+            </GlassView>
+          </TouchableOpacity>
+        </View>
+      </View>
+
       {/* Kanban-like Tabs */}
-      <View className="flex-row px-4 py-4 gap-2">
+      <View className="flex-row px-4 pb-4 gap-2">
         {(["todo", "in-progress", "completed"] as TaskStatus[]).map(
           (status) => (
             <TouchableOpacity
               key={status}
               onPress={() => setActiveTab(status)}
-              className={`flex-1 py-3 rounded-2xl border items-center ${
+              className={`flex-1 py-2.5 rounded-2xl border items-center ${
                 activeTab === status
                   ? "bg-white border-white"
                   : "bg-white/10 border-white/5"
@@ -263,6 +400,25 @@ const TasksScreen = () => {
         onClose={() => setIsModalOpen(false)}
         onSuccess={() => {}} // Context updates automatically
       />
+
+      {showDatePicker && (
+        <DateTimePicker
+          value={
+            showDatePicker === "start"
+              ? startDate || new Date()
+              : endDate || new Date()
+          }
+          mode="date"
+          display={Platform.OS === "ios" ? "inline" : "default"}
+          onChange={onDateChange}
+          maximumDate={
+            showDatePicker === "start" && endDate ? endDate : undefined
+          }
+          minimumDate={
+            showDatePicker === "end" && startDate ? startDate : undefined
+          }
+        />
+      )}
     </ScreenWrapper>
   );
 };

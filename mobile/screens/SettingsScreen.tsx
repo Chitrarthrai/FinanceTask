@@ -21,13 +21,20 @@ import {
   Bell,
   Shield,
   HelpCircle,
+  Move,
+  ArrowUp,
+  ArrowDown,
+  ArrowLeft,
+  ArrowRight,
 } from "lucide-react-native";
 import { useNavigation } from "@react-navigation/native";
+import { useData } from "../context/DataContext";
 
 const SettingsScreen = () => {
   const { user, signOut } = useAuth();
   const navigation = useNavigation();
   const { colorScheme, toggleColorScheme } = useColorScheme();
+  const { navPosition, setNavPosition } = useData();
   const isDark = colorScheme === "dark";
 
   const Section = ({
@@ -95,6 +102,40 @@ const SettingsScreen = () => {
                 trackColor={{ false: "#94a3b8", true: "#6366f1" }}
                 thumbColor={"#ffffff"}
               />
+            }
+          />
+          <SettingsItem
+            icon={Move}
+            label="Navigation Position"
+            value={
+              <View className="flex-row gap-2">
+                {[
+                  { pos: "top", Icon: ArrowUp },
+                  { pos: "bottom", Icon: ArrowDown },
+                  { pos: "left", Icon: ArrowLeft },
+                  { pos: "right", Icon: ArrowRight },
+                ].map(({ pos, Icon }) => (
+                  <TouchableOpacity
+                    key={pos}
+                    onPress={() => setNavPosition(pos as any)}
+                    className={`p-2 rounded-lg ${
+                      navPosition === pos
+                        ? "bg-indigo-500"
+                        : "bg-slate-200 dark:bg-white/10"
+                    }`}>
+                    <Icon
+                      size={18}
+                      color={
+                        navPosition === pos
+                          ? "#ffffff"
+                          : isDark
+                            ? "#cbd5e1"
+                            : "#475569"
+                      }
+                    />
+                  </TouchableOpacity>
+                ))}
+              </View>
             }
           />
           <SettingsItem icon={Bell} label="Notifications" isLast />

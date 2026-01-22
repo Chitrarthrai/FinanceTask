@@ -4,6 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 
 import { useColorScheme } from "nativewind";
+import { useData } from "../../context/DataContext";
 
 interface ScreenWrapperProps {
   children: React.ReactNode;
@@ -15,7 +16,39 @@ export const ScreenWrapper: React.FC<ScreenWrapperProps> = ({
   className = "",
 }) => {
   const { colorScheme } = useColorScheme();
+  const { navPosition, isNavHidden, isNavCollapsed } = useData();
   const isDark = colorScheme === "dark";
+
+  // Calculate dynamic padding based on nav position
+  const getNavPadding = () => {
+    // Side Navigation (Left/Right) is ALWAYS overlay/floating now
+    // We do NOT add padding for it, letting content go full width.
+    if (navPosition === "left" || navPosition === "right") {
+      return "";
+    }
+
+    // Collapsed Mode: Smaller padding for Top/Bottom FAB
+    if (isNavCollapsed) {
+      switch (navPosition) {
+        case "bottom":
+          return "pb-4";
+        case "top":
+          return "pt-4";
+      }
+    }
+
+    // Normal Mode (Top/Bottom)
+    switch (navPosition) {
+      case "bottom":
+        return "pb-4"; // Reduced from 32 to tighten gap
+      case "top":
+        return "pt-4"; // Reduced from 32 to tighten gap
+      default:
+        return "pb-24";
+    }
+  };
+
+  const navPaddingClass = getNavPadding();
 
   return (
     <View className="flex-1 bg-slate-50 dark:bg-slate-900">
@@ -61,7 +94,7 @@ export const ScreenWrapper: React.FC<ScreenWrapperProps> = ({
         }}
       />
 
-      <SafeAreaView className={`flex-1 pt-4 ${className}`}>
+      <SafeAreaView className={`flex-1 ${navPaddingClass} ${className}`}>
         {children}
       </SafeAreaView>
     </View>

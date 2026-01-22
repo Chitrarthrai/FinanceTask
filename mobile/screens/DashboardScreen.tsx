@@ -237,7 +237,9 @@ const DashboardScreen = () => {
       const total = transactions
         .filter((t) => {
           if (t.type !== "expense") return false;
+          // t.date is now raw string (likely ISO), we must parse it
           const tDate = new Date(t.date);
+
           if (mode === "month") {
             // Check matching month and year
             return (
@@ -245,8 +247,12 @@ const DashboardScreen = () => {
               tDate.getFullYear() === d.getFullYear()
             );
           } else {
-            // Check exact date string match as stored
-            return t.date === dateKey;
+            // Check exact date (Year, Month, Day) match
+            return (
+              tDate.getDate() === d.getDate() &&
+              tDate.getMonth() === d.getMonth() &&
+              tDate.getFullYear() === d.getFullYear()
+            );
           }
         })
         .reduce((sum, t) => sum + t.amount, 0);
@@ -647,11 +653,15 @@ const DashboardScreen = () => {
                   )}
                 </View>
                 <View>
-                  <Text className="font-bold text-slate-800 dark:text-white text-lg">
+                  <Text className="font-bold text-slate-800 dark:text-slate-200 text-lg">
                     {t.title}
                   </Text>
                   <Text className="text-sm font-medium text-slate-500 dark:text-slate-400 mt-0.5">
-                    {t.date} • {t.category}
+                    {new Date(t.date).toLocaleDateString(undefined, {
+                      month: "short",
+                      day: "numeric",
+                    })}{" "}
+                    • {t.category}
                   </Text>
                 </View>
               </View>

@@ -49,6 +49,12 @@ interface DataContextType {
   }>;
   getSmartInsights: (month: string) => Promise<any[]>;
   user: User | null;
+  navPosition: "bottom" | "top" | "left" | "right";
+  setNavPosition: (position: "bottom" | "top" | "left" | "right") => void;
+  isNavHidden: boolean;
+  setIsNavHidden: (hidden: boolean) => void;
+  isNavCollapsed: boolean;
+  setIsNavCollapsed: (collapsed: boolean) => void;
 }
 
 const defaultBudgetSettings: BudgetSettings = {
@@ -73,6 +79,11 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     defaultBudgetSettings,
   );
   const [categories, setCategories] = useState<Category[]>([]);
+  const [navPosition, setNavPosition] = useState<
+    "bottom" | "top" | "left" | "right"
+  >("bottom");
+  const [isNavHidden, setIsNavHidden] = useState(false);
+  const [isNavCollapsed, setIsNavCollapsed] = useState(false);
 
   // Derived Metrics State
   const [metrics, setMetrics] = useState<FinancialMetrics>({
@@ -196,11 +207,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
             amount: Number(t.amount),
             type: t.type as any,
             category: t.category,
-            date: new Date(t.date).toLocaleDateString("en-US", {
-              month: "short",
-              day: "numeric",
-              year: "numeric",
-            }),
+            date: t.date, // Pass raw date string
             paymentMethod: t.payment_method,
             receipt_url: t.receipt_url,
           })),
@@ -222,14 +229,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
             description: t.description || "",
             status: t.status as any,
             priority: t.priority as any,
-            dueDate: t.due_date
-              ? new Date(t.due_date).toLocaleString("en-US", {
-                  month: "short",
-                  day: "numeric",
-                  hour: "numeric",
-                  minute: "2-digit",
-                })
-              : "",
+            dueDate: t.due_date || "", // Pass raw date string
             recurring: t.recurring,
             tags: t.tags || [],
             category: t.category || "Personal",
@@ -285,12 +285,43 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     ).getDate();
     const daysRemaining = Math.max(1, daysInMonth - today.getDate());
 
-    const totalIncome = budgetSettings.monthlySalary;
+    // Calculate actuals for current month to fallback if budget not set
+    const actualIncome = transactions
+      .filter((t) => {
+        if (t.type !== "income") return false;
+        const tDate = new Date(t.date);
+        return (
+          tDate.getMonth() === today.getMonth() &&
+          tDate.getFullYear() === today.getFullYear()
+        );
+      })
+      .reduce((acc, curr) => acc + curr.amount, 0);
 
-    const totalFixedExpenses = budgetSettings.fixedExpenses.reduce(
+    const actualFixedExpenses = transactions
+      .filter((t) => {
+        if (t.type !== "expense") return false;
+        const cat = categories.find((c) => c.name === t.category);
+        const tDate = new Date(t.date);
+        return (
+          cat?.type === "fixed" &&
+          tDate.getMonth() === today.getMonth() &&
+          tDate.getFullYear() === today.getFullYear()
+        );
+      })
+      .reduce((acc, curr) => acc + curr.amount, 0);
+
+    // Use Budget Settings if set, otherwise use Actuals
+    const totalIncome =
+      budgetSettings.monthlySalary > 0
+        ? budgetSettings.monthlySalary
+        : actualIncome;
+
+    const plannedFixed = budgetSettings.fixedExpenses.reduce(
       (acc, curr) => acc + curr.amount,
       0,
     );
+    const totalFixedExpenses =
+      plannedFixed > 0 ? plannedFixed : actualFixedExpenses;
 
     const totalVariableExpenses = budgetSettings.variableExpenses.reduce(
       (acc, curr) => acc + curr.amount,
@@ -313,12 +344,27 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
 
     // Calculate spent today
     const spentToday = transactions
-      .filter((t) => t.type === "expense" && t.date === todayStr)
+      .filter((t) => {
+        if (t.type !== "expense") return false;
+        const tDate = new Date(t.date);
+        return (
+          tDate.getDate() === today.getDate() &&
+          tDate.getMonth() === today.getMonth() &&
+          tDate.getFullYear() === today.getFullYear()
+        );
+      })
       .reduce((acc, curr) => acc + curr.amount, 0);
 
-    const currentMonthStr = today.toLocaleString("default", { month: "short" });
+    // Calculate spent this month
     const spentMonthTotal = transactions
-      .filter((t) => t.type === "expense" && t.date.includes(currentMonthStr))
+      .filter((t) => {
+        if (t.type !== "expense") return false;
+        const tDate = new Date(t.date);
+        return (
+          tDate.getMonth() === today.getMonth() &&
+          tDate.getFullYear() === today.getFullYear()
+        );
+      })
       .reduce((acc, curr) => acc + curr.amount, 0);
 
     const remainingPocketMoney = Math.max(0, pocketMoneyPool - spentMonthTotal);
@@ -343,7 +389,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
       daysRemaining,
       budgetHealth,
     });
-  }, [budgetSettings, transactions]);
+  }, [budgetSettings, transactions, categories]);
 
   // Actions
   const addTransaction = async (transaction: Transaction) => {
@@ -561,6 +607,12 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
           if (error) return [];
           return data?.insights || [];
         },
+        navPosition,
+        setNavPosition,
+        isNavHidden,
+        setIsNavHidden,
+        isNavCollapsed,
+        setIsNavCollapsed,
       }}>
       {children}
     </DataContext.Provider>

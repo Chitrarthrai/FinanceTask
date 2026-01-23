@@ -8,6 +8,7 @@ import Tasks from "./pages/Tasks";
 import Analytics from "./pages/Analytics";
 import Settings from "./pages/Settings";
 import Reports from "./pages/Reports";
+import P2PShare from "./pages/P2PShare";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
@@ -106,6 +107,7 @@ const App = () => {
             <Route path="analytics" element={<Analytics />} />
             <Route path="reports" element={<Reports />} />
             <Route path="settings" element={<Settings />} />
+            <Route path="p2p" element={<P2PShare />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />

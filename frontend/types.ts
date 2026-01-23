@@ -91,6 +91,7 @@ export interface FinancialMetrics {
   remainingToday: number;
   daysRemaining: number;
   budgetHealth: "Healthy" | "At Risk" | "Critical";
+  savingsTrend?: number; // Month-over-month percentage change
 }
 
 // Analytics Types

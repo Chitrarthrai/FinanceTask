@@ -8,6 +8,7 @@ import {
   LogOut,
   CreditCard,
   FileText,
+  Share2,
 } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useData } from "../contexts/DataContext";
@@ -21,6 +22,7 @@ const Sidebar = () => {
     { icon: CheckSquare, label: "Tasks", path: "/app/tasks" },
     { icon: PieChart, label: "Analytics", path: "/app/analytics" },
     { icon: FileText, label: "Reports", path: "/app/reports" },
+    { icon: Share2, label: "P2P Share", path: "/app/p2p" },
     { icon: Settings, label: "Settings", path: "/app/settings" },
   ];
 
@@ -87,13 +89,21 @@ const Sidebar = () => {
                 <div className="p-2 bg-white/10 rounded-lg">
                   <Wallet className="w-4 h-4 text-white" />
                 </div>
-                <span className="text-xs font-medium text-emerald-100 bg-emerald-500/20 px-2 py-0.5 rounded-full">
-                  +2.5%
-                </span>
+                {metrics?.savingsTrend !== undefined && (
+                  <span
+                    className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                      metrics.savingsTrend >= 0
+                        ? "text-emerald-100 bg-emerald-500/20"
+                        : "text-rose-100 bg-rose-500/20"
+                    }`}>
+                    {metrics.savingsTrend >= 0 ? "+" : ""}
+                    {metrics.savingsTrend.toFixed(1)}%
+                  </span>
+                )}
               </div>
               <p className="text-xs text-white/70 mb-1">Total Balance</p>
               <p className="text-2xl font-bold mb-3">
-                ${(metrics?.net_savings || 0).toLocaleString()}
+                ${(metrics?.totalSavings || 0).toLocaleString()}
               </p>
               <div className="h-1.5 bg-black/20 rounded-full overflow-hidden">
                 <div
@@ -103,10 +113,10 @@ const Sidebar = () => {
                       100,
                       Math.max(
                         0,
-                        ((metrics?.net_savings || 0) /
-                          (metrics?.total_income || 1)) *
-                          100
-                      )
+                        ((metrics?.totalSavings || 0) /
+                          (metrics?.totalIncome || 1)) *
+                          100,
+                      ),
                     )}%`,
                   }}
                 />
@@ -123,8 +133,8 @@ const Sidebar = () => {
       </aside>
 
       {/* Mobile Bottom Nav */}
-      <nav className="lg:hidden fixed bottom-4 left-4 right-4 bg-bg-secondary/90 backdrop-blur-xl rounded-2xl shadow-xl shadow-slate-900/5 border border-border-subtle z-50 px-6 py-3 flex justify-between items-center">
-        {navItems.slice(0, 4).map((item) => (
+      <nav className="lg:hidden fixed bottom-4 left-4 right-4 bg-bg-secondary/90 backdrop-blur-xl rounded-2xl shadow-xl shadow-slate-900/5 border border-border-subtle z-50 px-2 py-3 flex justify-between items-center">
+        {navItems.map((item) => (
           <NavLink
             key={item.path}
             to={item.path}

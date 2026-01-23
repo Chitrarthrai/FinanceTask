@@ -8,6 +8,7 @@ import {
   MessageSquare,
   CheckSquare,
   FileText,
+  Share2,
 } from "lucide-react-native";
 import { useColorScheme } from "nativewind";
 import CustomTabBar from "./CustomTabBar";
@@ -21,6 +22,7 @@ import ChatScreen from "../screens/ChatScreen";
 import SettingsScreen from "../screens/SettingsScreen";
 import ReportsScreen from "../screens/ReportsScreen"; // The "Report Paper" view
 import AnalyticsScreen from "../screens/AnalyticsScreen"; // The "Deep Dive" charts view
+import P2PShareScreen from "../screens/P2PShareScreen";
 
 const Tab = createBottomTabNavigator();
 
@@ -90,6 +92,14 @@ const MainTabNavigator = () => {
           tabBarIcon: ({ color, size }) => (
             <MessageSquare color={color} size={size} />
           ),
+        }}
+      />
+      <Tab.Screen
+        name="P2PTab"
+        component={P2PShareScreen}
+        options={{
+          tabBarLabel: "Share",
+          tabBarIcon: ({ color, size }) => <Share2 color={color} size={size} />,
         }}
       />
     </Tab.Navigator>

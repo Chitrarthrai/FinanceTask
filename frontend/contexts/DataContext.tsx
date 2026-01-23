@@ -300,12 +300,55 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
       0,
     );
 
-    const totalVariableExpenses = budgetSettings.variableExpenses.reduce(
-      (acc, curr) => acc + curr.amount,
-      0,
-    );
+    // Unified Calculation Logic
 
+    // 1. Calculate Expenses & Savings for Current Month
+    const currentMonthExpenses = transactions
+      .filter((t) => {
+        const d = new Date(t.date);
+        return (
+          d.getMonth() === today.getMonth() &&
+          d.getFullYear() === today.getFullYear() &&
+          t.type === "expense"
+        );
+      })
+      .reduce((acc, curr) => acc + curr.amount, 0);
+
+    const totalVariableExpenses = currentMonthExpenses; // Previously this was calculated twice redundantly
+
+    // Total Savings (Actual cashflow: Income - Fixed - Variable)
     const totalSavings =
+      totalIncome - totalFixedExpenses - totalVariableExpenses;
+
+    // 2. Calculate Previous Month Savings for Trend
+    const prevMonthDate = new Date();
+    prevMonthDate.setMonth(prevMonthDate.getMonth() - 1);
+
+    const prevMonthVariableExpenses = transactions
+      .filter((t) => {
+        const d = new Date(t.date);
+        return (
+          d.getMonth() === prevMonthDate.getMonth() &&
+          d.getFullYear() === prevMonthDate.getFullYear() &&
+          t.type === "expense"
+        );
+      })
+      .reduce((acc, curr) => acc + curr.amount, 0);
+
+    const prevMonthSavings =
+      totalIncome - totalFixedExpenses - prevMonthVariableExpenses;
+
+    let savingsTrend = 0;
+    if (prevMonthSavings !== 0) {
+      savingsTrend =
+        ((totalSavings - prevMonthSavings) / Math.abs(prevMonthSavings)) * 100;
+    } else if (totalSavings > 0) {
+      savingsTrend = 100;
+    }
+
+    // 3. Calculate "Available Pool" logic requires target savings from budget settings
+    // This was the other totalSavings/totalVariableExpenses calculation that was conflicting
+    const targetSavingsAmount =
       (totalIncome * (budgetSettings.savingsTargetPercent || 20)) / 100;
 
     const pocketMoneyPool = Math.max(
@@ -354,6 +397,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
       remainingToday,
       daysRemaining,
       budgetHealth,
+      savingsTrend,
     });
   }, [budgetSettings, transactions]);
 

@@ -1606,6 +1606,62 @@ When user spends on a given day:
 
 ---
 
+---
+
+### 4.4 P2P FILE SHARING FEATURES
+
+#### 4.4.1 Direct Device-to-Device Sharing (Web & Mobile)
+
+**Overview:**
+Integrated file transfer system allowing users to send files directly between their devices (Web ⇄ Mobile, Mobile ⇄ Mobile, Web ⇄ Web) without storing files on the server. This ensures privacy and eliminates server storage costs for transient file transfers.
+
+**Core Technology:**
+
+- **WebRTC:** For peer-to-peer data channels (streaming file chunks directly).
+- **Supabase Realtime:** For signaling (exchanging connection details: Offer/Answer/ICE candidates).
+- **Direct Connection:** No file size limits (server-side), high speed on local networks, end-to-end encrypted.
+
+**Workflows:**
+
+**1. Sender Workflow:**
+
+- **Select Mode:** User chooses "Send File".
+- **Room Generation:** System generates a unique, short 6-character Room ID (e.g., `K9X2P1`).
+- **File Selection:** User picks a file (Image, Document, Video, etc.).
+- **Wait State:** App shows the Room ID big and bold, waiting for peer to join.
+- **Transfer:** Once Receiver connects, transfer can start automatically or via "Send" button.
+- **Feedback:** Progress bar shows upload percentage.
+
+**2. Receiver Workflow:**
+
+- **Select Mode:** User chooses "Receive File".
+- **Input Code:** User enters the 6-character Room ID provided by Sender.
+- **Connection:** System uses Supabase Realtime to find the room and establish WebRTC handshake.
+- **Download:** Once connected, file chunks are received and reassembled.
+- **Feedback:** Progress bar shows download percentage.
+- **Completion:** File is saved to device (Downloads folder on Web, File System/Share Sheet on Mobile).
+
+**Functional Requirements:**
+
+- **Cross-Platform Compatibility:**
+  - Web Client (React + simple-peer logic)
+  - Mobile Client (React Native + react-native-webrtc)
+  - Must support Web-to-Mobile, Mobile-to-Web, and Mobile-to-Mobile flows.
+- **Real-time Feedback:**
+  - Visual status indicators: Idle, Waiting, Connecting, Connected, Transferring, Completed.
+  - Percentage progress bar on both screens.
+- **Error Handling:**
+  - Auto-reconnect or clear error messages for "Peer disconnected", "Invalid ID", "Network Error".
+  - Graceful handling of large files (chunking).
+
+**UI/UX Requirements:**
+
+- **Theming:** Full support for Light and Dark modes matching system preference.
+- **Responsiveness:** Mobile UI optimized for touch, Web UI optimized for drag-and-drop.
+- **Clarity:** Room IDs must be easy to read (uppercase, large font).
+
+---
+
 ## 5. Technical Architecture & Implementation
 
 ### 5.1 Technology Stack (Comprehensive)

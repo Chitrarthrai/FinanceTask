@@ -89,19 +89,29 @@ Stop manual data entry forever.
 - **Priority Matrix**: Automatically sort tasks by urgency and importance.
 - **Calendar Sync**: View upcoming bill due dates and paydays on a unified calendar view.
 
+### 🔄 Privacy-First P2P Sharing
+
+Securely transfer files between devices without them ever touching a cloud server.
+
+- **Zero-Config Connection**: Connect devices instantly using simple 6-character Room IDs—no pairing or bluetooth headaches.
+- **Direct WebRTC Stream**: Files are streamed directly from Peer-to-Peer. No size limits, no storage costs, and maximum privacy.
+- **Cross-Platform Bridge**: Seamlessly send photos, documents, and receipts from your Mobile to your Laptop (and vice versa) for easier management.
+- **Real-Time Feedback**: Watch transfer progress with visual indicators and progress bars on both sending and receiving devices.
+
 ---
 
 ## �️ Tech Stack
 
 We utilize the latest edge technologies to ensure performance, type safety, and developer experience.
 
-| Layer          | Technologies                                     |
-| :------------- | :----------------------------------------------- |
-| **Frontend**   | React 19, TypeScript, Vite, Tailwind CSS v4      |
-| **Mobile**     | React Native, Expo, NativeWind, Expo Router      |
-| **Components** | Radix UI (Web), GlassView (Mobile), Lucide Icons |
-| **Backend**    | Supabase (PostgreSQL, Auth, Realtime)            |
-| **AI Engine**  | Google Gemini 2.5 Flash                          |
+| Layer            | Technologies                                     |
+| :--------------- | :----------------------------------------------- |
+| **Frontend**     | React 19, TypeScript, Vite, Tailwind CSS v4      |
+| **Mobile**       | React Native, Expo, NativeWind, Expo Router      |
+| **Components**   | Radix UI (Web), GlassView (Mobile), Lucide Icons |
+| **Backend**      | Supabase (PostgreSQL, Auth, Realtime)            |
+| **AI Engine**    | Google Gemini 2.5 Flash                          |
+| **P2P Transfer** | WebRTC (SimplePeer / React-Native-WebRTC)        |
 
 ---
 

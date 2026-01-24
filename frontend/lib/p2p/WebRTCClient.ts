@@ -1,6 +1,7 @@
 import { SignalingClient } from "./Signaling";
 
-const CHUNK_SIZE = 16 * 1024; // 16KB
+const CHUNK_SIZE = 16 * 1024; // 16KB - Safe MTU
+const MAX_BUFFERED_AMOUNT = 64 * 1024; // 64KB - Low Latency
 
 type ProgressCallback = (percent: number) => void;
 type FileReceivedCallback = (file: Blob, metadata: any) => void;
@@ -35,6 +36,8 @@ export class WebRTCClient {
       iceServers: [
         { urls: "stun:stun.l.google.com:19302" },
         { urls: "stun:global.stun.twilio.com:3478" },
+        { urls: "stun:stun1.l.google.com:19302" },
+        { urls: "stun:stun2.l.google.com:19302" },
       ],
     };
 
@@ -50,6 +53,16 @@ export class WebRTCClient {
       const state = this.peerConnection.connectionState;
       this.onStatus?.(state);
       console.log(`Connection state: ${state}`);
+    };
+
+    this.peerConnection.oniceconnectionstatechange = () => {
+      const iceState = this.peerConnection.iceConnectionState;
+      console.log(`ICE Connection State: ${iceState}`);
+      if (iceState === "failed" || iceState === "disconnected") {
+        console.warn(
+          "ICE connection failed. Possible network firewall/NAT issue.",
+        );
+      }
     };
 
     // Handle incoming data channels (for receiver)
@@ -129,6 +142,8 @@ export class WebRTCClient {
   private setupDataChannel(channel: RTCDataChannel) {
     this.dataChannel = channel;
     this.dataChannel.binaryType = "arraybuffer";
+    // Refill when buffer is half empty to keep pipe saturated
+    this.dataChannel.bufferedAmountLowThreshold = MAX_BUFFERED_AMOUNT / 2;
 
     this.dataChannel.onopen = () => {
       this.onStatus?.("connected");
@@ -175,13 +190,17 @@ export class WebRTCClient {
     };
   }
 
-  sendFile(file: File) {
+  /**
+   * Send file using "Breathing Loop" architecture.
+   * Uses async imperative loop + explicit yielding to prevent CPU starvation and ICE timeouts.
+   */
+  async sendFile(file: File) {
     if (!this.dataChannel || this.dataChannel.readyState !== "open") {
       console.error("Data channel not ready");
       return;
     }
 
-    // Send metadata first
+    // 1. Send Metadata
     const metadata = {
       type: "metadata",
       payload: {
@@ -191,32 +210,68 @@ export class WebRTCClient {
       },
     };
     this.dataChannel.send(JSON.stringify(metadata));
+    console.log(`Starting file send: ${file.name}, size: ${file.size}`);
 
-    // Send chunks
+    // Wait for connection to settle (500ms safety)
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    // 2. Prepare Loop
     const reader = new FileReader();
     let offset = 0;
+    let chunkCount = 0;
 
-    reader.onload = (e) => {
-      if (!e.target?.result) return;
+    const readPromise = (blob: Blob): Promise<ArrayBuffer> => {
+      return new Promise((resolve, reject) => {
+        reader.onload = (e) => resolve(e.target?.result as ArrayBuffer);
+        reader.onerror = (e) => reject(e);
+        reader.readAsArrayBuffer(blob);
+      });
+    };
 
-      const buffer = e.target.result as ArrayBuffer;
-      this.dataChannel?.send(buffer);
+    // 3. Start Chunk Loop
+    try {
+      while (offset < file.size) {
+        // Check Backpressure
+        if (this.dataChannel.bufferedAmount > MAX_BUFFERED_AMOUNT) {
+          await new Promise<void>((resolve) => {
+            if (!this.dataChannel) return resolve();
+            const handler = () => {
+              this.dataChannel?.removeEventListener(
+                "bufferedamountlow",
+                handler,
+              );
+              resolve();
+            };
+            this.dataChannel.addEventListener("bufferedamountlow", handler);
+          });
+        }
 
-      offset += buffer.byteLength;
-      const progress = (offset / file.size) * 100;
-      this.onProgress?.(progress);
+        // Read Chunk
+        const slice = file.slice(offset, offset + CHUNK_SIZE);
+        const buffer = await readPromise(slice);
 
-      if (offset < file.size) {
-        readNextChunk();
+        // Send
+        this.dataChannel.send(buffer);
+        offset += buffer.byteLength;
+        chunkCount++;
+
+        // Update Progress
+        const progress = (offset / file.size) * 100;
+        this.onProgress?.(progress);
+
+        // Log occasionally
+        if (chunkCount % 200 === 0) {
+          console.log(
+            `Sent ${(offset / (1024 * 1024)).toFixed(2)} MB / ${(file.size / (1024 * 1024)).toFixed(2)} MB`,
+          );
+          // EXPLICIT YIELD: Breath for 0ms to let ICE pings process
+          await new Promise((resolve) => setTimeout(resolve, 0));
+        }
       }
-    };
-
-    const readNextChunk = () => {
-      const slice = file.slice(offset, offset + CHUNK_SIZE);
-      reader.readAsArrayBuffer(slice);
-    };
-
-    readNextChunk();
+      console.log("File send complete");
+    } catch (err) {
+      console.error("Error sending file:", err);
+    }
   }
 
   close() {

@@ -11,6 +11,7 @@ import { Platform } from "react-native";
 import * as Sharing from "expo-sharing";
 
 const CHUNK_SIZE = 16 * 1024; // 16KB
+const MAX_BUFFERED_AMOUNT = 64 * 1024; // 64KB
 
 type ProgressCallback = (percent: number) => void;
 type FileReceivedCallback = (fileUri: string, metadata: any) => void;
@@ -131,6 +132,7 @@ export class MobileWebRTCClient {
   private setupDataChannel(channel: RTCDataChannel) {
     this.dataChannel = channel;
     this.dataChannel.binaryType = "arraybuffer";
+    this.dataChannel.bufferedAmountLowThreshold = MAX_BUFFERED_AMOUNT / 2;
 
     this.dataChannel.onopen = () => {
       this.onStatus?.("connected");
@@ -213,6 +215,21 @@ export class MobileWebRTCClient {
     const readAndSendChunk = async () => {
       if (offset >= meta.size) return;
 
+      // Check backpressure
+      if (
+        this.dataChannel &&
+        this.dataChannel.bufferedAmount > MAX_BUFFERED_AMOUNT
+      ) {
+        await new Promise<void>((resolve) => {
+          if (!this.dataChannel) return resolve();
+          const handler = () => {
+            this.dataChannel?.removeEventListener("bufferedamountlow", handler);
+            resolve();
+          };
+          this.dataChannel.addEventListener("bufferedamountlow", handler);
+        });
+      }
+
       const length = Math.min(CHUNK_SIZE, meta.size - offset);
       try {
         // Read chunk as Base64
@@ -239,7 +256,10 @@ export class MobileWebRTCClient {
       }
     };
 
-    readAndSendChunk();
+    // Start with delay to let ICE stabilize
+    setTimeout(() => {
+      readAndSendChunk();
+    }, 500);
   }
 
   close() {

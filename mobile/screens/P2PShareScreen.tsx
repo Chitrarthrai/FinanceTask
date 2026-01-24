@@ -7,8 +7,11 @@ import {
   ActivityIndicator,
   Alert,
   Platform,
+  LogBox,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { ScreenWrapper } from "../components/ui/ScreenWrapper";
+
+LogBox.ignoreLogs(["[Reanimated]"]); // Ignore noisy animation warnings
 import { LinearGradient } from "expo-linear-gradient";
 import * as DocumentPicker from "expo-document-picker";
 import * as Sharing from "expo-sharing";
@@ -21,8 +24,12 @@ import {
 } from "lucide-react-native";
 import { SignalingClient } from "../lib/p2p/Signaling";
 import { MobileWebRTCClient } from "../lib/p2p/MobileWebRTCClient";
+import { useColorScheme } from "nativewind";
 
 export default function P2PShareScreen() {
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
+
   const [mode, setMode] = useState<"send" | "receive" | null>(null);
   const [roomId, setRoomId] = useState("");
   const [status, setStatus] = useState("idle"); // idle, connecting, connected, transferring, completed
@@ -168,134 +175,154 @@ export default function P2PShareScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white dark:bg-slate-950">
+    <ScreenWrapper>
       <View className="flex-1 p-6">
-        <Text className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-          P2P File Transfer
+        <Text className="text-3xl font-bold text-slate-900 dark:text-white mb-2 tracking-tight">
+          P2P Share
         </Text>
-        <Text className="text-gray-500 dark:text-gray-400 mb-8">
-          Send files securely directly between devices.
+        <Text className="text-slate-500 dark:text-slate-400 mb-8 font-medium">
+          Secure, direct file transfer.
         </Text>
 
         {!mode ? (
           // Mode Selection
-          <View className="flex-1 justify-center space-y-6">
+          <View className="flex-1 justify-center">
             <TouchableOpacity
-              className="bg-blue-500 dark:bg-blue-600 p-6 rounded-2xl flex-row items-center justify-between shadow-lg shadow-blue-500/30"
+              activeOpacity={0.8}
+              className="mb-8"
               onPress={() => {
                 setMode("send");
                 handleStartSending();
               }}>
-              <View>
-                <Text className="text-white text-xl font-bold">Send File</Text>
-                <Text className="text-blue-100 mt-1">
-                  Generate a code to share
-                </Text>
-              </View>
-              <Send size={32} color="white" />
+              <LinearGradient
+                colors={
+                  isDark ? ["#6366f1", "#a855f7"] : ["#ffffff", "#f8fafc"]
+                }
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={{ borderRadius: 24 }}
+                className={`p-6 rounded-3xl flex-row items-center justify-between shadow-xl ${isDark ? "shadow-indigo-500/30 border border-white/10" : "border border-slate-200 shadow-slate-200"}`}>
+                <View>
+                  <Text
+                    className={`${isDark ? "text-white" : "text-slate-900"} text-2xl font-bold mb-1`}>
+                    Send File
+                  </Text>
+                  <Text
+                    className={`${isDark ? "text-indigo-100" : "text-slate-500"} font-medium`}>
+                    Create a room
+                  </Text>
+                </View>
+                <View
+                  className={`${isDark ? "bg-white/20" : "bg-indigo-50"} p-3 rounded-2xl`}>
+                  <Send size={32} color={isDark ? "white" : "#6366f1"} />
+                </View>
+              </LinearGradient>
             </TouchableOpacity>
 
             <TouchableOpacity
-              className="bg-gray-100 dark:bg-slate-800 p-6 rounded-2xl flex-row items-center justify-between border border-gray-200 dark:border-slate-700"
+              activeOpacity={0.8}
               onPress={() => setMode("receive")}>
-              <View>
-                <Text className="text-gray-900 dark:text-white text-xl font-bold">
-                  Receive File
-                </Text>
-                <Text className="text-gray-500 dark:text-gray-400 mt-1">
-                  Enter a code from sender
-                </Text>
-              </View>
-              <Download size={32} color="#9ca3af" />
+              <LinearGradient
+                colors={
+                  isDark ? ["#1e293b", "#0f172a"] : ["#ffffff", "#f1f5f9"]
+                }
+                style={{ borderRadius: 24 }}
+                className={`p-6 rounded-3xl flex-row items-center justify-between shadow-xl ${isDark ? "border border-slate-700" : "border border-slate-200 shadow-slate-200"}`}>
+                <View>
+                  <Text
+                    className={`${isDark ? "text-slate-200" : "text-slate-900"} text-2xl font-bold mb-1`}>
+                    Receive File
+                  </Text>
+                  <Text className="text-slate-500 font-medium">
+                    Join a room
+                  </Text>
+                </View>
+                <View
+                  className={`${isDark ? "bg-slate-800 border-slate-700" : "bg-slate-100 border-slate-200"} p-3 rounded-2xl border`}>
+                  <Download size={32} color="#94a3b8" />
+                </View>
+              </LinearGradient>
             </TouchableOpacity>
           </View>
         ) : (
           // Active Mode UI
           <View className="flex-1">
-            <View className="flex-row justify-between items-center mb-6">
+            <View className="flex-row justify-between items-center mb-8">
               <TouchableOpacity
                 onPress={() => {
                   setMode(null);
                   cleanup();
-                }}>
-                <Text className="text-blue-500 dark:text-blue-400 font-medium">
-                  ← Back to Menu
-                </Text>
+                }}
+                className="flex-row items-center bg-slate-800/50 px-4 py-2 rounded-full border border-slate-700">
+                <Text className="text-slate-300 font-bold mr-2">Back</Text>
               </TouchableOpacity>
+
               <TouchableOpacity
                 onPress={() => {
                   cleanup();
                   setRoomId(mode === "send" ? generateRoomId() : "");
                 }}
-                className="bg-red-50 dark:bg-red-900/20 px-3 py-1 rounded-full">
-                <Text className="text-red-500 dark:text-red-400 font-medium text-sm">
-                  Cancel / Refresh
+                className="bg-red-500/10 px-4 py-2 rounded-full border border-red-500/20">
+                <Text className="text-red-400 font-bold text-xs uppercase tracking-wider">
+                  Reset
                 </Text>
               </TouchableOpacity>
             </View>
 
             {mode === "send" ? (
               <View className="items-center">
-                <View className="bg-blue-50 dark:bg-blue-900/20 w-full p-8 rounded-3xl items-center border border-dashed border-blue-200 dark:border-blue-700 mb-8">
-                  <Text className="text-gray-500 dark:text-gray-400 mb-2">
-                    Your Room ID
-                  </Text>
-                  <Text className="text-4xl font-bold text-blue-600 dark:text-blue-400 tracking-widest">
-                    {roomId}
-                  </Text>
-                  <Text className="text-xs text-gray-400 dark:text-gray-500 mt-2">
-                    Share this code with the receiver
-                  </Text>
+                <View className="w-full relative mb-8 group">
+                  <View className="absolute -inset-1 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-[2rem] blur opacity-25"></View>
+                  <View className="bg-slate-900 w-full p-8 rounded-[1.8rem] items-center border border-slate-700 relative">
+                    <Text className="text-slate-400 mb-4 font-medium uppercase tracking-widest text-xs">
+                      Share Code
+                    </Text>
+                    <Text className="text-5xl font-mono font-bold text-white tracking-[0.2em]">
+                      {roomId}
+                    </Text>
+                  </View>
                 </View>
 
                 {/* File Selection */}
                 <TouchableOpacity
                   onPress={pickFile}
-                  className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 w-full p-4 rounded-xl flex-row items-center mb-6 shadow-sm">
-                  <View className="bg-gray-100 dark:bg-slate-800 p-3 rounded-lg mr-4">
-                    <FileText size={24} color="#6B7280" />
+                  className="w-full bg-slate-800/50 border border-slate-700 p-5 rounded-2xl flex-row items-center mb-8 active:bg-slate-800 transition-colors">
+                  <View className="bg-slate-700/50 p-4 rounded-xl mr-4">
+                    <FileText size={28} color="#e2e8f0" />
                   </View>
                   <View className="flex-1">
                     <Text
-                      className="font-semibold text-gray-900 dark:text-white"
+                      className="font-bold text-lg text-white mb-1"
                       numberOfLines={1}>
-                      {selectedFile
-                        ? selectedFile.name
-                        : "Select a file to send"}
+                      {selectedFile ? selectedFile.name : "Select File"}
                     </Text>
-                    <Text className="text-xs text-gray-500 dark:text-gray-400">
+                    <Text className="text-sm text-slate-400">
                       {selectedFile
                         ? `${(selectedFile.size! / 1024 / 1024).toFixed(2)} MB`
-                        : "Tap to browse files"}
+                        : "Tap to browse documents"}
                     </Text>
                   </View>
                 </TouchableOpacity>
 
                 {/* Status & Action */}
                 <View className="w-full">
-                  <View className="flex-row items-center mb-4 justify-center space-x-2">
-                    <View
-                      className={`w-3 h-3 rounded-full ${status === "connected" || status === "transferring" || status === "completed" ? "bg-green-500" : "bg-yellow-500"}`}
-                    />
-                    <Text className="text-gray-600 dark:text-gray-300 font-medium capitalize">
-                      {status === "idle" ? "Waiting for receiver..." : status}
-                    </Text>
-                  </View>
-
                   {/* SENDER PROGRESS BAR */}
                   {status === "transferring" && (
-                    <View className="w-full mb-4 px-2">
-                      <View className="flex-row justify-between mb-2">
-                        <Text className="text-gray-600 dark:text-gray-400 font-medium">
+                    <View className="w-full mb-6 max-w-sm mx-auto">
+                      <View className="flex-row justify-between mb-3">
+                        <Text className="text-slate-300 font-bold">
                           Sending...
                         </Text>
-                        <Text className="text-blue-600 dark:text-blue-400 font-bold">
+                        <Text className="text-indigo-400 font-mono font-bold">
                           {Math.round(progress)}%
                         </Text>
                       </View>
-                      <View className="h-2 bg-gray-200 dark:bg-slate-700 rounded-full overflow-hidden">
-                        <View
-                          className="h-full bg-blue-500 dark:bg-blue-600"
+                      <View className="h-3 bg-slate-800 rounded-full overflow-hidden border border-slate-700">
+                        <LinearGradient
+                          colors={["#6366f1", "#a855f7"]}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 0 }}
+                          className="h-full rounded-full"
                           style={{ width: `${progress}%` }}
                         />
                       </View>
@@ -304,78 +331,93 @@ export default function P2PShareScreen() {
 
                   {status === "connected" && selectedFile && (
                     <TouchableOpacity
-                      className="bg-blue-600 dark:bg-blue-500 w-full py-4 rounded-xl items-center shadow-lg shadow-blue-500/30"
+                      className="w-full mt-4"
+                      activeOpacity={0.8}
                       onPress={sendFile}>
-                      <Text className="text-white font-bold text-lg">
-                        Send File
-                      </Text>
+                      <LinearGradient
+                        colors={["#4f46e5", "#7c3aed"]} // Indigo to Purple
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                        style={{ borderRadius: 24 }}
+                        className="w-full py-4 px-6 rounded-3xl flex-row items-center justify-center shadow-lg shadow-indigo-500/40 border border-white/20">
+                        <Text className="text-white font-bold text-xl mr-3 tracking-wide">
+                          Send Now
+                        </Text>
+                        <View className="bg-white/20 p-2 rounded-full">
+                          <Send size={20} color="white" />
+                        </View>
+                      </LinearGradient>
                     </TouchableOpacity>
                   )}
 
                   {status === "completed" && (
-                    <View className="w-full bg-green-50 dark:bg-green-900/20 p-4 rounded-xl items-center border border-green-200 dark:border-green-800">
-                      <CheckCircle size={28} color="#10B981" />
-                      <Text className="text-green-700 dark:text-green-300 font-bold mt-2">
-                        File Sent Successfully!
+                    <View className="w-full bg-green-500/10 p-6 rounded-2xl items-center border border-green-500/20">
+                      <CheckCircle size={40} color="#34d399" />
+                      <Text className="text-green-400 font-bold text-xl mt-3">
+                        Sent Successfully
                       </Text>
                     </View>
                   )}
                 </View>
 
-                {(status === "idle" ||
-                  status === "waiting" ||
-                  status === "connecting") && (
-                  <TouchableOpacity onPress={cleanup} className="mt-4">
-                    <Text className="text-red-500 dark:text-red-400 font-medium">
-                      Cancel Connection
-                    </Text>
-                  </TouchableOpacity>
-                )}
+                <View className="mt-8 flex-row items-center space-x-2">
+                  <View
+                    className={`w-2 h-2 rounded-full ${status === "connected" ? "bg-green-500" : "bg-slate-600"}`}
+                  />
+                  <Text className="text-slate-500 text-sm font-medium uppercase tracking-wide">
+                    Status: {status}
+                  </Text>
+                </View>
               </View>
             ) : (
-              <View className="items-center">
-                <Text className="text-xl font-bold text-gray-900 dark:text-white mb-6">
-                  Enter Room ID
+              <View className="items-center w-full">
+                <Text className="text-2xl font-bold text-white mb-8 text-center">
+                  Enter Code
                 </Text>
 
-                <View className="flex-row space-x-4 mb-8">
-                  <TextInput
-                    className="bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-xl px-6 py-4 text-2xl font-bold tracking-widest text-center w-full text-slate-900 dark:text-white"
-                    placeholder="XXXXXX"
-                    placeholderTextColor="#9ca3af"
-                    value={roomId}
-                    onChangeText={(t) => setRoomId(t.toUpperCase())}
-                    maxLength={6}
-                    autoCapitalize="characters"
-                  />
-                </View>
+                <TextInput
+                  className="bg-slate-900 border border-slate-700 rounded-2xl px-8 py-6 text-4xl font-mono font-bold tracking-[0.3em] text-center w-full text-white mb-8 selection:bg-indigo-500/30"
+                  placeholder="XXXXXX"
+                  placeholderTextColor="#334155"
+                  value={roomId}
+                  onChangeText={(t) => setRoomId(t.toUpperCase())}
+                  maxLength={6}
+                  autoCapitalize="characters"
+                />
 
                 {status === "idle" && (
                   <TouchableOpacity
-                    className="bg-blue-600 dark:bg-blue-500 w-full py-4 rounded-xl items-center"
+                    className="w-full"
                     onPress={handleConnectReceiver}>
-                    <Text className="text-white font-bold text-lg">
-                      Connect
-                    </Text>
+                    <LinearGradient
+                      colors={["#6366f1", "#4f46e5"]}
+                      className="w-full py-5 rounded-2xl items-center shadow-xl shadow-indigo-500/20">
+                      <Text className="text-white font-bold text-xl">
+                        Connect & Download
+                      </Text>
+                    </LinearGradient>
                   </TouchableOpacity>
                 )}
 
                 {/* Status Display for Receiver */}
                 {status !== "idle" && (
-                  <View className="w-full bg-gray-50 dark:bg-slate-900/50 p-6 rounded-2xl items-center mt-4 border border-gray-100 dark:border-slate-800">
+                  <View className="w-full bg-slate-800/40 p-6 rounded-3xl items-center mt-6 border border-slate-700/50 backdrop-blur-md">
                     {status === "transferring" && (
-                      <View className="w-full mb-4">
-                        <View className="flex-row justify-between mb-2">
-                          <Text className="text-gray-600 dark:text-gray-400 font-medium">
+                      <View className="w-full">
+                        <View className="flex-row justify-between mb-3">
+                          <Text className="text-slate-300 font-bold">
                             Downloading...
                           </Text>
-                          <Text className="text-blue-600 dark:text-blue-400 font-bold">
+                          <Text className="text-indigo-400 font-mono font-bold">
                             {Math.round(progress)}%
                           </Text>
                         </View>
-                        <View className="h-2 bg-gray-200 dark:bg-slate-700 rounded-full overflow-hidden">
-                          <View
-                            className="h-full bg-blue-500 dark:bg-blue-600"
+                        <View className="h-3 bg-slate-900 rounded-full overflow-hidden border border-slate-700">
+                          <LinearGradient
+                            colors={["#3b82f6", "#0ea5e9"]}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 0 }}
+                            className="h-full rounded-full"
                             style={{ width: `${progress}%` }}
                           />
                         </View>
@@ -384,59 +426,39 @@ export default function P2PShareScreen() {
 
                     {status === "completed" && (
                       <View className="items-center w-full">
-                        <View className="bg-green-100 dark:bg-green-900/30 p-4 rounded-full mb-4">
-                          <CheckCircle size={32} color="#10B981" />
+                        <View className="bg-green-500/20 p-5 rounded-full mb-6">
+                          <CheckCircle size={48} color="#34d399" />
                         </View>
-                        <Text className="text-lg font-bold text-gray-900 dark:text-white mb-6">
-                          Transfer Complete!
+                        <Text className="text-2xl font-bold text-white mb-8">
+                          Download Complete
                         </Text>
 
                         <TouchableOpacity
-                          className="bg-gray-900 dark:bg-white w-full py-4 rounded-xl items-center flex-row justify-center space-x-2"
+                          className="bg-white w-full py-5 rounded-2xl items-center flex-row justify-center space-x-3 shadow-xl"
                           onPress={saveReceivedFile}>
-                          <Download
-                            size={20}
-                            color={Platform.OS === "ios" ? "white" : "#111827"}
-                          />
-                          <Text className="text-white dark:text-slate-900 font-bold text-lg ml-2">
-                            Save / Share File
+                          <Download size={24} color="#0f172a" />
+                          <Text className="text-slate-900 font-bold text-lg ml-2">
+                            Save File
                           </Text>
                         </TouchableOpacity>
                       </View>
                     )}
 
                     {status === "connecting" && (
-                      <View className="flex-row items-center space-x-3">
-                        <ActivityIndicator color="#3B82F6" />
-                        <Text className="text-gray-500 dark:text-gray-400">
-                          Connecting to peer...
-                        </Text>
-                      </View>
-                    )}
-
-                    {status === "connected" && (
-                      <View className="flex-row items-center space-x-3">
-                        <Smartphone size={24} color="#10B981" />
-                        <Text className="text-green-600 dark:text-green-400 font-medium">
-                          Connected! Transfer starting...
+                      <View className="py-8 items-center">
+                        <ActivityIndicator size="large" color="#6366f1" />
+                        <Text className="text-slate-400 mt-4 font-medium animate-pulse">
+                          Searching for peer...
                         </Text>
                       </View>
                     )}
                   </View>
                 )}
-
-                <TouchableOpacity
-                  onPress={cleanup}
-                  className="mt-8 bg-red-50 dark:bg-red-900/20 p-4 rounded-xl items-center w-full">
-                  <Text className="text-red-500 dark:text-red-400 font-bold">
-                    Cancel / Reset
-                  </Text>
-                </TouchableOpacity>
               </View>
             )}
           </View>
         )}
       </View>
-    </SafeAreaView>
+    </ScreenWrapper>
   );
 }

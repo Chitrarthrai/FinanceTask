@@ -37,6 +37,7 @@ const P2PShare = () => {
   }, []);
 
   const initializeP2P = () => {
+    console.log("P2P: Initializing P2P clients...");
     // Cleanup previous instances if any
     webRTC.current?.close();
     signaling.current?.leaveRoom();
@@ -44,9 +45,13 @@ const P2PShare = () => {
     const sig = new SignalingClient();
     const rtc = new WebRTCClient(sig);
 
-    rtc.onStatus = (s) => setStatus(s);
+    rtc.onStatus = (s) => {
+      console.log(`P2P: Status changed to ${s}`);
+      setStatus(s);
+    };
     rtc.onProgress = (p) => setProgress(p);
     rtc.onFileReceived = (blob, meta) => {
+      console.log("P2P: File received!", meta);
       setReceivedFile({ blob, meta });
       setStatus("completed");
     };
@@ -57,6 +62,7 @@ const P2PShare = () => {
   };
 
   const startSend = async () => {
+    console.log("P2P: startSend clicked");
     const { sig, rtc } = initializeP2P();
 
     // Slight delay to ensure clean state
@@ -66,11 +72,10 @@ const P2PShare = () => {
     setRoomId(newRoomId);
     setStatus("waiting");
 
-    console.log("Sender: Joining room and waiting for peer...");
-
-    console.log("Sender: Joining room and waiting for peer...");
+    console.log(`P2P: Generated Room ID ${newRoomId}, joining...`);
 
     await sig.joinRoom(newRoomId, async (type, payload) => {
+      console.log(`P2P: Signal received ${type}`);
       if (type === "new-peer") {
         console.log("Sender: New peer joined! Creating offer...");
         await rtc.initialize(true);
@@ -81,6 +86,7 @@ const P2PShare = () => {
   };
 
   const startReceive = async () => {
+    console.log("P2P: startReceive clicked with Room ID:", roomId);
     if (!roomId) return;
     const { sig, rtc } = initializeP2P();
 
@@ -88,9 +94,8 @@ const P2PShare = () => {
 
     console.log("Receiver: Joining room...");
 
-    console.log("Receiver: Joining room...");
-
     await sig.joinRoom(roomId, (type, payload) => {
+      console.log(`P2P: Signal received ${type}`);
       rtc.handleSignal(type, payload);
     });
 
@@ -102,15 +107,26 @@ const P2PShare = () => {
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log("P2P: File selected");
     if (e.target.files && e.target.files[0]) {
+      console.log("P2P: File set", e.target.files[0].name);
       setFile(e.target.files[0]);
     }
   };
 
   const sendFile = () => {
+    console.log("P2P: sendFile clicked");
     if (file && status === "connected" && webRTC.current) {
+      console.log("P2P: invoking webRTC.sendFile");
       setStatus("sending");
       webRTC.current.sendFile(file);
+    } else {
+      console.warn(
+        "P2P: Cannot send file. Status:",
+        status,
+        "File:",
+        file?.name,
+      );
     }
   };
 
@@ -195,40 +211,60 @@ const P2PShare = () => {
           {mode === "send" && (
             <div className="space-y-8">
               {!roomId ? (
-                <div className="group relative">
-                  <div className="absolute -inset-1 bg-gradient-to-r from-brand-600 to-indigo-600 rounded-3xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
-                  <div className="relative border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-2xl p-10 text-center bg-slate-50/50 dark:bg-slate-800/50 hover:bg-white dark:hover:bg-slate-800 transition-all duration-300 cursor-pointer overflow-hidden">
-                    <input
-                      type="file"
-                      onChange={handleFileSelect}
-                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
-                    />
+                <>
+                  <div className="group relative">
+                    <div className="absolute -inset-1 bg-gradient-to-r from-brand-600 to-indigo-600 rounded-3xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
+                    <div className="relative border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-2xl p-10 text-center bg-slate-50/50 dark:bg-slate-800/50 hover:bg-white dark:hover:bg-slate-800 transition-all duration-300 cursor-pointer overflow-hidden">
+                      <input
+                        type="file"
+                        onChange={handleFileSelect}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
+                      />
 
-                    <div className="w-20 h-20 bg-brand-100 dark:bg-brand-900/30 text-brand-600 dark:text-brand-400 rounded-3xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg shadow-brand-500/10">
-                      <FileIcon className="w-10 h-10" />
+                      <div className="w-20 h-20 bg-brand-100 dark:bg-brand-900/30 text-brand-600 dark:text-brand-400 rounded-3xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg shadow-brand-500/10">
+                        <FileIcon className="w-10 h-10" />
+                      </div>
+
+                      {file ? (
+                        <div className="animate-fade-in-up">
+                          <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200 break-words mb-1">
+                            {file.name}
+                          </h3>
+                          <p className="text-sm font-medium text-brand-600 dark:text-brand-400">
+                            {(file.size / (1024 * 1024)).toFixed(2)} MB
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          <h3 className="text-xl font-bold text-slate-800 dark:text-slate-200 group-hover:text-brand-600 transition-colors">
+                            Drop your file here
+                          </h3>
+                          <p className="text-slate-500 dark:text-slate-400 text-sm">
+                            or click to browse from your device
+                          </p>
+                        </div>
+                      )}
                     </div>
-
-                    {file ? (
-                      <div className="animate-fade-in-up">
-                        <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200 break-words mb-1">
-                          {file.name}
-                        </h3>
-                        <p className="text-sm font-medium text-brand-600 dark:text-brand-400">
-                          {(file.size / (1024 * 1024)).toFixed(2)} MB
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="space-y-2">
-                        <h3 className="text-xl font-bold text-slate-800 dark:text-slate-200 group-hover:text-brand-600 transition-colors">
-                          Drop your file here
-                        </h3>
-                        <p className="text-slate-500 dark:text-slate-400 text-sm">
-                          or click to browse from your device
-                        </p>
-                      </div>
-                    )}
                   </div>
-                </div>
+                  {/* Buttons for File Selection Stage */}
+                  {file && (
+                    <div className="flex flex-col gap-4 mt-6">
+                      <button
+                        onClick={startSend}
+                        className="w-full btn bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white py-4 rounded-xl text-lg font-bold shadow-xl shadow-brand-500/30 hover:shadow-brand-500/40 hover:-translate-y-1 transition-all duration-300">
+                        Generate Share Code
+                      </button>
+                      <button
+                        onClick={() => {
+                          setFile(null);
+                          setStatus("idle");
+                        }}
+                        className="px-6 py-2 rounded-lg font-bold bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors w-full">
+                        Cancel
+                      </button>
+                    </div>
+                  )}
+                </>
               ) : (
                 <div className="text-center py-6 animate-scale-in">
                   <div className="mb-6">
@@ -260,13 +296,6 @@ const P2PShare = () => {
                   </div>
 
                   <div className="flex flex-col gap-4 mt-6">
-                    {file && !roomId && (
-                      <button
-                        onClick={startSend}
-                        className="w-full btn bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white py-4 rounded-xl text-lg font-bold shadow-xl shadow-brand-500/30 hover:shadow-brand-500/40 hover:-translate-y-1 transition-all duration-300">
-                        Generate Share Code
-                      </button>
-                    )}
                     <button
                       onClick={() => {
                         setStatus("idle");

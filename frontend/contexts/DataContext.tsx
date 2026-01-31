@@ -15,6 +15,7 @@ import {
   MonthlyMetrics,
   CategoryDistribution,
   SpendingTrend,
+  Note,
 } from "../types";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "./AuthContext";
@@ -23,6 +24,7 @@ import { User } from "@supabase/supabase-js";
 interface DataContextType {
   transactions: Transaction[];
   tasks: Task[];
+  notes: Note[];
   budgetSettings: BudgetSettings;
   categories: Category[];
   metrics: FinancialMetrics;
@@ -41,6 +43,11 @@ interface DataContextType {
   updateCategory: (id: string, name: string) => Promise<void>;
   deleteCategory: (id: string) => Promise<void>;
   addRecurringRule: (rule: any) => Promise<void>;
+  // Notes operations
+  addNote: (note: Partial<Note>) => Promise<void>;
+  updateNote: (note: Partial<Note>) => Promise<void>;
+  deleteNote: (id: string) => Promise<void>;
+  pinNote: (id: string, isPinned: boolean) => Promise<void>;
   refreshData: () => Promise<void>;
   getAnalyticsData: (month: string) => Promise<{
     metrics: MonthlyMetrics | null;
@@ -69,6 +76,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
   const { user } = useAuth();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [notes, setNotes] = useState<Note[]>([]);
   const [budgetSettings, setBudgetSettings] = useState<BudgetSettings>(
     defaultBudgetSettings,
   );
@@ -231,6 +239,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
               ? new Date(t.due_date).toLocaleString("en-US", {
                   month: "short",
                   day: "numeric",
+                  year: "numeric",
                   hour: "numeric",
                   minute: "2-digit",
                 })
@@ -238,6 +247,33 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
             recurring: t.recurring,
             tags: t.tags || [],
             category: t.category || "Personal",
+          })),
+        );
+      }
+
+      // 5. Fetch Notes
+      const { data: notesData } = await supabase
+        .from("notes")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("is_pinned", { ascending: false })
+        .order("updated_at", { ascending: false });
+
+      if (notesData) {
+        setNotes(
+          notesData.map((n) => ({
+            id: n.id,
+            userId: n.user_id,
+            taskId: n.task_id,
+            title: n.title,
+            content: n.content,
+            summary: n.summary,
+            tags: n.tags || [],
+            extractedTasks: n.extracted_tasks || [],
+            isPinned: n.is_pinned,
+            color: n.color || "default",
+            createdAt: n.created_at,
+            updatedAt: n.updated_at,
           })),
         );
       }
@@ -277,9 +313,13 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
   };
 
   useEffect(() => {
+    console.log("DataContext: Auth State Changed", { user });
     if (user) {
+      console.log("DataContext: Fetching data for user", user.id);
       fetchData();
       checkRecurringTransactions();
+    } else {
+      console.log("DataContext: No user, skipping fetch");
     }
   }, [user]);
 
@@ -587,12 +627,85 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     }
   };
 
+  // Notes CRUD Operations
+  const addNote = async (noteData: Partial<Note>) => {
+    if (!user) return;
+    const newNote: Note = {
+      id: noteData.id || crypto.randomUUID(),
+      userId: user.id,
+      taskId: noteData.taskId,
+      title: noteData.title || "Untitled Note",
+      content: noteData.content || "",
+      summary: noteData.summary,
+      tags: noteData.tags || [],
+      extractedTasks: noteData.extractedTasks || [],
+      isPinned: noteData.isPinned || false,
+      color: noteData.color || "default",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    setNotes((prev) => [newNote, ...prev]);
+
+    await supabase.from("notes").insert({
+      id: newNote.id,
+      user_id: user.id,
+      task_id: newNote.taskId,
+      title: newNote.title,
+      content: newNote.content,
+      summary: newNote.summary,
+      tags: newNote.tags,
+      extracted_tasks: newNote.extractedTasks,
+      is_pinned: newNote.isPinned,
+      color: newNote.color,
+    });
+  };
+
+  const updateNote = async (noteData: Partial<Note>) => {
+    if (!user || !noteData.id) return;
+
+    setNotes((prev) =>
+      prev.map((n) =>
+        n.id === noteData.id
+          ? { ...n, ...noteData, updatedAt: new Date().toISOString() }
+          : n,
+      ),
+    );
+
+    await supabase
+      .from("notes")
+      .update({
+        task_id: noteData.taskId,
+        title: noteData.title,
+        content: noteData.content,
+        summary: noteData.summary,
+        tags: noteData.tags,
+        extracted_tasks: noteData.extractedTasks,
+        is_pinned: noteData.isPinned,
+        color: noteData.color,
+      })
+      .eq("id", noteData.id);
+  };
+
+  const deleteNote = async (id: string) => {
+    if (!user) return;
+    setNotes((prev) => prev.filter((n) => n.id !== id));
+    await supabase.from("notes").delete().eq("id", id);
+  };
+
+  const pinNote = async (id: string, isPinned: boolean) => {
+    if (!user) return;
+    setNotes((prev) => prev.map((n) => (n.id === id ? { ...n, isPinned } : n)));
+    await supabase.from("notes").update({ is_pinned: isPinned }).eq("id", id);
+  };
+
   return (
     <DataContext.Provider
       value={{
         transactions,
         user,
         tasks,
+        notes,
         budgetSettings,
         categories,
         metrics,
@@ -607,6 +720,10 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
         updateCategory,
         deleteCategory,
         addRecurringRule,
+        addNote,
+        updateNote,
+        deleteNote,
+        pinNote,
         refreshData: fetchData,
         getAnalyticsData: async (monthStr: string) => {
           if (!user) return { metrics: null, distribution: [], trend: [] };

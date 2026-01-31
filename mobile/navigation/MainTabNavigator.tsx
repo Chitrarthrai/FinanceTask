@@ -17,7 +17,8 @@ import { useData } from "../context/DataContext";
 
 // Screens
 import TransactionsScreen from "../screens/TransactionsScreen";
-import TasksScreen from "../screens/TasksScreen";
+import TasksStackNavigator from "./TasksStackNavigator"; // Use the new Stack
+
 import ChatScreen from "../screens/ChatScreen";
 import SettingsScreen from "../screens/SettingsScreen";
 import ReportsScreen from "../screens/ReportsScreen"; // The "Report Paper" view
@@ -54,9 +55,10 @@ const MainTabNavigator = () => {
           tabBarIcon: ({ color, size }) => <Wallet color={color} size={size} />,
         }}
       />
+
       <Tab.Screen
         name="TasksTab"
-        component={TasksScreen}
+        component={TasksStackNavigator} // Use the stack navigator
         options={{
           tabBarLabel: "Tasks",
           tabBarIcon: ({ color, size }) => (

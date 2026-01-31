@@ -12,6 +12,7 @@ import P2PShare from "./pages/P2PShare";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import Notes from "./pages/Notes"; // Import Notes Page
 import { DataProvider } from "./contexts/DataContext";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { AIChatBot } from "./components/AIChatBot";
@@ -104,6 +105,7 @@ const App = () => {
             <Route index element={<Dashboard />} />
             <Route path="transactions" element={<Transactions />} />
             <Route path="tasks" element={<Tasks />} />
+            <Route path="notes" element={<Notes />} />
             <Route path="analytics" element={<Analytics />} />
             <Route path="reports" element={<Reports />} />
             <Route path="settings" element={<Settings />} />

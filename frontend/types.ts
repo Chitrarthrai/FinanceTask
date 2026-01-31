@@ -111,3 +111,37 @@ export interface SpendingTrend {
   day_label: string;
   amount: number;
 }
+
+// Notes Types
+export type NoteColor =
+  | "default"
+  | "red"
+  | "orange"
+  | "yellow"
+  | "green"
+  | "blue"
+  | "purple";
+
+export interface ExtractedTask {
+  title: string;
+  priority: TaskPriority;
+  dueDate?: string;
+  assignee?: string;
+}
+
+export interface Note {
+  id: string;
+  userId?: string;
+  taskId?: string; // Optional link to task
+  title: string;
+  content: string;
+  summary?: string; // AI-generated summary
+  tags: string[];
+  extractedTasks: ExtractedTask[];
+  isPinned: boolean;
+  color: NoteColor;
+  createdAt: string;
+  updatedAt: string;
+  // Virtual field for linked task info
+  linkedTask?: Task;
+}

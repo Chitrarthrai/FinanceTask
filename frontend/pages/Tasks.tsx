@@ -15,9 +15,10 @@ import {
   Trash2,
   X,
   Tag,
+  FileText,
 } from "lucide-react";
 import { useData } from "../contexts/DataContext";
-import { Task, TaskStatus } from "../types";
+import { Task, TaskStatus, ExtractedTask } from "../types";
 import Modal from "../components/Modal";
 import TaskCalendar from "../components/TaskCalendar";
 import CustomDatePicker from "../components/CustomDatePicker";
@@ -27,6 +28,12 @@ const Tasks = () => {
   const { tasks, addTask, updateTaskStatus, deleteTask } = useData();
   const [view, setView] = useState<"board" | "list" | "calendar">("board");
   const [filter, setFilter] = useState("");
+  const [endDate, setEndDate] = useState<Date | null>(() => new Date());
+  const [startDate, setStartDate] = useState<Date | null>(() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 7);
+    return d;
+  });
 
   const [searchParams] = useSearchParams();
   useEffect(() => {
@@ -73,17 +80,46 @@ const Tasks = () => {
     updateTaskStatus(id, status);
   };
 
-  const filteredTasks = tasks.filter((t) => {
-    const matchesSearch =
-      t.title.toLowerCase().includes(filter.toLowerCase()) ||
-      (t.description &&
-        t.description.toLowerCase().includes(filter.toLowerCase()));
-    const matchesPriority =
-      priorityFilter === "all" || t.priority === priorityFilter;
-    const matchesCategory =
-      categoryFilter === "all" || t.category === categoryFilter;
-    return matchesSearch && matchesPriority && matchesCategory;
-  });
+  const filteredTasks = tasks
+    .filter((t) => {
+      const matchesSearch =
+        t.title.toLowerCase().includes(filter.toLowerCase()) ||
+        (t.description &&
+          t.description.toLowerCase().includes(filter.toLowerCase()));
+      const matchesPriority =
+        priorityFilter === "all" || t.priority === priorityFilter;
+      const matchesCategory =
+        categoryFilter === "all" || t.category === categoryFilter;
+
+      // Date Filter
+      let matchesDate = true;
+      if (t.dueDate) {
+        const taskDate = new Date(t.dueDate);
+        taskDate.setHours(0, 0, 0, 0); // Normalize time
+
+        if (startDate) {
+          const start = new Date(startDate);
+          start.setHours(0, 0, 0, 0);
+          if (taskDate < start) matchesDate = false;
+        }
+
+        if (matchesDate && endDate) {
+          const end = new Date(endDate);
+          end.setHours(23, 59, 59, 999);
+          if (taskDate > end) matchesDate = false;
+        }
+      } else if (startDate || endDate) {
+        // If filters are active but task has no date, usually exclude it
+        matchesDate = false;
+      }
+
+      return matchesSearch && matchesPriority && matchesCategory && matchesDate;
+    })
+    .sort((a, b) => {
+      const dateA = a.dueDate ? new Date(a.dueDate).getTime() : Infinity;
+      const dateB = b.dueDate ? new Date(b.dueDate).getTime() : Infinity;
+      return dateA - dateB;
+    });
 
   const handleAddTask = (e: React.FormEvent) => {
     e.preventDefault();
@@ -100,7 +136,7 @@ const Tasks = () => {
     }
 
     addTask({
-      id: Math.random().toString(36).substr(2, 9),
+      id: crypto.randomUUID(),
       title: newTask.title || "Untitled",
       description: newTask.description || "",
       priority: newTask.priority as any,
@@ -294,13 +330,15 @@ const Tasks = () => {
   return (
     <div className="space-y-6 h-[calc(100vh-140px)] flex flex-col pb-6 animate-fade-in">
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-end gap-4 flex-shrink-0">
+      <div className="flex flex-col md:flex-row justify-between items-end gap-4 shrink-0">
         <div>
           <h1 className="text-3xl font-extrabold text-slate-800 dark:text-white tracking-tight mb-1">
-            Task Board
+            {view === "notes" ? "Notes" : "Task Board"}
           </h1>
           <p className="text-slate-500 dark:text-slate-400 font-medium">
-            Manage your projects and daily to-dos.
+            {view === "notes"
+              ? "AI-powered notes with smart features."
+              : "Manage your projects and daily to-dos."}
           </p>
         </div>
         <div className="flex gap-3">
@@ -344,63 +382,111 @@ const Tasks = () => {
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="flex gap-4 flex-shrink-0">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-          <input
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-            type="text"
-            placeholder="Search tasks..."
-            className={`w-full pl-10 pr-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-brand-200 outline-none transition-all text-sm font-medium glass-input ${
-              theme === "dark"
-                ? "bg-slate-800/40 border-slate-700/50 focus:bg-slate-900 text-white"
-                : "bg-white border-slate-200 focus:bg-white text-slate-800"
-            }`}
-          />
-        </div>
+      {/* Filters - only shown when not in notes view */}
+      {view !== "notes" && (
+        <div className="flex gap-4 shrink-0">
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <input
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              type="text"
+              placeholder="Search tasks..."
+              className={`w-full pl-10 pr-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-brand-200 outline-none transition-all text-sm font-medium glass-input ${
+                theme === "dark"
+                  ? "bg-slate-800/40 border-slate-700/50 focus:bg-slate-900 text-white"
+                  : "bg-white border-slate-200 focus:bg-white text-slate-800"
+              }`}
+            />
+          </div>
 
-        {/* Functional Priority Filter */}
-        <div className="relative">
-          <select
-            value={priorityFilter}
-            onChange={(e) => setPriorityFilter(e.target.value)}
-            className={`appearance-none pl-10 pr-10 py-2.5 border rounded-xl font-bold transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-500/50 ${
-              theme === "dark"
-                ? "bg-slate-800/40 border-slate-700/50 text-slate-300 hover:bg-slate-800"
-                : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
-            }`}>
-            <option value="all">All Priorities</option>
-            <option value="high">High Priority</option>
-            <option value="medium">Medium Priority</option>
-            <option value="low">Low Priority</option>
-          </select>
-          <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
-          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
-        </div>
+          {/* Functional Priority Filter */}
+          <div className="relative">
+            <select
+              value={priorityFilter}
+              onChange={(e) => setPriorityFilter(e.target.value)}
+              className={`appearance-none pl-10 pr-10 py-2.5 border rounded-xl font-bold transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-500/50 ${
+                theme === "dark"
+                  ? "bg-slate-800/40 border-slate-700/50 text-slate-300 hover:bg-slate-800"
+                  : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
+              }`}>
+              <option value="all">All Priorities</option>
+              <option value="high">High Priority</option>
+              <option value="medium">Medium Priority</option>
+              <option value="low">Low Priority</option>
+            </select>
+            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
+          </div>
 
-        {/* Category Filter */}
-        <div className="relative">
-          <select
-            value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
-            className={`appearance-none pl-10 pr-10 py-2.5 border rounded-xl font-bold transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-500/50 ${
-              theme === "dark"
-                ? "bg-slate-800/40 border-slate-700/50 text-slate-300 hover:bg-slate-800"
-                : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
-            }`}>
-            <option value="all">All Categories</option>
-            {TASK_CATEGORIES.map((cat) => (
-              <option key={cat} value={cat}>
-                {cat}
-              </option>
-            ))}
-          </select>
-          <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
-          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
+          {/* Category Filter */}
+          <div className="relative">
+            <select
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              className={`appearance-none pl-10 pr-10 py-2.5 border rounded-xl font-bold transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-500/50 ${
+                theme === "dark"
+                  ? "bg-slate-800/40 border-slate-700/50 text-slate-300 hover:bg-slate-800"
+                  : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
+              }`}>
+              <option value="all">All Categories</option>
+              {TASK_CATEGORIES.map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat}
+                </option>
+              ))}
+            </select>
+            <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
+          </div>
+
+          {/* Date Filter Inputs */}
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <input
+                type="date"
+                className={`pl-8 pr-3 py-2.5 border rounded-xl font-medium transition-all focus:outline-none focus:ring-2 focus:ring-brand-500/50 ${
+                  theme === "dark"
+                    ? "bg-slate-800/40 border-slate-700/50 text-slate-300"
+                    : "bg-white border-slate-200 text-slate-600"
+                }`}
+                value={startDate ? startDate.toISOString().split("T")[0] : ""}
+                onChange={(e) =>
+                  setStartDate(e.target.value ? new Date(e.target.value) : null)
+                }
+              />
+              <CalendarIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
+            </div>
+            <span className="text-slate-400 font-medium">-</span>
+            <div className="relative">
+              <input
+                type="date"
+                className={`pl-8 pr-3 py-2.5 border rounded-xl font-medium transition-all focus:outline-none focus:ring-2 focus:ring-brand-500/50 ${
+                  theme === "dark"
+                    ? "bg-slate-800/40 border-slate-700/50 text-slate-300"
+                    : "bg-white border-slate-200 text-slate-600"
+                }`}
+                value={endDate ? endDate.toISOString().split("T")[0] : ""}
+                onChange={(e) =>
+                  setEndDate(e.target.value ? new Date(e.target.value) : null)
+                }
+              />
+              <CalendarIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
+            </div>
+            {(startDate || endDate) && (
+              <button
+                onClick={() => {
+                  setStartDate(null);
+                  setEndDate(null);
+                }}
+                className="p-2 rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-colors"
+                title="Clear Date Filter">
+                <X className="w-5 h-5" />
+              </button>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* View Content */}
       {view === "board" && (
@@ -431,7 +517,7 @@ const Tasks = () => {
 
       {view === "list" && (
         <div className="glass-panel rounded-3xl overflow-hidden flex-1">
-          <div className="overflow-x-auto">
+          <div className="overflow-auto max-h-full">
             <table className="w-full">
               <thead className="bg-white/30 dark:bg-slate-900/30 border-b border-white/20 dark:border-white/5">
                 <tr>

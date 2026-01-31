@@ -41,14 +41,15 @@ By integrating **Advanced Financial Analytics** with **Kanban-style Task Managem
 
 ### 🤖 AI Financial Assistant (Powered by Gemini)
 
-Your personal financial advisor, available 24/7.
+Your intelligent personal financial advisor, available 24/7.
 
-- **Natural Language Chat**: Ask questions directly to your data.
-  - _"How much did I spend on coffee last month?"_
-  - _"What is my remaining budget for the week?"_
-  - _"Can I afford a new laptop right now?"_
-- **Smart Insights**: The AI pro-actively suggests budget adjustments based on your spending habits.
-- **Context Aware**: Understands your past transactions and future recurring payments.
+- **Natural Language Chat**: Communicate with your financial data as if you were talking to an expert.
+  - _"How much did I spend on coffee last month vs. this month?"_
+  - _"What is my safe-to-spend limit for the rest of the week?"_
+  - _"Can I afford a new laptop right now without breaking my savings goal?"_
+- **Actionable Intelligence**: Don't just ask—act. Tell the AI to "Add a $15 lunch expense" or "Remind me to pay the electricity bill tomorrow," and it handles the data entry for you.
+- **Proactive Insights**: The AI constantly monitors your budget health and alerts you _before_ you overspend, offering tailored advice to get back on track.
+- **Context Aware**: It understands your full financial picture—recurring bills, income cycles, and past spending habits—to give personalized answers.
 
 ### 📊 Advanced Analytics & Visualization
 
@@ -88,6 +89,14 @@ Stop manual data entry forever.
 - **Kanban Task Management**: Visualize financial tasks (e.g., "Call Bank", "Pay Utility Bill") on a drag-and-drop board.
 - **Priority Matrix**: Automatically sort tasks by urgency and importance.
 - **Calendar Sync**: View upcoming bill due dates and paydays on a unified calendar view.
+
+### 📝 Smart Notes with AI
+
+Capture ideas instantly, organize them effortlessly.
+
+- **Intelligent Task Extraction**: Transform unstructured brain dumps into action items. Write down rough meeting notes, and let **Gemini AI** identify the tasks, deadlines, and priorities, automatically adding them to your Kanban board.
+- **AI Auto-Tagging & Summarization**: Keep your knowledge base organized without the manual work. The AI automatically tags your notes based on context and creates concise summaries for long documents.
+- **Visual Masonry Grid**: A beautiful, responsive card layout (similar to Google Keep) that allows for color-coding and pinning, ensuring your most important thoughts are always front and center.
 
 ### 🔄 Privacy-First P2P Sharing
 
@@ -137,7 +146,8 @@ Built for speed and reliability.
 
 Exciting features currently in development:
 
-- [ ] **Recurring Transactions**: Set it and forget it for monthly subscriptions and rent.
+- [x] **Recurring Transactions**: Set it and forget it for monthly subscriptions and rent.
+- [x] **Smart Notes**: AI-powered note taking with task extraction.
 - [ ] **Goal Tracking**: Specialized "Buckets" for saving towards a Vacation, Car, or House.
 - [ ] **Gamification**: Earn badges and "Financial Health Points" for staying under budget.
 - [ ] **Multi-Currency Support**: Perfect for digital nomads and travelers.

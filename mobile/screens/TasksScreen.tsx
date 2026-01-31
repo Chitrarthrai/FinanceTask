@@ -4,13 +4,10 @@ import {
   Text,
   FlatList,
   TouchableOpacity,
-  ActivityIndicator,
   TextInput,
-  ScrollView,
   Platform,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { ScreenWrapper } from "../components/ui/ScreenWrapper";
 import { GlassView } from "../components/ui/GlassView";
 import { useData } from "../context/DataContext";
@@ -23,50 +20,51 @@ import {
   Calendar,
   Search,
   X,
-  Tag,
-  Flag,
-  MoreHorizontal,
   Trash2,
   List,
 } from "lucide-react-native";
 import AddTaskModal from "../components/AddTaskModal";
+import { ViewToggle } from "../components/ui/ViewToggle";
 
 const TasksScreen = (props: any) => {
   const { tasks, updateTaskStatus, deleteTask } = useData();
   const [activeTab, setActiveTab] = useState<TaskStatus>("todo");
+  // const [activeView, setActiveView] = useState<"tasks" | "notes">("tasks"); // Removed, handled by Stack
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
-  // Initialize from params
+  // Initialize from params if needed
   React.useEffect(() => {
     if ((props.route.params as any)?.search) {
       setSearchQuery((props.route.params as any).search);
     }
   }, [props.route.params]);
 
-  const [startDate, setStartDate] = useState<Date | null>(new Date());
   const [endDate, setEndDate] = useState<Date | null>(new Date());
+  const [startDate, setStartDate] = useState<Date | null>(() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 7);
+    return d;
+  });
   const [showDatePicker, setShowDatePicker] = useState<"start" | "end" | null>(
     null,
   );
 
   const onDateChange = (event: any, selectedDate?: Date) => {
     const currentMode = showDatePicker;
-    setShowDatePicker(null); // Close picker on selection (Android behavior mostly)
+    setShowDatePicker(null); // Close picker on selection
 
     if (event.type === "dismissed") return;
 
     if (selectedDate && currentMode) {
       if (currentMode === "start") {
         setStartDate(selectedDate);
-        // Auto-adjust end date if it's before start date
         if (endDate && endDate < selectedDate) {
           setEndDate(null);
         }
       } else {
         setEndDate(selectedDate);
-        // Auto-adjust start date if it's after end date
         if (startDate && startDate > selectedDate) {
           setStartDate(null);
         }
@@ -79,10 +77,7 @@ const TasksScreen = (props: any) => {
       .filter((t) => t.status === activeTab)
       .filter((t) => t.title.toLowerCase().includes(searchQuery.toLowerCase()))
       .filter((t) => {
-        // Custom Date Range Filter
-        // If neither start nor end is selected, show all (return true)
         if (!startDate && !endDate) return true;
-
         if (!t.dueDate) return false;
         const due = new Date(t.dueDate);
         due.setHours(0, 0, 0, 0);
@@ -95,11 +90,15 @@ const TasksScreen = (props: any) => {
 
         if (endDate) {
           const end = new Date(endDate);
-          end.setHours(23, 59, 59, 999); // End of the day
+          end.setHours(23, 59, 59, 999);
           if (due > end) return false;
         }
-
         return true;
+      })
+      .sort((a, b) => {
+        const dateA = a.dueDate ? new Date(a.dueDate).getTime() : Infinity;
+        const dateB = b.dueDate ? new Date(b.dueDate).getTime() : Infinity;
+        return dateA - dateB;
       });
   }, [tasks, activeTab, searchQuery, startDate, endDate]);
 
@@ -186,7 +185,6 @@ const TasksScreen = (props: any) => {
         </View>
 
         <View className="flex-row gap-2">
-          {/* Status Actions */}
           {item.status !== "todo" && (
             <TouchableOpacity
               onPress={() => updateTaskStatus(item.id, "todo")}
@@ -223,6 +221,10 @@ const TasksScreen = (props: any) => {
 
   return (
     <ScreenWrapper>
+      {/* View Toggle */}
+      <ViewToggle activeView="tasks" />
+
+      {/* Main Content */}
       <View className="px-4 py-4 z-10">
         <View className="flex-row justify-between items-center mb-4">
           <Text className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
@@ -365,7 +367,29 @@ const TasksScreen = (props: any) => {
                       ? "text-slate-900"
                       : "text-slate-500 dark:text-white"
                   }`}>
-                  {tasks.filter((t) => t.status === status).length}
+                  {
+                    tasks.filter((t) => {
+                      if (t.status !== status) return false;
+                      // Duplicate date logic to ensure counts match view
+                      if (!startDate && !endDate) return true;
+                      if (!t.dueDate) return false;
+                      const due = new Date(t.dueDate);
+                      due.setHours(0, 0, 0, 0);
+
+                      if (startDate) {
+                        const start = new Date(startDate);
+                        start.setHours(0, 0, 0, 0);
+                        if (due < start) return false;
+                      }
+
+                      if (endDate) {
+                        const end = new Date(endDate);
+                        end.setHours(23, 59, 59, 999);
+                        if (due > end) return false;
+                      }
+                      return true;
+                    }).length
+                  }
                 </Text>
               </View>
             </TouchableOpacity>
@@ -390,7 +414,7 @@ const TasksScreen = (props: any) => {
 
       {/* Floating Action Button */}
       <TouchableOpacity
-        className="absolute bottom-24 right-6 w-14 h-14 bg-indigo-500 rounded-full items-center justify-center shadow-lg shadow-indigo-500/40 border border-white/20"
+        className="absolute bottom-28 right-6 w-14 h-14 bg-indigo-500 rounded-full items-center justify-center shadow-lg shadow-indigo-500/40 border border-white/20 z-50"
         onPress={() => setIsModalOpen(true)}>
         <Plus color="white" size={30} />
       </TouchableOpacity>

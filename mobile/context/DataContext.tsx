@@ -15,6 +15,7 @@ import {
   MonthlyMetrics,
   CategoryDistribution,
   SpendingTrend,
+  Note,
 } from "../types";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "./AuthContext";
@@ -23,6 +24,7 @@ import { User } from "@supabase/supabase-js";
 interface DataContextType {
   transactions: Transaction[];
   tasks: Task[];
+  notes: Note[];
   budgetSettings: BudgetSettings;
   categories: Category[];
   metrics: FinancialMetrics;
@@ -41,6 +43,11 @@ interface DataContextType {
   updateCategory: (id: string, name: string) => Promise<void>;
   deleteCategory: (id: string) => Promise<void>;
   addRecurringRule: (rule: any) => Promise<void>;
+  // Notes operations
+  addNote: (note: Partial<Note>) => Promise<void>;
+  updateNote: (note: Partial<Note>) => Promise<void>;
+  deleteNote: (id: string) => Promise<void>;
+  pinNote: (id: string, isPinned: boolean) => Promise<void>;
   refreshData: () => Promise<void>;
   getAnalyticsData: (month: string) => Promise<{
     metrics: MonthlyMetrics | null;
@@ -75,6 +82,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
   const { user } = useAuth();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [notes, setNotes] = useState<Note[]>([]);
   const [budgetSettings, setBudgetSettings] = useState<BudgetSettings>(
     defaultBudgetSettings,
   );
@@ -222,12 +230,20 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
         .order("due_date", { ascending: true });
 
       if (taskData) {
+        // Helper to normalize status
+        const normalizeStatus = (s: string): TaskStatus => {
+          const lower = s.toLowerCase();
+          if (lower === "in_progress" || lower === "in progress")
+            return "in-progress";
+          return lower as TaskStatus;
+        };
+
         setTasks(
           taskData.map((t) => ({
             id: t.id,
             title: t.title,
             description: t.description || "",
-            status: t.status as any,
+            status: normalizeStatus(t.status),
             priority: t.priority as any,
             dueDate: t.due_date || "", // Pass raw date string
             recurring: t.recurring,
@@ -250,6 +266,33 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
       if (metricsData && metricsData.length > 0) {
         // We could merge this with calculated metrics if needed, but for now we use local calculation overriding
         // actually local calculation is better for instant updates on transaction add
+      }
+
+      // 6. Fetch Notes
+      const { data: notesData } = await supabase
+        .from("notes")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("is_pinned", { ascending: false })
+        .order("updated_at", { ascending: false });
+
+      if (notesData) {
+        setNotes(
+          notesData.map((n) => ({
+            id: n.id,
+            userId: n.user_id,
+            taskId: n.task_id,
+            title: n.title || "",
+            content: n.content || "",
+            summary: n.summary,
+            tags: n.tags || [],
+            extractedTasks: n.extracted_tasks || [],
+            isPinned: n.is_pinned || false,
+            color: n.color || "default",
+            createdAt: n.created_at,
+            updatedAt: n.updated_at,
+          })),
+        );
       }
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -485,8 +528,19 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
 
   const updateTaskStatus = async (id: string, status: TaskStatus) => {
     if (!user) return;
-    setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, status } : t)));
-    await supabase.from("tasks").update({ status }).eq("id", id);
+    // Helper to normalize status
+    const normalizeStatus = (s: string): TaskStatus => {
+      const lower = s.toLowerCase();
+      if (lower === "in_progress" || lower === "in progress")
+        return "in-progress";
+      return lower as TaskStatus;
+    };
+    const normalized = normalizeStatus(status);
+
+    setTasks((prev) =>
+      prev.map((t) => (t.id === id ? { ...t, status: normalized } : t)),
+    );
+    await supabase.from("tasks").update({ status: normalized }).eq("id", id);
   };
 
   const updateBudgetSettings = async (settings: Partial<BudgetSettings>) => {
@@ -565,12 +619,85 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     }
   };
 
+  // Notes Operations
+  const addNote = async (note: Partial<Note>) => {
+    if (!user) return;
+    const newNote: Note = {
+      id: note.id || crypto.randomUUID(),
+      userId: user.id,
+      taskId: note.taskId,
+      title: note.title || "Untitled Note",
+      content: note.content || "",
+      summary: note.summary,
+      tags: note.tags || [],
+      extractedTasks: note.extractedTasks || [],
+      isPinned: note.isPinned || false,
+      color: note.color || "default",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    setNotes((prev) => [newNote, ...prev]);
+
+    await supabase.from("notes").insert({
+      id: newNote.id,
+      user_id: user.id,
+      task_id: newNote.taskId,
+      title: newNote.title,
+      content: newNote.content,
+      summary: newNote.summary,
+      tags: newNote.tags,
+      extracted_tasks: newNote.extractedTasks,
+      is_pinned: newNote.isPinned,
+      color: newNote.color,
+    });
+  };
+
+  const updateNote = async (note: Partial<Note>) => {
+    if (!user || !note.id) return;
+
+    setNotes((prev) =>
+      prev.map((n) =>
+        n.id === note.id
+          ? { ...n, ...note, updatedAt: new Date().toISOString() }
+          : n,
+      ),
+    );
+
+    await supabase
+      .from("notes")
+      .update({
+        task_id: note.taskId,
+        title: note.title,
+        content: note.content,
+        summary: note.summary,
+        tags: note.tags,
+        extracted_tasks: note.extractedTasks,
+        is_pinned: note.isPinned,
+        color: note.color,
+      })
+      .eq("id", note.id);
+  };
+
+  const deleteNote = async (id: string) => {
+    if (!user) return;
+    setNotes((prev) => prev.filter((n) => n.id !== id));
+    await supabase.from("notes").delete().eq("id", id);
+  };
+
+  const pinNote = async (id: string, isPinned: boolean) => {
+    if (!user) return;
+    setNotes((prev) => prev.map((n) => (n.id === id ? { ...n, isPinned } : n)));
+    await supabase.from("notes").update({ is_pinned: isPinned }).eq("id", id);
+  };
+
   return (
     <DataContext.Provider
       value={{
         transactions,
         user,
         tasks,
+        notes,
         budgetSettings,
         categories,
         metrics,
@@ -585,6 +712,10 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
         updateCategory,
         deleteCategory,
         addRecurringRule,
+        addNote,
+        updateNote,
+        deleteNote,
+        pinNote,
         refreshData: fetchData,
         getAnalyticsData: async (monthStr: string) => {
           if (!user) return { metrics: null, distribution: [], trend: [] };

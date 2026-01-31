@@ -20,6 +20,7 @@ const Sidebar = () => {
     { icon: LayoutDashboard, label: "Dashboard", path: "/app" },
     { icon: Wallet, label: "Transactions", path: "/app/transactions" },
     { icon: CheckSquare, label: "Tasks", path: "/app/tasks" },
+    { icon: FileText, label: "Notes", path: "/app/notes" },
     { icon: PieChart, label: "Analytics", path: "/app/analytics" },
     { icon: FileText, label: "Reports", path: "/app/reports" },
     { icon: Share2, label: "P2P Share", path: "/app/p2p" },

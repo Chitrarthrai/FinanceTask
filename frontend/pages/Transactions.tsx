@@ -29,8 +29,14 @@ const Transactions = () => {
   const { transactions, deleteTransaction, categories, user } = useData();
   const [filter, setFilter] = useState("All");
   const [searchTerm, setSearchTerm] = useState("");
-  const [startDate, setStartDate] = useState<Date | null>(null);
-  const [endDate, setEndDate] = useState<Date | null>(null);
+  const [startDate, setStartDate] = useState<Date | null>(() => {
+    const date = new Date();
+    return new Date(date.getFullYear(), date.getMonth(), 1);
+  });
+  const [endDate, setEndDate] = useState<Date | null>(() => {
+    const date = new Date();
+    return new Date(date.getFullYear(), date.getMonth() + 1, 0);
+  });
   const [limit, setLimit] = useState(6);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<

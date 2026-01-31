@@ -121,7 +121,7 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
       } else {
         // Create new
         await addTransaction({
-          id: Math.random().toString(36).substr(2, 9),
+          id: crypto.randomUUID(),
           title: newTrans.title || "Untitled",
           category: newTrans.category || "Others",
           amount: Number(newTrans.amount),

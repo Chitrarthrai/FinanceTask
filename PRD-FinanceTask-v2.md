@@ -143,7 +143,8 @@ Root
 │   ├── /tasks/kanban (Kanban Board View)
 │   ├── /tasks/calendar (Calendar View)
 │   ├── /tasks/list (List View)
-│   └── /tasks/create
+│   ├── /tasks/create
+│   └── /notes (AI Smart Notes)
 ├── Settings
 │   ├── /settings/profile (User Profile)
 │   ├── /settings/budget (Budget Configuration)
@@ -721,21 +722,32 @@ Four-column Kanban board:
 
 ### 3.8 AI Financial Assistant (Gemini Integrated)
 
-**Purpose:** A conversational AI interface available globally across the app to answer financial questions and perform actions.
+**Purpose:**
+A highly intelligent, conversational AI interface available globally across the application. It acts as a personal financial advisor and productivity assistant, capable of understanding natural language to answer complex queries, perform actions, and provide proactive insights.
 
-**Features:**
+**Core Capabilities:**
 
-- **Context-Aware:** Knows your current budget, recent transactions, and spending patterns.
-- **Actionable:** Can execute commands like "Add transaction" or "Create task" directly from chat.
-- **Gemini 2.5 Flash:** Powered by Google's latest model for fast and accurate responses.
-- **Floating UI:** Glassmorphism-styled chat widget accessible from any page.
+1.  **Context-Aware Intelligence:**
+    - The AI has access to your real-time financial data (transactions, budget settings) and task statuses.
+    - It understands "Can I afford this?" by checking your _current_ remaining pocket money and upcoming fixed expenses.
+    - It knows your spending history to identify trends (e.g., "You're spending 20% more on food this month compared to last").
 
-**Capabilities:**
+2.  **Actionable Commands:**
+    - **One-Shot Data Entry:** "Added a $15 burger for lunch" -> Automatically creates a transaction: Title="Burger", Amount=15, Category="Food", Date=Today.
+    - **Task Creation:** "Remind me to file tax returns next Monday at 10 AM" -> Creates a task with high priority and sets a due date.
 
-- **Analytics:** "How much did I spend on Food this month?"
-- **Budget Checks:** "Can I afford dinner tonight?"
-- **Data Entry:** "Add $50 expense for Groceries."
-- **Task Management:** "Remind me to pay rent on Friday."
+3.  **Proactive Financial Coaching:**
+    - Provides specific advice rather than generic tips.
+    - _Example:_ "You've exhausted 80% of your Shopping budget but only 10 days have passed. Consider pausing discretionary spending for the next week."
+
+**User Interaction Examples:**
+
+- **Analytics:** "Analyze my spending for last week. Where did most of my money go?"
+- **Budget Checks:** "I want to buy a $300 watch. Will this affect my savings target?"
+- **Data Entry:** "Spent 500 rupees on Cab just now."
+- **Task Management:** "What tasks are due today?"
+- **Productivity:** "Draft a checklist for 'Home Renovation' based on my recent notes."
+- **Summarization:** "Give me a summary of my financial health for January."
 
 ---
 

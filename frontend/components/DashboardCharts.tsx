@@ -11,6 +11,7 @@ import {
   Cell,
 } from "recharts";
 import { useThemeColors } from "../lib/theme";
+import { useData } from "../contexts/DataContext";
 
 interface SpendingOverviewProps {
   data: { name: string; value: number; secondary: number }[];
@@ -83,7 +84,6 @@ export const SpendingOverview = ({ data }: SpendingOverviewProps) => {
             animationDuration={1500}
             animationEasing="ease-out"
           />
-          {/* Removed secondary area for now as we might only have one series */}
         </AreaChart>
       </ResponsiveContainer>
     </div>
@@ -95,6 +95,7 @@ interface CategoryDistributionProps {
 }
 
 export const CategoryDistribution = ({ data }: CategoryDistributionProps) => {
+  const { currencySymbol } = useData();
   const total = data.reduce((acc, curr) => acc + curr.value, 0);
   const colors = useThemeColors();
   const CHART_COLORS = [
@@ -145,7 +146,7 @@ export const CategoryDistribution = ({ data }: CategoryDistributionProps) => {
           Total
         </span>
         <span className="text-xl font-bold" style={{ color: colors.primary }}>
-          ${total.toLocaleString()}
+          {currencySymbol}{total.toLocaleString()}
         </span>
       </div>
     </div>

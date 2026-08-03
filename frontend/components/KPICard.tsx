@@ -9,6 +9,8 @@ import {
   DollarSign,
 } from "lucide-react";
 
+import { useData } from "../contexts/DataContext";
+
 interface KPICardProps {
   data: KPIData;
   delay?: number;
@@ -23,9 +25,6 @@ const iconMap = {
   "dollar-sign": DollarSign,
 };
 
-// Map color keys to their full class strings
-// Light Mode: Solid, pastel background (bg-color-100)
-// Dark Mode: Semi-transparent background (bg-color-500/20) for better contrast on dark
 const colorStyles: Record<string, string> = {
   emerald:
     "bg-emerald-500 text-white dark:bg-emerald-500/20 dark:text-emerald-400",
@@ -37,6 +36,7 @@ const colorStyles: Record<string, string> = {
 };
 
 const KPICard: React.FC<KPICardProps> = ({ data, delay = 0 }) => {
+  const { currencySymbol } = useData();
   const Icon = iconMap[data.icon];
   const [count, setCount] = useState(0);
 
@@ -63,12 +63,9 @@ const KPICard: React.FC<KPICardProps> = ({ data, delay = 0 }) => {
   }, [data.value, delay]);
 
   const formattedValue = data.currency
-    ? new Intl.NumberFormat("en-US", {
-        style: "currency",
-        currency: "USD",
-        maximumFractionDigits: 0,
-      }).format(count)
+    ? `${currencySymbol}${count.toLocaleString()}`
     : count.toLocaleString();
+
 
   // Fallback if data.color is not in map
   const iconClasses = colorStyles[data.color] || colorStyles.emerald;

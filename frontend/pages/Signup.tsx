@@ -1,87 +1,86 @@
-import React from "react";
-import { useNavigate } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { ArrowLeft, User, Mail, Lock } from 'lucide-react';
+import { Card } from '../components/ui/Card';
+import { Button } from '../components/ui/Button';
+import { Input } from '../components/ui/Input';
+import { Logo } from '../components/common/Logo';
 
-const Signup = () => {
+export const Signup: React.FC = () => {
   const navigate = useNavigate();
 
   const handleSignup = (e: React.FormEvent) => {
     e.preventDefault();
-    navigate("/app");
+    navigate('/login');
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6">
+    <div className="min-h-screen flex items-center justify-center bg-[var(--bg-app)] p-4 text-[var(--text-primary)] relative">
       <div className="absolute top-6 left-6">
-        <button
-          onClick={() => navigate("/")}
-          className="flex items-center gap-2 text-slate-600 hover:text-slate-900 text-sm font-medium px-4 py-2.5 bg-white/40 rounded-lg backdrop-blur-md transition-all">
-          <ArrowLeft className="w-4 h-4" /> Back
-        </button>
+        <Button
+          variant="glass"
+          size="sm"
+          onClick={() => navigate('/')}
+          leftIcon={<ArrowLeft className="w-4 h-4" />}
+        >
+          Home
+        </Button>
       </div>
 
-      <div className="glass-panel w-full max-w-md p-10 rounded-[2.5rem] shadow-2xl shadow-slate-900/10 animate-slide-up">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-extrabold text-slate-800 mb-2">
-            Create Account
+      <Card variant="rim" className="w-full max-w-md p-8 space-y-6 bg-[var(--surface-l1)]">
+        <div className="text-center space-y-3">
+          <div className="flex justify-center">
+            <Logo size="lg" />
+          </div>
+          <h1 className="text-2xl font-bold font-display text-[var(--text-primary)]">
+            Create Workspace Account
           </h1>
-          <p className="text-slate-500 font-medium">
-            Start your journey to financial freedom.
+          <p className="text-xs font-mono text-[var(--text-muted)]">
+            Start tracking budgets, transactions & tasks
           </p>
         </div>
 
-        <form onSubmit={handleSignup} className="space-y-5">
-          <div className="space-y-2">
-            <label className="text-sm font-bold text-slate-700 ml-1">
-              Full Name
-            </label>
-            <input
-              type="text"
-              className="w-full px-5 py-4 rounded-2xl glass-input text-slate-800 font-medium placeholder:text-slate-400 transition-all"
-              placeholder="John Doe"
-            />
-          </div>
+        <form onSubmit={handleSignup} className="space-y-4">
+          <Input
+            label="Full Name"
+            type="text"
+            required
+            leftIcon={<User className="w-4 h-4 text-[var(--text-muted)]" />}
+            placeholder="John Doe"
+          />
 
-          <div className="space-y-2">
-            <label className="text-sm font-bold text-slate-700 ml-1">
-              Email Address
-            </label>
-            <input
-              type="email"
-              className="w-full px-5 py-4 rounded-2xl glass-input text-slate-800 font-medium placeholder:text-slate-400 transition-all"
-              placeholder="name@company.com"
-            />
-          </div>
+          <Input
+            label="Email Address"
+            type="email"
+            required
+            leftIcon={<Mail className="w-4 h-4 text-[var(--text-muted)]" />}
+            placeholder="you@company.com"
+          />
 
-          <div className="space-y-2">
-            <label className="text-sm font-bold text-slate-700 ml-1">
-              Password
-            </label>
-            <input
-              type="password"
-              className="w-full px-5 py-4 rounded-2xl glass-input text-slate-800 font-medium placeholder:text-slate-400 transition-all"
-              placeholder="••••••••"
-            />
-          </div>
+          <Input
+            label="Password"
+            type="password"
+            required
+            leftIcon={<Lock className="w-4 h-4 text-[var(--text-muted)]" />}
+            placeholder="••••••••"
+            minLength={6}
+          />
 
-          <button
-            type="submit"
-            className="w-full py-3 text-sm font-medium bg-slate-800 text-white rounded-lg hover:bg-slate-900 shadow-xl shadow-slate-800/20 active:scale-95 transition-all mt-2">
-            Create Account
-          </button>
+          <Button type="submit" variant="primary" className="w-full">
+            Create Workspace Account
+          </Button>
         </form>
 
-        <div className="mt-8 text-center">
-          <p className="text-slate-500 font-medium">
-            Already have an account?{" "}
-            <span
-              onClick={() => navigate("/login")}
-              className="text-brand-600 font-bold cursor-pointer hover:underline">
-              Log in
-            </span>
-          </p>
+        <div className="pt-2 text-center text-xs text-[var(--text-muted)]">
+          Already have an account?{' '}
+          <button
+            onClick={() => navigate('/login')}
+            className="text-[var(--accent-primary)] font-bold hover:underline cursor-pointer"
+          >
+            Log In
+          </button>
         </div>
-      </div>
+      </Card>
     </div>
   );
 };

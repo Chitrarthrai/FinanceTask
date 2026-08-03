@@ -1,7 +1,7 @@
-import { useData } from "../contexts/DataContext";
-import { MonthlyMetrics, CategoryDistribution, SpendingTrend } from "../types";
-import { useState, useEffect } from "react";
-import { useThemeColors } from "../lib/theme"; // Added
+import React, { useState, useEffect } from 'react';
+import { useData } from '../contexts/DataContext';
+import { MonthlyMetrics, CategoryDistribution, SpendingTrend } from '../types';
+import { useThemeColors } from '../lib/theme';
 import {
   BarChart,
   Bar,
@@ -16,7 +16,7 @@ import {
   Cell,
   AreaChart,
   Area,
-} from "recharts";
+} from 'recharts';
 import {
   Calendar,
   Download,
@@ -26,22 +26,35 @@ import {
   TrendingDown,
   ChevronLeft,
   ChevronRight,
-} from "lucide-react";
+  Sparkles,
+} from 'lucide-react';
+import { Card } from '../components/ui/Card';
+import { Button } from '../components/ui/Button';
+import { Badge } from '../components/ui/Badge';
 
-const Analytics = () => {
-  const { getAnalyticsData, getSmartInsights } = useData();
-  const colors = useThemeColors(); // Added
+export const Analytics: React.FC = () => {
+  const { getAnalyticsData, getSmartInsights, currencySymbol } = useData();
+  const colors = useThemeColors();
+
   const [metrics, setMetrics] = useState<MonthlyMetrics | null>(null);
-  const [distributions, setDistributions] = useState<CategoryDistribution[]>(
-    [],
-  );
+  const [distributions, setDistributions] = useState<CategoryDistribution[]>([]);
   const [trend, setTrend] = useState<SpendingTrend[]>([]);
   const [insights, setInsights] = useState<any[]>([]);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [loading, setLoading] = useState(true);
   const [showMonthPicker, setShowMonthPicker] = useState(false);
 
-  // Generate list of last 24 months for quick selection
+  const CHART_COLORS = [
+    '#00f2ff', // Electric Cyan
+    '#7c3aed', // Hyper Violet
+    '#00ff9d', // Luminous Mint
+    '#ffb800', // Cyber Amber
+    '#ff3b5c', // Crimson Pulse
+  ];
+
+  const velocityGradientColor =
+    metrics && metrics.net_savings < 0 ? '#ff3b5c' : '#00f2ff';
+
   const generateMonthOptions = () => {
     const options = [];
     const today = new Date();
@@ -54,21 +67,12 @@ const Analytics = () => {
 
   const monthOptions = generateMonthOptions();
 
-  // Dynamic Chart Colors
-  const CHART_COLORS = [
-    colors.chart1,
-    colors.chart2,
-    colors.chart3,
-    colors.chart4,
-    colors.chart5,
-  ];
-
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
       const monthStr = `${currentDate.getFullYear()}-${String(
-        currentDate.getMonth() + 1,
-      ).padStart(2, "0")}-01`;
+        currentDate.getMonth() + 1
+      ).padStart(2, '0')}-01`;
 
       const { metrics, distribution, trend } = await getAnalyticsData(monthStr);
       const fetchedInsights = await getSmartInsights(monthStr);
@@ -81,127 +85,125 @@ const Analytics = () => {
     loadData();
   }, [currentDate]);
 
-  // Close month picker when clicking outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
-      if (!target.closest(".month-picker-container")) {
+      if (!target.closest('.month-picker-container')) {
         setShowMonthPicker(false);
       }
     };
-
     if (showMonthPicker) {
-      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener('mousedown', handleClickOutside);
     }
-
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [showMonthPicker]);
 
   if (loading) {
     return (
-      <div className="p-8 text-center text-text-muted">
-        Loading analytics...
+      <div className="p-12 text-center text-[var(--text-muted)] font-mono text-sm">
+        <span className="inline-block animate-spin mr-2">⚡</span> Loading Financial Intelligence...
       </div>
     );
   }
 
-  // Derived stats
   const totalSpent = metrics?.total_expenses || 0;
-  const daysInMonth = 30; // Approximation
-  const avgDaily = totalSpent / daysInMonth;
-  // Income vs Expense Chart Data (Current Month)
+  const avgDaily = totalSpent / 30;
   const comparisonData = [
     {
-      name: "Current",
-      value: metrics?.total_income || 0,
-      secondary: metrics?.total_expenses || 0,
+      name: 'Current Month',
+      Income: metrics?.total_income || 0,
+      Expenses: metrics?.total_expenses || 0,
     },
   ];
 
   const handleExport = () => {
     if (!metrics) return;
     const rows = [
-      ["Metric", "Value"],
-      ["Total Income", metrics.total_income],
-      ["Total Expenses", metrics.total_expenses],
-      ["Net Savings", metrics.net_savings],
+      ['Metric', 'Value'],
+      ['Total Income', metrics.total_income],
+      ['Total Expenses', metrics.total_expenses],
+      ['Net Savings', metrics.net_savings],
       [],
-      ["Category", "Amount"],
+      ['Category', 'Amount'],
       ...distributions.map((d) => [d.name, d.value]),
     ];
 
     const csvContent =
-      "data:text/csv;charset=utf-8," + rows.map((e) => e.join(",")).join("\n");
+      'data:text/csv;charset=utf-8,' + rows.map((e) => e.join(',')).join('\n');
 
     const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "financial_analytics.csv");
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', 'financial_analytics_report.csv');
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
+  const savingsRate = metrics?.total_income
+    ? ((metrics.net_savings / metrics.total_income) * 100).toFixed(1)
+    : '0';
+
   return (
-    <div className="space-y-8 animate-fade-in pb-20">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-end gap-6">
+    <div className="space-y-6 pb-20 animate-fade-in">
+      {/* Top Header & Period Selector */}
+      <section className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold text-text-primary tracking-tight mb-2">
-            Financial Analytics
+          <h1 className="text-3xl font-bold font-display text-[var(--text-primary)] tracking-tight">
+            Financial Intelligence
           </h1>
-          <p className="text-text-muted font-medium">
-            Deep dive into your spending habits and trends.
+          <p className="text-sm font-medium text-[var(--text-secondary)] mt-0.5">
+            Deep-dive analytics, burn rate velocity, and category cash flow trends
           </p>
         </div>
-        <div className="flex gap-3">
+
+        <div className="flex items-center gap-3">
           {/* Month Picker Dropdown */}
           <div className="relative month-picker-container">
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-bg-primary/60 backdrop-blur-md border border-surface-glass-border text-text-secondary">
-              <button
+            <div className="flex items-center gap-1.5 p-1 rounded-xl glass-panel">
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={() =>
                   setCurrentDate(
-                    new Date(
-                      currentDate.getFullYear(),
-                      currentDate.getMonth() - 1,
-                      1,
-                    ),
+                    new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1)
                   )
                 }
-                className="p-1.5 rounded-lg transition-colors hover:bg-bg-tertiary">
-                <ChevronLeft className="w-4 h-4 text-text-muted" />
-              </button>
-              <div
+              >
+                <ChevronLeft className="w-4 h-4 text-[var(--text-secondary)]" />
+              </Button>
+
+              <button
                 onClick={() => setShowMonthPicker(!showMonthPicker)}
-                className="flex items-center gap-2 min-w-[140px] justify-center cursor-pointer hover:bg-bg-tertiary px-2 py-1 rounded-lg transition-colors">
-                <Calendar className="w-4 h-4 text-text-muted" />
-                <span className="font-bold text-sm">
-                  {currentDate.toLocaleDateString("en-US", {
-                    month: "long",
-                    year: "numeric",
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-[var(--surface-l2)] transition-all cursor-pointer font-mono font-bold text-xs text-[var(--text-primary)]"
+              >
+                <Calendar className="w-3.5 h-3.5 text-[var(--accent-primary)]" />
+                <span>
+                  {currentDate.toLocaleDateString('en-US', {
+                    month: 'long',
+                    year: 'numeric',
                   })}
                 </span>
-              </div>
-              <button
+              </button>
+
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={() =>
                   setCurrentDate(
-                    new Date(
-                      currentDate.getFullYear(),
-                      currentDate.getMonth() + 1,
-                      1,
-                    ),
+                    new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1)
                   )
                 }
-                className="p-1.5 rounded-lg transition-colors hover:bg-bg-tertiary">
-                <ChevronRight className="w-4 h-4 text-text-muted" />
-              </button>
+              >
+                <ChevronRight className="w-4 h-4 text-[var(--text-secondary)]" />
+              </Button>
             </div>
 
-            {/* Month Picker Dropdown */}
+            {/* Dropdown Menu */}
             {showMonthPicker && (
-              <div className="absolute top-full mt-2 left-0 w-64 max-h-80 overflow-y-auto bg-white/95 dark:bg-slate-800/95 backdrop-blur-lg border border-slate-200 dark:border-slate-700 rounded-2xl shadow-2xl z-50 p-2">
+              <div className="absolute top-full mt-2 left-0 w-60 max-h-72 overflow-y-auto glass-panel rounded-xl border border-[var(--border-rim)] shadow-2xl p-1.5 z-50 animate-slide-up">
                 {monthOptions.map((date, idx) => {
                   const isSelected =
                     date.getMonth() === currentDate.getMonth() &&
@@ -213,14 +215,15 @@ const Analytics = () => {
                         setCurrentDate(date);
                         setShowMonthPicker(false);
                       }}
-                      className={`w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-mono font-medium transition-all cursor-pointer ${
                         isSelected
-                          ? "bg-brand-500 text-white"
-                          : "text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700"
-                      }`}>
-                      {date.toLocaleDateString("en-US", {
-                        month: "long",
-                        year: "numeric",
+                          ? 'bg-[var(--accent-primary)] text-[var(--text-inverted)] font-bold'
+                          : 'text-[var(--text-primary)] hover:bg-[var(--surface-l2)]'
+                      }`}
+                    >
+                      {date.toLocaleDateString('en-US', {
+                        month: 'long',
+                        year: 'numeric',
                       })}
                     </button>
                   );
@@ -228,316 +231,226 @@ const Analytics = () => {
               </div>
             )}
           </div>
-          <button
-            onClick={handleExport}
-            className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium bg-brand-600 text-text-inverted rounded-lg hover:bg-brand-700 transition-all shadow-lg shadow-brand-500/30 hover:shadow-brand-500/40 active:scale-95 border border-transparent">
-            <Download className="w-5 h-5" /> Export Report
-          </button>
-        </div>
-      </div>
 
-      {/* Summary Stats Row */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {[
-          {
-            label: "Total Spent",
-            value: `$${totalSpent.toLocaleString()}`,
-            icon: DollarSign,
-            color: "text-white",
-            bg: "bg-emerald-500 dark:bg-emerald-900/20",
-          },
-          {
-            label: "Avg. Daily",
-            value: `$${avgDaily.toFixed(2)}`,
-            icon: Target,
-            color: "text-white",
-            bg: "bg-brand-500 dark:bg-brand-900/20",
-          },
-          {
-            label: "Highest Spend",
-            value: `$${Math.max(
-              0,
-              ...distributions.map((d) => d.value),
-            ).toLocaleString()}`,
-            sub:
-              distributions.sort((a, b) => b.value - a.value)[0]?.name || "N/A",
-            icon: TrendingUp,
-            color: "text-white",
-            bg: "bg-rose-500 dark:bg-rose-900/20",
-          },
-          {
-            label: "Savings Rate",
-            value: `${
-              metrics?.total_income
-                ? ((metrics.net_savings / metrics.total_income) * 100).toFixed(
-                    1,
-                  )
-                : 0
-            }%`,
-            icon: TrendingDown,
-            color: "text-white",
-            bg: "bg-emerald-500 dark:bg-emerald-900/20",
-          },
-        ].map((stat, idx) => (
-          <div
-            key={idx}
-            className={`glass-panel p-5 rounded-2xl flex items-center justify-between animate-slide-up hover:border-brand-200 dark:hover:border-slate-700 transition-colors`}
-            style={{ animationDelay: `${idx * 100}ms` }}>
-            <div>
-              <p className="text-xs font-bold text-text-muted uppercase tracking-wide">
-                {stat.label}
-              </p>
-              <p className={`text-2xl font-extrabold ${stat.color} mt-1`}>
-                {stat.value}
-              </p>
-              {stat.sub && (
-                <p className="text-xs font-medium text-text-muted">
-                  {stat.sub}
-                </p>
-              )}
-            </div>
-            <div className={`p-3 rounded-xl ${stat.bg} ${stat.color}`}>
-              <stat.icon className="w-5 h-5" />
-            </div>
+          <Button
+            variant="glass"
+            size="sm"
+            onClick={handleExport}
+            leftIcon={<Download className="w-4 h-4 text-[var(--accent-primary)]" />}
+          >
+            Export CSV
+          </Button>
+        </div>
+      </section>
+
+      {/* Summary KPI Cards */}
+      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card variant="glass" hoverable glowColor="cyan">
+          <div className="flex items-center justify-between pb-2">
+            <span className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
+              Total Spent
+            </span>
+            <DollarSign className="w-4 h-4 text-[var(--danger)]" />
           </div>
-        ))}
-      </div>
+          <div className="text-2xl font-bold font-mono text-[var(--text-primary)] my-1">
+            {currencySymbol}
+            {totalSpent.toLocaleString()}
+          </div>
+          <span className="text-[11px] text-[var(--text-muted)] font-mono">Monthly Total</span>
+        </Card>
+
+        <Card variant="glass" hoverable glowColor="violet">
+          <div className="flex items-center justify-between pb-2">
+            <span className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
+              Avg Daily Burn
+            </span>
+            <Target className="w-4 h-4 text-[var(--accent-primary)]" />
+          </div>
+          <div className="text-2xl font-bold font-mono text-[var(--text-primary)] my-1">
+            {currencySymbol}
+            {avgDaily.toFixed(2)}
+          </div>
+          <span className="text-[11px] text-[var(--text-muted)] font-mono">Daily Expense Pace</span>
+        </Card>
+
+        <Card variant="glass" hoverable glowColor="cyan">
+          <div className="flex items-center justify-between pb-2">
+            <span className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
+              Highest Category
+            </span>
+            <TrendingUp className="w-4 h-4 text-[var(--warning)]" />
+          </div>
+          <div className="text-2xl font-bold font-mono text-[var(--text-primary)] my-1 truncate">
+            {currencySymbol}
+            {Math.max(0, ...distributions.map((d) => d.value)).toLocaleString()}
+          </div>
+          <span className="text-[11px] text-[var(--accent-primary)] font-mono font-bold">
+            {distributions.sort((a, b) => b.value - a.value)[0]?.name || 'N/A'}
+          </span>
+        </Card>
+
+        <Card variant="glass" hoverable glowColor="success">
+          <div className="flex items-center justify-between pb-2">
+            <span className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
+              Savings Rate
+            </span>
+            <TrendingDown className="w-4 h-4 text-[var(--success)]" />
+          </div>
+          <div className="text-2xl font-bold font-mono text-[var(--success)] my-1">
+            {savingsRate}%
+          </div>
+          <Badge variant={Number(savingsRate) >= 20 ? 'success' : 'warning'} size="sm">
+            {Number(savingsRate) >= 20 ? 'Healthy' : 'Below Target'}
+          </Badge>
+        </Card>
+      </section>
 
       {/* Main Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Income vs Expense */}
-        <div
-          className="glass-panel p-8 rounded-3xl animate-slide-up hover:border-brand-200 dark:hover:border-slate-700 transition-colors"
-          style={{ animationDelay: "400ms" }}>
-          <h3 className="text-xl font-bold text-text-primary mb-6">
-            Income vs Expenses
+      <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Income vs Expenses Bar Chart */}
+        <Card variant="glass">
+          <h3 className="text-base font-bold font-display text-[var(--text-primary)] mb-4">
+            Income vs Expense Comparison
           </h3>
-          <div className="h-[300px]">
+          <div className="h-[280px]">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={comparisonData}
-                margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  vertical={false}
-                  stroke={colors.muted}
-                  strokeOpacity={0.2}
-                />
-                <XAxis
-                  dataKey="name"
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fill: colors.muted, fontSize: 12 }}
-                  dy={10}
-                />
-                <YAxis
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fill: colors.muted, fontSize: 12 }}
-                />
+              <BarChart data={comparisonData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(148, 163, 184, 0.15)" />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 12 }} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 12 }} />
                 <Tooltip
-                  cursor={{ fill: colors.secondary, opacity: 0.1 }}
+                  cursor={{ fill: 'rgba(255, 255, 255, 0.05)' }}
                   contentStyle={{
-                    borderRadius: "16px",
-                    border: "1px solid var(--surface-glass-border)",
-                    boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
-                    backgroundColor: "var(--surface-glass)",
-                    backdropFilter: "blur(12px)",
-                    color: "var(--text-primary)",
-                  }}
-                  itemStyle={{ color: "var(--text-primary)", fontWeight: 600 }}
-                  labelStyle={{
-                    color: "var(--text-muted)",
-                    marginBottom: "0.5rem",
+                    borderRadius: '12px',
+                    border: '1px solid var(--border-rim)',
+                    backgroundColor: 'var(--surface-l2)',
+                    backdropFilter: 'blur(16px)',
+                    color: 'var(--text-primary)',
                   }}
                 />
-                <Legend
-                  iconType="circle"
-                  wrapperStyle={{ paddingTop: "20px" }}
-                />
-                <Bar
-                  dataKey="value"
-                  name="Income"
-                  fill={colors.chart2}
-                  radius={[4, 4, 0, 0]}
-                  barSize={20}
-                />
-                <Bar
-                  dataKey="secondary"
-                  name="Expenses"
-                  fill={colors.chart4}
-                  radius={[4, 4, 0, 0]}
-                  barSize={20}
-                />
+                <Legend iconType="circle" />
+                <Bar dataKey="Income" fill="#00ff9d" radius={[6, 6, 0, 0]} barSize={28} />
+                <Bar dataKey="Expenses" fill="#ff3b5c" radius={[6, 6, 0, 0]} barSize={28} />
               </BarChart>
             </ResponsiveContainer>
           </div>
-        </div>
+        </Card>
 
-        {/* Category Breakdown */}
-        <div
-          className="glass-panel p-8 rounded-3xl animate-slide-up hover:border-brand-200 dark:hover:border-slate-700 transition-colors"
-          style={{ animationDelay: "500ms" }}>
-          <h3 className="text-xl font-bold text-text-primary mb-6">
-            Spending by Category
+        {/* Category Breakdown Donut Chart */}
+        <Card variant="glass">
+          <h3 className="text-base font-bold font-display text-[var(--text-primary)] mb-4">
+            Category Expenditure Breakdown
           </h3>
-          <div className="h-[300px] flex items-center justify-center">
+          <div className="h-[280px] flex items-center justify-center">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={distributions}
                   cx="50%"
                   cy="50%"
-                  innerRadius={80}
-                  outerRadius={100}
-                  paddingAngle={5}
-                  dataKey="value">
+                  innerRadius={70}
+                  outerRadius={95}
+                  paddingAngle={4}
+                  dataKey="value"
+                >
                   {distributions.map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={CHART_COLORS[index % CHART_COLORS.length]}
-                      stroke="none"
-                    />
+                    <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} stroke="none" />
                   ))}
                 </Pie>
                 <Tooltip
                   contentStyle={{
-                    borderRadius: "16px",
-                    border: "1px solid var(--surface-glass-border)",
-                    boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
-                    backgroundColor: "var(--surface-glass)",
-                    backdropFilter: "blur(12px)",
-                    color: "var(--text-primary)",
+                    borderRadius: '12px',
+                    border: '1px solid var(--border-rim)',
+                    backgroundColor: 'var(--surface-l2)',
+                    backdropFilter: 'blur(16px)',
+                    color: 'var(--text-primary)',
                   }}
-                  itemStyle={{ color: "var(--text-primary)", fontWeight: 600 }}
                 />
-                <Legend
-                  layout="vertical"
-                  verticalAlign="middle"
-                  align="right"
-                />
+                <Legend layout="vertical" verticalAlign="middle" align="right" />
               </PieChart>
             </ResponsiveContainer>
           </div>
-        </div>
-      </div>
+        </Card>
+      </section>
 
-      {/* Spending Trend Area Chart */}
-      <div
-        className="glass-panel p-8 rounded-3xl animate-slide-up hover:border-brand-200 dark:hover:border-slate-700 transition-colors"
-        style={{ animationDelay: "600ms" }}>
-        <div className="flex justify-between items-center mb-6">
-          <h3 className="text-xl font-bold text-text-primary">
-            Weekly Spending Trend
+      {/* Weekly Spending Trend Area Chart */}
+      <Card variant="glass">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-base font-bold font-display text-[var(--text-primary)]">
+            Weekly Velocity Trend
           </h3>
-          <div className="flex gap-2">
-            <span className="flex items-center gap-1 text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 px-2 py-1 rounded-md">
-              <TrendingDown className="w-3 h-3" /> 12% vs last week
-            </span>
-          </div>
+          <Badge variant="cyan" size="sm">
+            Live Trajectory
+          </Badge>
         </div>
-        <div className="h-[300px]">
+        <div className="h-[280px]">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart
-              data={trend}
-              margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+            <AreaChart data={trend} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
               <defs>
-                <linearGradient
-                  id="analyticsGradient"
-                  x1="0"
-                  y1="0"
-                  x2="0"
-                  y2="1">
-                  <stop
-                    offset="5%"
-                    stopColor={colors.chart1}
-                    stopOpacity={0.3}
-                  />
-                  <stop
-                    offset="95%"
-                    stopColor={colors.chart1}
-                    stopOpacity={0}
-                  />
+                <linearGradient id="analyticsVelocityGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor={velocityGradientColor} stopOpacity={0.4} />
+                  <stop offset="95%" stopColor={velocityGradientColor} stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid
-                strokeDasharray="3 3"
-                vertical={false}
-                stroke={colors.muted}
-                strokeOpacity={0.2}
-              />
-              <XAxis
-                dataKey="day_label"
-                axisLine={false}
-                tickLine={false}
-                tick={{ fill: colors.muted, fontSize: 12 }}
-                dy={10}
-              />
-              <YAxis
-                axisLine={false}
-                tickLine={false}
-                tick={{ fill: colors.muted, fontSize: 12 }}
-              />
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(148, 163, 184, 0.15)" />
+              <XAxis dataKey="day_label" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 12 }} />
+              <YAxis axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 12 }} />
               <Tooltip
                 contentStyle={{
-                  borderRadius: "16px",
-                  border: "1px solid var(--surface-glass-border)",
-                  boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
-                  backgroundColor: "var(--surface-glass)",
-                  backdropFilter: "blur(12px)",
-                  color: "var(--text-primary)",
-                }}
-                itemStyle={{ color: "var(--text-primary)", fontWeight: 600 }}
-                labelStyle={{
-                  color: "var(--text-muted)",
-                  marginBottom: "0.5rem",
+                  borderRadius: '12px',
+                  border: '1px solid var(--border-rim)',
+                  backgroundColor: 'var(--surface-l2)',
+                  backdropFilter: 'blur(16px)',
+                  color: 'var(--text-primary)',
                 }}
               />
               <Area
                 type="monotone"
                 dataKey="amount"
-                stroke={colors.chart1}
+                stroke={velocityGradientColor}
                 strokeWidth={3}
                 fillOpacity={1}
-                fill="url(#analyticsGradient)"
+                fill="url(#analyticsVelocityGradient)"
               />
             </AreaChart>
           </ResponsiveContainer>
         </div>
-      </div>
+      </Card>
 
-      {/* AI Insights Section */}
-      <div
-        className="glass-panel p-8 rounded-3xl bg-gradient-to-br from-brand-600 to-amber-600 dark:from-slate-800 dark:to-slate-900 text-white animate-slide-up shadow-xl shadow-brand-900/20 dark:shadow-slate-900/20"
-        style={{ animationDelay: "700ms" }}>
-        <div className="flex items-center gap-3 mb-4">
-          <div className="p-2 bg-white/10 rounded-lg backdrop-blur-md">
-            <Target className="w-5 h-5 text-brand-300" />
+      {/* AI Smart Financial Insights */}
+      <Card variant="rim" className="bg-gradient-to-br from-[var(--surface-l1)] to-[var(--surface-l2)]">
+        <div className="flex items-center gap-2.5 mb-3">
+          <div className="p-2 rounded-xl bg-[var(--accent-primary-light)] text-[var(--accent-primary)] border border-[var(--accent-primary)]/30">
+            <Sparkles className="w-5 h-5" />
           </div>
-          <h3 className="text-xl font-bold">Smart Insights</h3>
+          <div>
+            <h3 className="text-base font-bold font-display text-[var(--text-primary)]">
+              AI Smart Financial Insights
+            </h3>
+            <p className="text-xs text-[var(--text-muted)]">Pattern recognition & optimization recommendations</p>
+          </div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {insights.length > 0 ? (
             insights.slice(0, 2).map((insight, idx) => (
-              <p
-                key={idx}
-                className="text-slate-700 dark:text-slate-300 leading-relaxed">
-                <strong className="text-brand-600 dark:text-brand-300 font-bold">
-                  {insight.title}:
-                </strong>{" "}
+              <div key={idx} className="p-3.5 rounded-xl bg-[var(--surface-l2)] border border-[var(--border-rim)] text-xs text-[var(--text-secondary)] leading-relaxed">
+                <strong className="text-[var(--accent-primary)] font-bold block mb-1">
+                  {insight.title}
+                </strong>
                 {insight.message}
-              </p>
+              </div>
             ))
           ) : (
-            <p className="text-slate-700 dark:text-slate-300 leading-relaxed col-span-2">
-              <strong className="text-brand-600 dark:text-brand-300 font-bold">
-                No Insights Available:
-              </strong>{" "}
-              Start tracking your expenses to see personalized insights here.
-            </p>
+            <div className="col-span-2 p-3.5 rounded-xl bg-[var(--surface-l2)] border border-[var(--border-rim)] text-xs text-[var(--text-secondary)]">
+              <strong className="text-[var(--accent-primary)] font-bold block mb-1">
+                Data Gathering In Progress:
+              </strong>
+              Continue logging daily transactions to unlock automated spending velocity insights and budget optimization tips.
+            </div>
           )}
         </div>
-      </div>
+      </Card>
     </div>
   );
 };

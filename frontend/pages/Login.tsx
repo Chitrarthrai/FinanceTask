@@ -1,15 +1,19 @@
-import React, { useState } from "react";
-import { supabase } from "../lib/supabase";
-import { useNavigate } from "react-router-dom";
-import { Mail, Lock, Loader2, ArrowRight, CreditCard } from "lucide-react";
+import React, { useState } from 'react';
+import { supabase } from '../lib/supabase';
+import { useNavigate } from 'react-router-dom';
+import { Mail, Lock, Loader2, ArrowRight } from 'lucide-react';
+import { Card } from '../components/ui/Card';
+import { Button } from '../components/ui/Button';
+import { Input } from '../components/ui/Input';
+import { Logo } from '../components/common/Logo';
 
-const Login = () => {
+export const Login: React.FC = () => {
   const [loading, setLoading] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
   const [message, setMessage] = useState<{
-    type: "error" | "success";
+    type: 'error' | 'success';
     text: string;
   } | null>(null);
   const navigate = useNavigate();
@@ -26,14 +30,14 @@ const Login = () => {
           password,
           options: {
             data: {
-              full_name: email.split("@")[0], // Default name
+              full_name: email.split('@')[0],
             },
           },
         });
         if (error) throw error;
         setMessage({
-          type: "success",
-          text: "Check your email for the confirmation link!",
+          type: 'success',
+          text: 'Check your email for confirmation link!',
         });
       } else {
         const { error } = await supabase.auth.signInWithPassword({
@@ -41,111 +45,93 @@ const Login = () => {
           password,
         });
         if (error) throw error;
-        navigate("/app");
+        navigate('/app');
       }
     } catch (error: any) {
-      setMessage({ type: "error", text: error.message });
+      setMessage({ type: 'error', text: error.message });
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-bg-primary p-4">
-      <div className="w-full max-w-md bg-bg-secondary rounded-3xl shadow-xl p-8 border border-border-subtle overflow-hidden relative">
-        {/* Background blobs */}
-        <div className="absolute top-0 right-0 w-32 h-32 bg-brand-500/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
-        <div className="absolute bottom-0 left-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl -ml-16 -mb-16 pointer-events-none"></div>
+    <div className="min-h-screen flex items-center justify-center bg-[var(--bg-app)] p-4 text-[var(--text-primary)] relative">
+      <div className="absolute w-96 h-96 bg-[var(--accent-primary)]/15 rounded-full blur-[120px] pointer-events-none" />
 
-        <div className="text-center mb-8 relative z-10">
-          <div className="w-16 h-16 bg-gradient-to-tr from-brand-600 via-orange-500 to-amber-500 rounded-2xl mx-auto flex items-center justify-center shadow-lg shadow-brand-500/30 mb-6">
-            <CreditCard className="w-8 h-8 text-white" />
+      <Card variant="rim" className="w-full max-w-md p-8 space-y-6 bg-[var(--surface-l1)]">
+        <div className="text-center space-y-3">
+          <div className="flex justify-center">
+            <Logo size="lg" />
           </div>
-          <h1 className="text-3xl font-extrabold text-text-primary mb-2">
-            {isSignUp ? "Create Account" : "Welcome Back"}
+          <h1 className="text-2xl font-bold font-display text-[var(--text-primary)]">
+            {isSignUp ? 'Create Workspace Account' : 'Welcome Back'}
           </h1>
-          <p className="text-text-muted">
+          <p className="text-xs font-mono text-[var(--text-muted)]">
             {isSignUp
-              ? "Sign up to start tracking your finances."
-              : "Enter your credentials to access your account."}
+              ? 'Register to unlock financial automation'
+              : 'Sign in to access your audit dashboard'}
           </p>
         </div>
 
         {message && (
           <div
-            className={`p-4 rounded-xl mb-6 text-sm font-bold flex items-center gap-2 ${
-              message.type === "error"
-                ? "bg-rose-50 text-rose-600 dark:bg-rose-900/20 dark:text-rose-400 border border-rose-100 dark:border-rose-900"
-                : "bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900"
-            }`}>
+            className={`p-3 rounded-xl text-xs font-mono ${
+              message.type === 'error'
+                ? 'bg-[var(--danger)]/15 border border-[var(--danger)]/30 text-[var(--danger)]'
+                : 'bg-[var(--success)]/15 border border-[var(--success)]/30 text-[var(--success)]'
+            }`}
+          >
             {message.text}
           </div>
         )}
 
-        <form onSubmit={handleAuth} className="space-y-4 relative z-10">
-          <div>
-            <label className="block text-sm font-bold text-text-primary mb-1 ml-1">
-              Email Address
-            </label>
-            <div className="relative">
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-muted" />
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-12 pr-4 py-3.5 bg-bg-tertiary border border-border-primary rounded-xl focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all font-medium text-text-primary placeholder:text-text-muted"
-                placeholder="you@example.com"
-              />
-            </div>
-          </div>
+        <form onSubmit={handleAuth} className="space-y-4">
+          <Input
+            label="Email Address"
+            type="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            leftIcon={<Mail className="w-4 h-4 text-[var(--text-muted)]" />}
+            placeholder="you@domain.com"
+          />
 
-          <div>
-            <label className="block text-sm font-bold text-text-primary mb-1 ml-1">
-              Password
-            </label>
-            <div className="relative">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-muted" />
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-12 pr-4 py-3.5 bg-bg-tertiary border border-border-primary rounded-xl focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all font-medium text-text-primary placeholder:text-text-muted"
-                placeholder="••••••••"
-                minLength={6}
-              />
-            </div>
-          </div>
+          <Input
+            label="Password"
+            type="password"
+            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            leftIcon={<Lock className="w-4 h-4 text-[var(--text-muted)]" />}
+            placeholder="••••••••"
+            minLength={6}
+          />
 
-          <button
+          <Button
             type="submit"
+            variant="primary"
+            className="w-full"
             disabled={loading}
-            className="w-full py-2.5 text-sm font-medium rounded-lg transition-all shadow-lg shadow-brand-500/30 flex items-center justify-center gap-2 active:scale-[0.98] border-2 border-brand-600 text-brand-600 bg-transparent hover:bg-brand-600 hover:text-white hover:shadow-brand-500/40">
-            {loading ? (
-              <Loader2 className="w-5 h-5 animate-spin" />
-            ) : (
-              <>
-                {isSignUp ? "Sign Up" : "Sign In"}{" "}
-                <ArrowRight className="w-5 h-5" />
-              </>
-            )}
-          </button>
+            rightIcon={!loading && <ArrowRight className="w-4 h-4" />}
+          >
+            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : isSignUp ? 'Sign Up' : 'Sign In'}
+          </Button>
         </form>
 
-        <div className="mt-6 text-center">
-          <button
+        <div className="pt-2 text-center">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full text-xs"
             onClick={() => {
               setIsSignUp(!isSignUp);
               setMessage(null);
             }}
-            className="w-full py-2.5 text-sm font-medium rounded-lg border border-border-primary text-text-muted hover:text-white hover:bg-brand-600 hover:border-brand-600 dark:hover:bg-brand-500 dark:hover:border-brand-500 transition-all hover:shadow-lg hover:shadow-brand-500/20 active:scale-[0.98]">
-            {isSignUp
-              ? "Already have an account? Sign In"
-              : "Don't have an account? Sign Up"}
-          </button>
+          >
+            {isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
+          </Button>
         </div>
-      </div>
+      </Card>
     </div>
   );
 };

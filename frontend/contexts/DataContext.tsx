@@ -4,6 +4,8 @@ import React, {
   useState,
   ReactNode,
   useEffect,
+  useMemo,
+  useRef,
 } from "react";
 import {
   Transaction,
@@ -16,7 +18,9 @@ import {
   CategoryDistribution,
   SpendingTrend,
   Note,
+  UndoItem,
 } from "../types";
+
 import { supabase } from "../lib/supabase";
 import { useAuth } from "./AuthContext";
 import { User } from "@supabase/supabase-js";
@@ -28,22 +32,27 @@ interface DataContextType {
   budgetSettings: BudgetSettings;
   categories: Category[];
   metrics: FinancialMetrics;
+  currencySymbol: string;
+  setCurrencySymbol: (symbol: string) => void;
+  undoItem: UndoItem | null;
+  categoryWarnings: { category: string; limit: number; spent: number; percent: number; level: "warning" | "critical" }[];
+  undoLastDelete: () => void;
   addTransaction: (transaction: Transaction) => Promise<void>;
   updateTransaction: (transaction: Transaction) => Promise<void>;
   addTask: (task: Task) => Promise<void>;
   deleteTransaction: (id: string) => Promise<void>;
   deleteTask: (id: string) => Promise<void>;
-  updateTaskStatus: (id: string, status: TaskStatus) => Promise<void>;
-  updateBudgetSettings: (settings: Partial<BudgetSettings>) => Promise<void>;
-  addCategory: (
-    name: string,
-    type: "income" | "expense",
-    color: string,
+  updateTaskStatus: (
+    id: string,
+    status: TaskStatus,
+    reasonNotDone?: string,
   ) => Promise<void>;
-  updateCategory: (id: string, name: string) => Promise<void>;
+
+  updateBudgetSettings: (settings: Partial<BudgetSettings>) => Promise<void>;
+  addCategory: (category: Category) => Promise<void>;
+  updateCategory: (category: Category) => Promise<void>;
   deleteCategory: (id: string) => Promise<void>;
   addRecurringRule: (rule: any) => Promise<void>;
-  // Notes operations
   addNote: (note: Partial<Note>) => Promise<void>;
   updateNote: (note: Partial<Note>) => Promise<void>;
   deleteNote: (id: string) => Promise<void>;
@@ -59,7 +68,7 @@ interface DataContextType {
 }
 
 const defaultBudgetSettings: BudgetSettings = {
-  id: "", // Will be set from DB
+  id: "",
   monthlySalary: 0,
   savingsTarget: 0,
   savingsTargetPercent: 20,
@@ -81,8 +90,59 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     defaultBudgetSettings,
   );
   const [categories, setCategories] = useState<Category[]>([]);
+  const [undoItem, setUndoItem] = useState<UndoItem | null>(null);
+  const undoTimeoutRef = useRef<any>(null);
 
-  // Derived Metrics State
+  const [currencySymbol, setCurrencySymbolState] = useState<string>(() => {
+    return localStorage.getItem("currency_symbol") || "$";
+  });
+
+  const setCurrencySymbol = (symbol: string) => {
+    setCurrencySymbolState(symbol);
+    localStorage.setItem("currency_symbol", symbol);
+    if (user && budgetSettings.id) {
+      updateBudgetSettings({ currencySymbol: symbol });
+    }
+  };
+
+  const categoryWarnings = useMemo(() => {
+    const warnings: {
+      category: string;
+      limit: number;
+      spent: number;
+      percent: number;
+      level: "warning" | "critical";
+    }[] = [];
+    const expenseTrans = transactions.filter((t) => t.type === "expense");
+
+    categories.forEach((cat) => {
+      if (cat.budgetLimit && cat.budgetLimit > 0) {
+        const spent = expenseTrans
+          .filter((t) => t.category === cat.name)
+          .reduce((sum, t) => sum + t.amount, 0);
+        const percent = Math.round((spent / cat.budgetLimit) * 100);
+        if (percent >= 100) {
+          warnings.push({
+            category: cat.name,
+            limit: cat.budgetLimit,
+            spent,
+            percent,
+            level: "critical",
+          });
+        } else if (percent >= 80) {
+          warnings.push({
+            category: cat.name,
+            limit: cat.budgetLimit,
+            spent,
+            percent,
+            level: "warning",
+          });
+        }
+      }
+    });
+    return warnings;
+  }, [transactions, categories]);
+
   const [metrics, setMetrics] = useState<FinancialMetrics>({
     totalIncome: 0,
     totalFixedExpenses: 0,
@@ -100,7 +160,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     if (!user) return;
 
     try {
-      // 1. Fetch Budget Settings
       const { data: budgetData } = await supabase
         .from("budget_settings")
         .select("*")
@@ -117,8 +176,11 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
           variableExpenses: budgetData.variable_expenses || [],
           emergencyFund: Number(budgetData.emergency_fund_amount),
         });
+        if (budgetData.currency_symbol) {
+          setCurrencySymbolState(budgetData.currency_symbol);
+          localStorage.setItem("currency_symbol", budgetData.currency_symbol);
+        }
       } else {
-        // Create default budget settings if not exists
         const { data: newBudget } = await supabase
           .from("budget_settings")
           .insert({
@@ -143,7 +205,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
         }
       }
 
-      // 2. Fetch Categories
       const { data: catData } = await supabase
         .from("categories")
         .select("*")
@@ -160,41 +221,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
             budgetedAmount: 0,
           })),
         );
-      } else {
-        // Initialize default categories if none exist
-        const defaults = [
-          {
-            name: "Food",
-            type: "variable",
-            color: "var(--chart-4)",
-            icon: "Coffee",
-          },
-          {
-            name: "Transport",
-            type: "variable",
-            color: "var(--chart-1)",
-            icon: "Car",
-          },
-          {
-            name: "Housing",
-            type: "fixed",
-            color: "var(--chart-2)",
-            icon: "Home",
-          },
-          {
-            name: "Income",
-            type: "income",
-            color: "var(--chart-5)",
-            icon: "DollarSign",
-          },
-        ];
-        // We can insert them or just set them locally? Better insert to DB.
-        // For now, let's just set empty and let user creating them, OR auto-create.
-        // Auto-create is better UX.
-        // (Skipping auto-create logic for brevity, user can add)
       }
 
-      // 3. Fetch Transactions
       const { data: transData } = await supabase
         .from("transactions")
         .select("*")
@@ -209,7 +237,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
             amount: Number(t.amount),
             type: t.type as any,
             category: t.category,
-            // Convert ISO string from DB to display string
             date: new Date(t.date).toLocaleDateString("en-US", {
               month: "short",
               day: "numeric",
@@ -220,7 +247,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
         );
       }
 
-      // 4. Fetch Tasks
       const { data: taskData } = await supabase
         .from("tasks")
         .select("*")
@@ -251,7 +277,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
         );
       }
 
-      // 5. Fetch Notes
       const { data: notesData } = await supabase
         .from("notes")
         .select("*")
@@ -278,16 +303,11 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
         );
       }
 
-      // 5. Fetch Global Metrics for Sidebar (Current Month)
       const dateForMetrics = new Date();
       const monthStr = `${dateForMetrics.getFullYear()}-${String(
         dateForMetrics.getMonth() + 1,
       ).padStart(2, "0")}-01`;
 
-      // We can reuse the getAnalyticsData logic, but we need to define it or import it.
-      // Since it's inside the same hook return, we can't call the export.
-      // We will duplicate the simple fetch call here or move the logic to a helper.
-      // For simplicity and safety, we call the RPC directly here as we did in getAnalyticsData.
       const { data: metricsData } = await supabase.rpc("get_monthly_metrics", {
         month_str: monthStr,
       });
@@ -313,17 +333,12 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
   };
 
   useEffect(() => {
-    console.log("DataContext: Auth State Changed", { user });
     if (user) {
-      console.log("DataContext: Fetching data for user", user.id);
       fetchData();
       checkRecurringTransactions();
-    } else {
-      console.log("DataContext: No user, skipping fetch");
     }
   }, [user]);
 
-  // Calculate Metrics
   useEffect(() => {
     const today = new Date();
     const daysInMonth = new Date(
@@ -340,9 +355,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
       0,
     );
 
-    // Unified Calculation Logic
-
-    // 1. Calculate Expenses & Savings for Current Month
     const currentMonthExpenses = transactions
       .filter((t) => {
         const d = new Date(t.date);
@@ -354,13 +366,11 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
       })
       .reduce((acc, curr) => acc + curr.amount, 0);
 
-    const totalVariableExpenses = currentMonthExpenses; // Previously this was calculated twice redundantly
+    const totalVariableExpenses = currentMonthExpenses;
 
-    // Total Savings (Actual cashflow: Income - Fixed - Variable)
     const totalSavings =
       totalIncome - totalFixedExpenses - totalVariableExpenses;
 
-    // 2. Calculate Previous Month Savings for Trend
     const prevMonthDate = new Date();
     prevMonthDate.setMonth(prevMonthDate.getMonth() - 1);
 
@@ -386,11 +396,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
       savingsTrend = 100;
     }
 
-    // 3. Calculate "Available Pool" logic requires target savings from budget settings
-    // This was the other totalSavings/totalVariableExpenses calculation that was conflicting
-    const targetSavingsAmount =
-      (totalIncome * (budgetSettings.savingsTargetPercent || 20)) / 100;
-
     const pocketMoneyPool = Math.max(
       0,
       totalIncome - totalFixedExpenses - totalVariableExpenses - totalSavings,
@@ -402,14 +407,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
       year: "numeric",
     });
 
-    // Calculate spent today based on current transactions state
     const spentToday = transactions
       .filter((t) => t.type === "expense" && t.date === todayStr)
       .reduce((acc, curr) => acc + curr.amount, 0);
-
-    // Calculate spent this month (excluding today for opening balance calculation or including? Daily limit usually dynamic based on *remaining* funds)
-    // Formula: (Current Balance) / Days Remaining
-    // Current Balance = Pool - Spent So Far
 
     const currentMonthStr = today.toLocaleString("default", { month: "short" });
     const spentMonthTotal = transactions
@@ -441,7 +441,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     });
   }, [budgetSettings, transactions]);
 
-  // Actions
   const addTransaction = async (transaction: Transaction) => {
     if (!user) return;
     try {
@@ -499,19 +498,32 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
 
   const deleteTransaction = async (id: string) => {
     if (!user) return;
+    const target = transactions.find((t) => t.id === id);
+    if (!target) return;
+
     setTransactions((prev) => prev.filter((t) => t.id !== id));
-    await supabase.from("transactions").delete().eq("id", id);
+
+    if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
+    const item: UndoItem = {
+      id,
+      type: "transaction",
+      data: target,
+      expiryTime: Date.now() + 10000,
+    };
+    setUndoItem(item);
+
+    undoTimeoutRef.current = setTimeout(async () => {
+      await supabase.from("transactions").delete().eq("id", id);
+      setUndoItem(null);
+    }, 10000);
   };
 
   const addTask = async (task: Task) => {
     if (!user) return;
     setTasks((prev) => [...prev, task]);
 
-    // Assume task.dueDate is roughly parseable or default to now
     let isoDate = new Date().toISOString();
     if (task.dueDate) {
-      // Attempt to parse "Oct 12, 10:00 AM" by appending current year if needed?
-      // This relies on Tasks.tsx sending a good string.
       const d = new Date(task.dueDate);
       if (!isNaN(d.getTime())) isoDate = d.toISOString();
     }
@@ -526,20 +538,70 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
       recurring: task.recurring,
       due_date: isoDate,
       tags: task.tags,
-      category: task.category || "Personal", // Added
+      category: task.category || "Personal",
     });
   };
 
   const deleteTask = async (id: string) => {
     if (!user) return;
+    const target = tasks.find((t) => t.id === id);
+    if (!target) return;
+
     setTasks((prev) => prev.filter((t) => t.id !== id));
-    await supabase.from("tasks").delete().eq("id", id);
+
+    if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
+    const item: UndoItem = {
+      id,
+      type: "task",
+      data: target,
+      expiryTime: Date.now() + 10000,
+    };
+    setUndoItem(item);
+
+    undoTimeoutRef.current = setTimeout(async () => {
+      await supabase.from("tasks").delete().eq("id", id);
+      setUndoItem(null);
+    }, 10000);
   };
 
-  const updateTaskStatus = async (id: string, status: TaskStatus) => {
+  const undoLastDelete = () => {
+    if (!undoItem) return;
+    if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
+    if (undoItem.type === "transaction") {
+      setTransactions((prev) => [...prev, undoItem.data as Transaction]);
+    } else if (undoItem.type === "task") {
+      setTasks((prev) => [...prev, undoItem.data as Task]);
+    }
+    setUndoItem(null);
+  };
+
+  const updateTaskStatus = async (
+    id: string,
+    status: TaskStatus,
+    reasonNotDone?: string,
+  ) => {
     if (!user) return;
-    setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, status } : t)));
-    await supabase.from("tasks").update({ status }).eq("id", id);
+    const completionTime = status === "completed" ? new Date().toISOString() : undefined;
+    setTasks((prev) =>
+      prev.map((t) =>
+        t.id === id
+          ? {
+              ...t,
+              status,
+              reasonNotDone: reasonNotDone || t.reasonNotDone,
+              completionTime: completionTime || t.completionTime,
+            }
+          : t,
+      ),
+    );
+    await supabase
+      .from("tasks")
+      .update({
+        status,
+        reason_not_done: reasonNotDone || null,
+        completion_time: completionTime || null,
+      })
+      .eq("id", id);
   };
 
   const updateBudgetSettings = async (settings: Partial<BudgetSettings>) => {
@@ -578,6 +640,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
         type: category.type,
         color: category.color,
         icon: category.icon,
+        budget_limit: category.budgetLimit || null,
       })
       .select()
       .single();
@@ -601,6 +664,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
         type: category.type,
         color: category.color,
         icon: category.icon,
+        budget_limit: category.budgetLimit || null,
       })
       .eq("id", category.id);
   };
@@ -617,17 +681,15 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
       const { error } = await supabase.from("recurring_rules").insert({
         ...rule,
         user_id: user.id,
-        next_due_date: rule.start_date, // Initial due date
+        next_due_date: rule.start_date,
       });
       if (error) throw error;
-      // Refresh transactions just in case (optional) in future
     } catch (err) {
       console.error("Error adding recurring rule:", err);
       throw err;
     }
   };
 
-  // Notes CRUD Operations
   const addNote = async (noteData: Partial<Note>) => {
     if (!user) return;
     const newNote: Note = {
@@ -709,7 +771,13 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
         budgetSettings,
         categories,
         metrics,
+        currencySymbol,
+        setCurrencySymbol,
+        undoItem,
+        categoryWarnings,
+        undoLastDelete,
         addTransaction,
+
         updateTransaction,
         addTask,
         deleteTransaction,

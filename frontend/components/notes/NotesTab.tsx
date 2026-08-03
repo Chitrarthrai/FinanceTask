@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo } from 'react';
 import {
   Plus,
   Search,
@@ -7,10 +7,14 @@ import {
   SlidersHorizontal,
   FileText,
   X,
-} from "lucide-react";
-import { Note, Task, ExtractedTask } from "../../types";
-import NoteCard from "./NoteCard";
-import NoteEditor from "./NoteEditor";
+} from 'lucide-react';
+import { Note, Task, ExtractedTask } from '../../types';
+import NoteCard from './NoteCard';
+import NoteEditor from './NoteEditor';
+import { Card } from '../ui/Card';
+import { Button } from '../ui/Button';
+import { Input } from '../ui/Input';
+import { Badge } from '../ui/Badge';
 
 interface NotesTabProps {
   notes: Note[];
@@ -23,7 +27,7 @@ interface NotesTabProps {
   theme: string;
 }
 
-const NotesTab: React.FC<NotesTabProps> = ({
+export const NotesTab: React.FC<NotesTabProps> = ({
   notes,
   tasks,
   onAddNote,
@@ -33,13 +37,12 @@ const NotesTab: React.FC<NotesTabProps> = ({
   onCreateTask,
   theme,
 }) => {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [searchQuery, setSearchQuery] = useState('');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [filterTag, setFilterTag] = useState<string | null>(null);
 
-  // Get all unique tags from notes
   const allTags = useMemo(() => {
     const tagSet = new Set<string>();
     notes.forEach((note) => {
@@ -48,27 +51,23 @@ const NotesTab: React.FC<NotesTabProps> = ({
     return Array.from(tagSet).sort();
   }, [notes]);
 
-  // Filter and sort notes
   const filteredNotes = useMemo(() => {
     let result = notes;
 
-    // Search filter
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       result = result.filter(
         (note) =>
           note.title?.toLowerCase().includes(query) ||
           note.content?.toLowerCase().includes(query) ||
-          note.tags?.some((tag) => tag.toLowerCase().includes(query)),
+          note.tags?.some((tag) => tag.toLowerCase().includes(query))
       );
     }
 
-    // Tag filter
     if (filterTag) {
       result = result.filter((note) => note.tags?.includes(filterTag));
     }
 
-    // Sort: Pinned first, then by updated date
     return result.sort((a, b) => {
       if (a.isPinned && !b.isPinned) return -1;
       if (!a.isPinned && b.isPinned) return 1;
@@ -102,137 +101,110 @@ const NotesTab: React.FC<NotesTabProps> = ({
     setSelectedNote(null);
   };
 
-  // Get linked task for a note
   const getLinkedTask = (taskId?: string) => {
     if (!taskId) return undefined;
     return tasks.find((t) => t.id === taskId);
   };
 
   return (
-    <div className="h-full flex flex-col">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-        <div>
-          <h2
-            className={`text-2xl font-bold ${
-              theme === "dark" ? "text-white" : "text-slate-800"
-            }`}>
-            Notes
-          </h2>
-          <p
-            className={`text-sm ${
-              theme === "dark" ? "text-slate-400" : "text-slate-500"
-            }`}>
-            {notes.length} note{notes.length !== 1 ? "s" : ""} • AI-powered
-          </p>
+    <div className="space-y-6">
+      {/* Header Toolbar */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="flex items-center gap-2">
+          <Badge variant="cyan" size="sm">
+            {notes.length} {notes.length === 1 ? 'Note' : 'Notes'}
+          </Badge>
+          <span className="text-xs font-mono text-[var(--text-muted)]">AI-assisted workspace</span>
         </div>
 
-        <div className="flex gap-3">
-          {/* View Toggle */}
-          <div
-            className={`flex rounded-xl p-1 border ${
-              theme === "dark"
-                ? "bg-slate-800/40 border-slate-700/50"
-                : "bg-white border-slate-200"
-            }`}>
+        <div className="flex items-center gap-3">
+          <div className="flex p-1 rounded-xl glass-panel">
             <button
-              onClick={() => setViewMode("grid")}
-              className={`p-2 rounded-lg transition-all ${
-                viewMode === "grid"
-                  ? "bg-slate-100 dark:bg-slate-700 shadow-sm text-brand-600 dark:text-brand-400"
-                  : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+              onClick={() => setViewMode('grid')}
+              className={`p-2 rounded-lg transition-all cursor-pointer ${
+                viewMode === 'grid'
+                  ? 'bg-[var(--accent-primary)] text-[var(--text-inverted)] shadow-sm'
+                  : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
               }`}
-              title="Grid View">
-              <LayoutGrid className="w-5 h-5" />
+              title="Grid View"
+            >
+              <LayoutGrid className="w-4 h-4" />
             </button>
             <button
-              onClick={() => setViewMode("list")}
-              className={`p-2 rounded-lg transition-all ${
-                viewMode === "list"
-                  ? "bg-slate-100 dark:bg-slate-700 shadow-sm text-brand-600 dark:text-brand-400"
-                  : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+              onClick={() => setViewMode('list')}
+              className={`p-2 rounded-lg transition-all cursor-pointer ${
+                viewMode === 'list'
+                  ? 'bg-[var(--accent-primary)] text-[var(--text-inverted)] shadow-sm'
+                  : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
               }`}
-              title="List View">
-              <List className="w-5 h-5" />
+              title="List View"
+            >
+              <List className="w-4 h-4" />
             </button>
           </div>
 
-          {/* Add Note Button */}
-          <button
+          <Button
+            variant="primary"
+            size="sm"
             onClick={handleNewNote}
-            className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition-all shadow-lg shadow-brand-500/30 hover:shadow-brand-500/40 active:scale-95">
-            <Plus className="w-5 h-5" />
+            leftIcon={<Plus className="w-4 h-4" />}
+          >
             New Note
-          </button>
+          </Button>
         </div>
       </div>
 
-      {/* Search and Filters */}
-      <div className="flex flex-col md:flex-row gap-4 mb-6">
-        {/* Search */}
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-          <input
-            type="text"
+      {/* Search & Tag Filter Pills */}
+      <Card variant="glass" className="flex flex-wrap items-center gap-3">
+        <div className="flex-1 min-w-[200px]">
+          <Input
+            placeholder="Search notes content or tags..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search notes..."
-            className={`w-full pl-10 pr-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-brand-200 outline-none transition-all text-sm font-medium ${
-              theme === "dark"
-                ? "bg-slate-800/40 border-slate-700/50 focus:bg-slate-900 text-white placeholder:text-slate-500"
-                : "bg-white border-slate-200 focus:bg-white text-slate-800 placeholder:text-slate-400"
-            }`}
+            leftIcon={<Search className="w-4 h-4 text-[var(--text-muted)]" />}
+            className="py-1.5 text-xs"
           />
-          {searchQuery && (
-            <button
-              onClick={() => setSearchQuery("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
-              <X className="w-4 h-4" />
-            </button>
-          )}
         </div>
 
-        {/* Tag Filters */}
         {allTags.length > 0 && (
-          <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0">
-            <SlidersHorizontal className="w-4 h-4 text-slate-400 flex-shrink-0" />
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
+            <SlidersHorizontal className="w-3.5 h-3.5 text-[var(--text-muted)] shrink-0" />
             <button
               onClick={() => setFilterTag(null)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all ${
+              className={`px-2.5 py-1 rounded-lg text-xs font-mono font-semibold transition-all cursor-pointer ${
                 filterTag === null
-                  ? "bg-brand-500 text-white"
-                  : theme === "dark"
-                    ? "bg-slate-800 text-slate-400 hover:bg-slate-700"
-                    : "bg-slate-100 text-slate-500 hover:bg-slate-200"
-              }`}>
-              All
+                  ? 'bg-[var(--accent-primary)] text-[var(--text-inverted)]'
+                  : 'bg-[var(--surface-l2)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+              }`}
+            >
+              All Tags
             </button>
-            {allTags.slice(0, 5).map((tag) => (
+            {allTags.map((tag) => (
               <button
                 key={tag}
                 onClick={() => setFilterTag(filterTag === tag ? null : tag)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all ${
+                className={`px-2.5 py-1 rounded-lg text-xs font-mono font-semibold transition-all cursor-pointer ${
                   filterTag === tag
-                    ? "bg-brand-500 text-white"
-                    : theme === "dark"
-                      ? "bg-slate-800 text-slate-400 hover:bg-slate-700"
-                      : "bg-slate-100 text-slate-500 hover:bg-slate-200"
-                }`}>
+                    ? 'bg-[var(--accent-primary)] text-[var(--text-inverted)]'
+                    : 'bg-[var(--surface-l2)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                }`}
+              >
                 #{tag}
               </button>
             ))}
           </div>
         )}
-      </div>
+      </Card>
 
-      {/* Notes Grid/List */}
+      {/* Notes Display Grid / List */}
       {filteredNotes.length > 0 ? (
         <div
-          className={`flex-1 overflow-y-auto ${
-            viewMode === "grid"
-              ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
-              : "space-y-3"
-          }`}>
+          className={
+            viewMode === 'grid'
+              ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4'
+              : 'space-y-3'
+          }
+        >
           {filteredNotes.map((note) => (
             <NoteCard
               key={note.id}
@@ -245,44 +217,27 @@ const NotesTab: React.FC<NotesTabProps> = ({
           ))}
         </div>
       ) : (
-        // Empty State
-        <div className="flex-1 flex flex-col items-center justify-center text-center">
-          <div
-            className={`w-20 h-20 rounded-full flex items-center justify-center mb-4 ${
-              theme === "dark" ? "bg-slate-800" : "bg-slate-100"
-            }`}>
-            <FileText
-              className={`w-10 h-10 ${
-                theme === "dark" ? "text-slate-600" : "text-slate-300"
-              }`}
-            />
+        <Card variant="glass" className="py-16 text-center space-y-3">
+          <div className="w-12 h-12 rounded-2xl bg-[var(--surface-l2)] border border-[var(--border-rim)] text-[var(--text-muted)] flex items-center justify-center mx-auto">
+            <FileText className="w-6 h-6" />
           </div>
-          <h3
-            className={`text-lg font-bold mb-2 ${
-              theme === "dark" ? "text-slate-300" : "text-slate-700"
-            }`}>
-            {searchQuery || filterTag ? "No notes found" : "No notes yet"}
-          </h3>
-          <p
-            className={`text-sm mb-4 ${
-              theme === "dark" ? "text-slate-500" : "text-slate-400"
-            }`}>
+          <p className="font-bold text-sm text-[var(--text-primary)]">
+            {searchQuery || filterTag ? 'No matching notes found' : 'No notes created yet'}
+          </p>
+          <p className="text-xs text-[var(--text-muted)] max-w-sm mx-auto">
             {searchQuery || filterTag
-              ? "Try a different search or filter"
-              : "Create your first note with AI-powered features"}
+              ? 'Try resetting search terms or tag filters.'
+              : 'Create your first note to capture ideas, meeting points, and AI-extracted tasks.'}
           </p>
           {!searchQuery && !filterTag && (
-            <button
-              onClick={handleNewNote}
-              className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition-all">
-              <Plus className="w-5 h-5" />
+            <Button variant="primary" size="sm" onClick={handleNewNote} leftIcon={<Plus className="w-4 h-4" />}>
               Create Note
-            </button>
+            </Button>
           )}
-        </div>
+        </Card>
       )}
 
-      {/* Note Editor Modal */}
+      {/* Note Editor Drawer / Modal */}
       <NoteEditor
         note={selectedNote}
         tasks={tasks}

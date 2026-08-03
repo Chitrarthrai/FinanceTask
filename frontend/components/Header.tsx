@@ -1,16 +1,13 @@
-import React, { useState, useRef, useEffect } from "react";
-import {
-  Search,
-  Bell,
-  Menu,
-  Sun,
-  Moon,
-  Settings as SettingsIcon,
-  LogOut,
-  Settings,
-} from "lucide-react";
-import { useLocation, useNavigate } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext";
+import React, { useState, useRef, useEffect } from 'react';
+import { Search, Bell, Settings, LogOut, Plus } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import { useData } from '../contexts/DataContext';
+import { ThemeToggle } from './ui/ThemeToggle';
+import { CurrencySelector } from './ui/CurrencySelector';
+import { Button } from './ui/Button';
+import { Input } from './ui/Input';
+import TransactionModal from './TransactionModal';
 
 interface HeaderProps {
   theme: string;
@@ -21,44 +18,35 @@ const Header: React.FC<HeaderProps> = ({ theme, setTheme }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
+  const { categoryWarnings } = useData();
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchScope, setSearchScope] = useState<'transactions' | 'tasks'>('transactions');
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsDropdownOpen(false);
       }
     };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  /*
-   * NEW: Search Scope State
-   * Default to 'transactions' but switch if we are on the tasks page
-   */
-  const [searchScope, setSearchScope] = useState<"transactions" | "tasks">(
-    "transactions",
-  );
-
-  // Auto-detect scope based on current URL
   useEffect(() => {
-    if (location.pathname.includes("/tasks")) {
-      setSearchScope("tasks");
+    if (location.pathname.includes('/tasks')) {
+      setSearchScope('tasks');
     } else {
-      setSearchScope("transactions");
+      setSearchScope('transactions');
     }
   }, [location.pathname]);
 
   const handleSearch = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && searchQuery.trim()) {
-      if (searchScope === "transactions") {
+    if (e.key === 'Enter' && searchQuery.trim()) {
+      if (searchScope === 'transactions') {
         navigate(`/app/transactions?search=${encodeURIComponent(searchQuery)}`);
       } else {
         navigate(`/app/tasks?search=${encodeURIComponent(searchQuery)}`);
@@ -68,162 +56,140 @@ const Header: React.FC<HeaderProps> = ({ theme, setTheme }) => {
 
   const handleSignOut = async () => {
     await signOut();
-    navigate("/login");
+    navigate('/login');
   };
 
   const getPageTitle = () => {
     switch (location.pathname) {
-      case "/app":
-        return "Dashboard";
-      case "/app/transactions":
-        return "Transactions";
-      case "/app/tasks":
-        return "Tasks";
-      case "/app/settings":
-        return "Settings";
+      case '/app':
+        return 'Executive Dashboard';
+      case '/app/transactions':
+        return 'Transactions Ledger';
+      case '/app/tasks':
+        return 'Task Kanban';
+      case '/app/notes':
+        return 'Financial Notes';
+      case '/app/analytics':
+        return 'Financial Analytics';
+      case '/app/reports':
+        return 'Executive Reports';
+      case '/app/settings':
+        return 'Settings & Preferences';
       default:
-        return "FinanceTask";
+        return 'FinanceTask';
     }
   };
 
-  const toggleTheme = () => {
-    setTheme(theme === "light" ? "dark" : "light");
-  };
-
   return (
-    <header className="flex items-center justify-between mb-8">
-      <div>
-        <h2 className="text-2xl font-bold text-slate-800 dark:text-white tracking-tight">
-          {getPageTitle()}
-        </h2>
-        <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">
-          Welcome back,{" "}
-          {user?.user_metadata?.full_name?.split(" ")[0] || "User"}
-        </p>
-      </div>
-
-      <div className="flex items-center gap-4 ml-auto">
-        <div
-          className={`hidden md:flex items-center backdrop-blur-md px-4 py-2.5 rounded-2xl border focus-within:border-brand-300 focus-within:ring-2 focus-within:ring-brand-100 transition-all shadow-sm w-80 ${
-            theme === "dark"
-              ? "bg-slate-800/50 hover:bg-slate-800/80 border-slate-700/50"
-              : "bg-white hover:bg-white border-slate-200"
-          }`}>
-          {/* Scope Selector */}
-          <select
-            value={searchScope}
-            onChange={(e) =>
-              setSearchScope(e.target.value as "transactions" | "tasks")
-            }
-            className={`bg-transparent border-none outline-none text-xs font-bold uppercase mr-2 cursor-pointer focus:text-brand-600 ${
-              theme === "dark" ? "text-slate-500" : "text-slate-500"
-            }`}>
-            <option value="transactions">Trans</option>
-            <option value="tasks">Tasks</option>
-          </select>
-
-          <div
-            className={`h-4 w-px mr-2 ${
-              theme === "dark" ? "bg-slate-600" : "bg-slate-300"
-            }`}
-          />
-
-          <Search className="w-4 h-4 text-slate-400 mr-2" />
-          <input
-            type="text"
-            placeholder={
-              searchScope === "transactions"
-                ? "Search transactions..."
-                : "Search tasks..."
-            }
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyDown={handleSearch}
-            className={`bg-transparent border-none outline-none text-sm placeholder:text-slate-500 w-full ${
-              theme === "dark" ? "text-slate-200" : "text-slate-800"
-            }`}
-          />
+    <>
+      <header className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6 pt-2">
+        {/* Title & User Greeting */}
+        <div>
+          <h1 className="text-2xl font-bold font-display text-[var(--text-primary)] tracking-tight">
+            {getPageTitle()}
+          </h1>
+          <p className="text-xs font-medium text-[var(--text-secondary)] mt-0.5">
+            Welcome back, {user?.user_metadata?.full_name?.split(' ')[0] || 'User'} • Titanium Operating System
+          </p>
         </div>
 
-        {/* Theme Toggle */}
-        <button
-          onClick={toggleTheme}
-          className={`p-3 rounded-xl border transition-all hover:shadow-lg hover:shadow-brand-500/10 group backdrop-blur-md ${
-            theme === "dark"
-              ? "bg-slate-800/50 hover:bg-slate-700/80 border-slate-700/50 text-slate-300"
-              : "bg-white/40 hover:bg-white/80 border-white/50 text-slate-600"
-          }`}
-          aria-label="Toggle Dark Mode">
-          {theme === "dark" ? (
-            <Sun className="w-5 h-5 text-amber-400 group-hover:rotate-45 transition-transform" />
-          ) : (
-            <Moon className="w-5 h-5 text-slate-600 group-hover:-rotate-12 transition-transform" />
-          )}
-        </button>
-
-        <button
-          className={`relative p-3 rounded-xl border transition-all hover:shadow-lg hover:shadow-brand-500/10 group backdrop-blur-md ${
-            theme === "dark"
-              ? "bg-slate-800/50 hover:bg-slate-700/80 border-slate-700/50 text-slate-300"
-              : "bg-white/40 hover:bg-white/80 border-white/50 text-slate-600 hover:text-brand-600"
-          }`}>
-          <Bell className="w-5 h-5 group-hover:scale-110 transition-transform" />
-          <span
-            className={`absolute top-2.5 right-3 w-2 h-2 bg-rose-500 rounded-full border ${
-              theme === "dark" ? "border-slate-800" : "border-white"
-            }`}></span>
-        </button>
-
-        <div className="relative" ref={dropdownRef}>
-          <button
-            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-            className={`flex items-center gap-3 pl-1 pr-4 py-1 rounded-full border transition-all hover:shadow-md backdrop-blur-md ${
-              theme === "dark"
-                ? "bg-slate-800/50 hover:bg-slate-700/80 border-slate-700/50"
-                : "bg-white/40 hover:bg-white/80 border-white/50"
-            }`}>
-            <img
-              src={`https://ui-avatars.com/api/?name=${
-                user?.user_metadata?.full_name || "User"
-              }&background=random`}
-              alt="User"
-              className={`w-9 h-9 rounded-full object-cover ring-2 ${
-                theme === "dark" ? "ring-slate-700" : "ring-white"
-              }`}
+        {/* Global Controls */}
+        <div className="flex items-center gap-3 w-full md:w-auto justify-end flex-wrap">
+          {/* Quick Search */}
+          <div className="hidden lg:flex items-center w-64">
+            <Input
+              placeholder={searchScope === 'transactions' ? 'Search transactions...' : 'Search tasks...'}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={handleSearch}
+              leftIcon={<Search className="w-4 h-4 text-[var(--text-muted)]" />}
+              className="py-1.5 text-xs"
             />
-            <div className="hidden md:flex flex-col items-start">
-              <span className="text-sm font-bold text-slate-700 dark:text-slate-200 leading-tight">
-                {user?.user_metadata?.full_name || "User"}
-              </span>
-              <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
-                {user?.email || "No Email"}
-              </span>
-            </div>
-          </button>
+          </div>
 
-          {isDropdownOpen && (
-            <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-100 dark:border-slate-700 overflow-hidden animate-fade-in z-50">
-              <div className="p-1">
+          {/* Quick Add Action Button */}
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => setIsAddModalOpen(true)}
+            leftIcon={<Plus className="w-4 h-4" />}
+          >
+            New Entry
+          </Button>
+
+          {/* Currency Selector */}
+          <CurrencySelector />
+
+          {/* Theme Toggle */}
+          <ThemeToggle theme={theme} setTheme={setTheme} />
+
+          {/* Notifications Indicator */}
+          <div className="relative">
+            <Button variant="glass" size="icon" className="rounded-xl relative">
+              <Bell className="w-4 h-4 text-[var(--text-secondary)]" />
+              {categoryWarnings.length > 0 && (
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[var(--danger)] led-pulse" />
+              )}
+            </Button>
+          </div>
+
+          {/* User Profile Avatar Dropdown */}
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              className="flex items-center gap-2.5 p-1 pr-3 rounded-full border border-[var(--border-rim)] bg-[var(--surface-l1)] hover:border-[var(--border-highlight)] transition-all cursor-pointer"
+            >
+              <img
+                src={`https://ui-avatars.com/api/?name=${encodeURIComponent(
+                  user?.user_metadata?.full_name || 'User'
+                )}&background=00f2ff&color=090a0f&bold=true`}
+                alt="User Avatar"
+                className="w-7 h-7 rounded-full object-cover border border-white/20"
+              />
+              <span className="hidden md:inline text-xs font-semibold text-[var(--text-primary)]">
+                {user?.user_metadata?.full_name?.split(' ')[0] || 'User'}
+              </span>
+            </button>
+
+            {isDropdownOpen && (
+              <div className="absolute right-0 mt-2 w-52 glass-panel rounded-xl border border-[var(--border-rim)] shadow-2xl p-1.5 z-50 animate-slide-up">
+                <div className="px-3 py-2 border-b border-[var(--border-rim)] mb-1">
+                  <p className="text-xs font-bold text-[var(--text-primary)]">
+                    {user?.user_metadata?.full_name || 'User'}
+                  </p>
+                  <p className="text-[10px] text-[var(--text-muted)] truncate">{user?.email}</p>
+                </div>
                 <button
                   onClick={() => {
                     setIsDropdownOpen(false);
-                    navigate("/app/settings");
+                    navigate('/app/settings');
                   }}
-                  className="flex items-center gap-2 w-full px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50 rounded-lg transition-colors">
-                  <Settings className="w-4 h-4" /> Settings
+                  className="flex items-center gap-2 w-full px-3 py-2 text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-l2)] rounded-lg transition-colors cursor-pointer"
+                >
+                  <Settings className="w-4 h-4 text-[var(--accent-primary)]" />
+                  <span>Settings</span>
                 </button>
-                <div className="h-px bg-slate-100 dark:bg-slate-700 my-1" />
                 <button
                   onClick={handleSignOut}
-                  className="flex items-center gap-2 w-full px-4 py-2.5 text-sm font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-lg transition-colors">
-                  <LogOut className="w-4 h-4" /> Sign Out
+                  className="flex items-center gap-2 w-full px-3 py-2 text-xs font-medium text-[var(--danger)] hover:bg-[var(--danger)]/10 rounded-lg transition-colors cursor-pointer"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span>Sign Out</span>
                 </button>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
-      </div>
-    </header>
+      </header>
+
+      {/* Quick Add Transaction Modal */}
+      {isAddModalOpen && (
+        <TransactionModal
+          isOpen={isAddModalOpen}
+          onClose={() => setIsAddModalOpen(false)}
+        />
+      )}
+    </>
   );
 };
 

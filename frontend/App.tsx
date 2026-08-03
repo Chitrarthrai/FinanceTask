@@ -12,13 +12,12 @@ import P2PShare from "./pages/P2PShare";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
-import Notes from "./pages/Notes"; // Import Notes Page
+import Notes from "./pages/Notes";
 import { DataProvider } from "./contexts/DataContext";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { AIChatBot } from "./components/AIChatBot";
 import { Loader2 } from "lucide-react";
 
-// Layout for the main authenticated application
 const AppLayout = ({
   theme,
   setTheme,
@@ -27,40 +26,36 @@ const AppLayout = ({
   setTheme: (t: string) => void;
 }) => {
   return (
-    <div className="flex min-h-screen text-slate-800 dark:text-slate-100 font-sans selection:bg-brand-200 selection:text-brand-900 transition-colors duration-300">
+    <div className="min-h-screen bg-[var(--bg-app)] text-[var(--text-primary)] font-sans transition-colors duration-300">
       <Sidebar />
-      <div className="flex-1 lg:pl-64 transition-all duration-300">
-        <Header theme={theme} setTheme={setTheme} />
-        <main className="px-6 py-4">
-          <Outlet context={{ theme, setTheme }} />
-        </main>
+      <div className="lg:pl-64 flex flex-col min-h-screen transition-all duration-300">
+        <div className="px-4 sm:px-6 py-4 flex-1 flex flex-col w-full">
+          <Header theme={theme} setTheme={setTheme} />
+          <main className="flex-1 w-full">
+            <Outlet context={{ theme, setTheme }} />
+          </main>
+        </div>
         <AIChatBot />
       </div>
     </div>
   );
 };
 
-// Protected Route Component
 const ProtectedRoute = ({ children }: { children: React.ReactElement }) => {
   const { session, loading } = useAuth();
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900">
-        <Loader2 className="w-8 h-8 animate-spin text-brand-500" />
+      <div className="min-h-screen flex items-center justify-center bg-[var(--bg-app)]">
+        <Loader2 className="w-8 h-8 animate-spin text-[var(--accent-primary)]" />
       </div>
     );
-  }
-
-  if (!session) {
-    return <Navigate to="/login" replace />;
   }
 
   return children;
 };
 
 const App = () => {
-  // Theme state management with localStorage persistence
   const [theme, setTheme] = useState(() => {
     const savedTheme = localStorage.getItem("theme");
     return savedTheme || "dark";
@@ -75,7 +70,6 @@ const App = () => {
     localStorage.setItem("theme", theme);
   }, [theme]);
 
-  // Combined Provider to ensure Data has access to Auth if needed later
   const AppProviders = ({ children }: { children: React.ReactNode }) => (
     <AuthProvider>
       <DataProvider>{children}</DataProvider>
@@ -86,7 +80,6 @@ const App = () => {
     <AppProviders>
       <HashRouter>
         <Routes>
-          {/* Public Routes */}
           <Route
             path="/"
             element={<Landing theme={theme} setTheme={setTheme} />}
@@ -94,7 +87,6 @@ const App = () => {
           <Route path="/signup" element={<Signup />} />
           <Route path="/login" element={<Login />} />
 
-          {/* Protected App Routes */}
           <Route
             path="/app"
             element={

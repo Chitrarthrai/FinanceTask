@@ -25,7 +25,7 @@ export interface Transaction {
   paymentMethod?: string; // Added
 }
 
-export type TaskStatus = "todo" | "in-progress" | "completed";
+export type TaskStatus = "todo" | "in-progress" | "completed" | "not-done";
 export type TaskPriority = "low" | "medium" | "high";
 
 export interface Task {
@@ -39,7 +39,21 @@ export interface Task {
   tags?: string[];
   recurring?: boolean;
   category?: string; // Added
+  reasonNotDone?: string;
+  completionTime?: string;
 }
+
+export interface NotificationItem {
+  id: string;
+  userId?: string;
+  taskId?: string;
+  type: "budget_warning" | "alarm" | "task_reminder";
+  title: string;
+  message: string;
+  createdAt: string;
+  readAt?: string;
+}
+
 
 export interface ChartData {
   name: string;
@@ -78,7 +92,16 @@ export interface BudgetSettings {
   fixedExpenses: ExpenseItem[];
   variableExpenses: ExpenseItem[];
   emergencyFund: number; // Simplified to number
+  currencySymbol?: string; // Added: '$', '₹', '€', '£'
 }
+
+export interface UndoItem {
+  id: string;
+  type: "transaction" | "task";
+  data: Transaction | Task;
+  expiryTime: number; // Timestamp
+}
+
 
 export interface FinancialMetrics {
   totalIncome: number;

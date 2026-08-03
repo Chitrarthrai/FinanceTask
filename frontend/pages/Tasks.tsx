@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { useSearchParams, useOutletContext } from "react-router-dom";
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   Plus,
   Search,
@@ -15,60 +15,65 @@ import {
   Trash2,
   X,
   Tag,
-  FileText,
-} from "lucide-react";
-import { useData } from "../contexts/DataContext";
-import { Task, TaskStatus, ExtractedTask } from "../types";
-import Modal from "../components/Modal";
-import TaskCalendar from "../components/TaskCalendar";
-import CustomDatePicker from "../components/CustomDatePicker";
+} from 'lucide-react';
+import { useData } from '../contexts/DataContext';
+import { Task, TaskStatus } from '../types';
+import { Modal } from '../components/ui/Modal';
+import { Card } from '../components/ui/Card';
+import { Button } from '../components/ui/Button';
+import { Input } from '../components/ui/Input';
+import { Select } from '../components/ui/Select';
+import { Badge } from '../components/ui/Badge';
+import TaskCalendar from '../components/TaskCalendar';
+import CustomDatePicker from '../components/CustomDatePicker';
 
-const Tasks = () => {
-  const { theme } = useOutletContext<{ theme: string }>();
+export const Tasks: React.FC = () => {
   const { tasks, addTask, updateTaskStatus, deleteTask } = useData();
-  const [view, setView] = useState<"board" | "list" | "calendar">("board");
-  const [filter, setFilter] = useState("");
-  const [endDate, setEndDate] = useState<Date | null>(() => new Date());
+  const [view, setView] = useState<'board' | 'list' | 'calendar'>('board');
+  const [filter, setFilter] = useState('');
+  const [priorityFilter, setPriorityFilter] = useState<string>('all');
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [startDate, setStartDate] = useState<Date | null>(() => {
     const d = new Date();
     d.setDate(d.getDate() - 7);
     return d;
   });
+  const [endDate, setEndDate] = useState<Date | null>(() => new Date());
 
   const [searchParams] = useSearchParams();
   useEffect(() => {
-    const query = searchParams.get("search");
+    const query = searchParams.get('search');
     if (query) {
       setFilter(query);
     }
   }, [searchParams]);
-  const [priorityFilter, setPriorityFilter] = useState<string>("all");
-  const [categoryFilter, setCategoryFilter] = useState<string>("all");
+
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [notDoneTaskId, setNotDoneTaskId] = useState<string | null>(null);
+  const [reasonNotDoneInput, setReasonNotDoneInput] = useState('');
 
-  // Form State
   const [newTask, setNewTask] = useState<Partial<Task>>({
-    title: "",
-    description: "",
-    priority: "medium",
-    status: "todo",
-    dueDate: "",
+    title: '',
+    description: '',
+    priority: 'medium',
+    status: 'todo',
+    dueDate: '',
     recurring: false,
-    category: "Personal",
+    category: 'Personal',
   });
 
   const TASK_CATEGORIES = [
-    "Personal",
-    "Work",
-    "Health",
-    "Finance",
-    "Shopping",
-    "Learning",
+    'Personal',
+    'Work',
+    'Health',
+    'Finance',
+    'Shopping',
+    'Learning',
   ];
 
   const onDragStart = (e: React.DragEvent, id: string) => {
-    e.dataTransfer.setData("taskId", id);
+    e.dataTransfer.setData('taskId', id);
   };
 
   const onDragOver = (e: React.DragEvent) => {
@@ -76,26 +81,35 @@ const Tasks = () => {
   };
 
   const onDrop = (e: React.DragEvent, status: TaskStatus) => {
-    const id = e.dataTransfer.getData("taskId");
-    updateTaskStatus(id, status);
+    const id = e.dataTransfer.getData('taskId');
+    if (status === 'not-done') {
+      setNotDoneTaskId(id);
+      setReasonNotDoneInput('');
+    } else {
+      updateTaskStatus(id, status);
+    }
+  };
+
+  const handleConfirmNotDone = () => {
+    if (notDoneTaskId) {
+      updateTaskStatus(notDoneTaskId, 'not-done', reasonNotDoneInput);
+      setNotDoneTaskId(null);
+      setReasonNotDoneInput('');
+    }
   };
 
   const filteredTasks = tasks
     .filter((t) => {
       const matchesSearch =
         t.title.toLowerCase().includes(filter.toLowerCase()) ||
-        (t.description &&
-          t.description.toLowerCase().includes(filter.toLowerCase()));
-      const matchesPriority =
-        priorityFilter === "all" || t.priority === priorityFilter;
-      const matchesCategory =
-        categoryFilter === "all" || t.category === categoryFilter;
+        (t.description && t.description.toLowerCase().includes(filter.toLowerCase()));
+      const matchesPriority = priorityFilter === 'all' || t.priority === priorityFilter;
+      const matchesCategory = categoryFilter === 'all' || t.category === categoryFilter;
 
-      // Date Filter
       let matchesDate = true;
       if (t.dueDate) {
         const taskDate = new Date(t.dueDate);
-        taskDate.setHours(0, 0, 0, 0); // Normalize time
+        taskDate.setHours(0, 0, 0, 0);
 
         if (startDate) {
           const start = new Date(startDate);
@@ -108,9 +122,6 @@ const Tasks = () => {
           end.setHours(23, 59, 59, 999);
           if (taskDate > end) matchesDate = false;
         }
-      } else if (startDate || endDate) {
-        // If filters are active but task has no date, usually exclude it
-        matchesDate = false;
       }
 
       return matchesSearch && matchesPriority && matchesCategory && matchesDate;
@@ -123,37 +134,37 @@ const Tasks = () => {
 
   const handleAddTask = (e: React.FormEvent) => {
     e.preventDefault();
-    // Format the date nicely if it's an ISO string
-    let formattedDate = newTask.dueDate || "No Date";
-    if (newTask.dueDate && newTask.dueDate.includes("T")) {
+    let formattedDate = newTask.dueDate || 'No Date';
+    if (newTask.dueDate && newTask.dueDate.includes('T')) {
       const d = new Date(newTask.dueDate);
-      formattedDate = d.toLocaleString("en-US", {
-        month: "short",
-        day: "numeric",
-        hour: "numeric",
-        minute: "2-digit",
+      formattedDate = d.toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
       });
     }
 
     addTask({
       id: crypto.randomUUID(),
-      title: newTask.title || "Untitled",
-      description: newTask.description || "",
-      priority: newTask.priority as any,
-      status: newTask.status as any,
+      title: newTask.title || 'Untitled Task',
+      description: newTask.description || '',
+      priority: (newTask.priority as any) || 'medium',
+      status: (newTask.status as any) || 'todo',
       dueDate: formattedDate,
       recurring: newTask.recurring,
-      category: newTask.category,
+      category: newTask.category || 'Personal',
     });
+
     setIsAddModalOpen(false);
     setNewTask({
-      title: "",
-      description: "",
-      priority: "medium",
-      status: "todo",
-      dueDate: "",
+      title: '',
+      description: '',
+      priority: 'medium',
+      status: 'todo',
+      dueDate: '',
       recurring: false,
-      category: "Personal",
+      category: 'Personal',
     });
   };
 
@@ -161,27 +172,6 @@ const Tasks = () => {
     if (selectedTask) {
       deleteTask(selectedTask.id);
       setSelectedTask(null);
-    }
-  };
-
-  const getPriorityColor = (p: string) => {
-    switch (p) {
-      case "high":
-        return theme === "dark"
-          ? "bg-red-600 text-white border-red-600 shadow-md shadow-red-600/20"
-          : "bg-red-500 text-white border-red-500 shadow-md shadow-red-500/20";
-      case "medium":
-        return theme === "dark"
-          ? "bg-amber-600 text-white border-amber-600 shadow-md shadow-amber-600/20"
-          : "bg-amber-500 text-white border-amber-500 shadow-md shadow-amber-500/20";
-      case "low":
-        return theme === "dark"
-          ? "bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-600/20"
-          : "bg-blue-500 text-white border-blue-500 shadow-md shadow-blue-500/20";
-      default:
-        return theme === "dark"
-          ? "bg-slate-700 text-slate-300 border-slate-700"
-          : "bg-slate-200 text-slate-700 border-slate-300";
     }
   };
 
@@ -195,132 +185,106 @@ const Tasks = () => {
     count: number;
   }) => (
     <div
-      className="flex-1 min-w-[300px] flex flex-col h-full"
+      className="flex-1 min-w-[280px] flex flex-col h-full"
       onDragOver={onDragOver}
-      onDrop={(e) => onDrop(e, status)}>
-      <div className="flex justify-between items-center mb-4 px-2">
+      onDrop={(e) => onDrop(e, status)}
+    >
+      <div className="flex justify-between items-center mb-3 px-1">
         <div className="flex items-center gap-2">
-          <h3
-            className={`font-bold ${
-              theme === "dark" ? "text-slate-200" : "text-slate-700"
-            }`}>
+          <h3 className="font-bold text-sm font-display text-[var(--text-primary)]">
             {title}
           </h3>
-          <span className="badge-strong px-2 py-0.5 rounded-full text-xs font-bold">
+          <Badge variant="neutral" size="sm">
             {count}
-          </span>
+          </Badge>
         </div>
-        <button
+        <Button
+          variant="ghost"
+          size="icon"
           onClick={() => {
             setNewTask({ ...newTask, status });
             setIsAddModalOpen(true);
           }}
-          className={`transition-colors ${
-            theme === "dark"
-              ? "text-slate-400 hover:text-slate-200"
-              : "text-slate-400 hover:text-slate-600"
-          }`}>
-          <Plus className="w-5 h-5" />
-        </button>
+        >
+          <Plus className="w-4 h-4 text-[var(--accent-primary)]" />
+        </Button>
       </div>
 
-      <div
-        className={`flex-1 rounded-3xl p-4 space-y-3 overflow-y-auto border ${
-          theme === "dark"
-            ? "bg-slate-900/40 border-white/5" // Dark mode slightly stronger
-            : "bg-slate-50/80 border-slate-200" // Light mode: stronger bg and border
-        }`}>
+      <div className="flex-1 glass-panel rounded-2xl p-3 space-y-3 overflow-y-auto min-h-[420px]">
         {filteredTasks
           .filter((t) => t.status === status)
           .map((task) => (
-            <div
+            <Card
               key={task.id}
+              variant="rim"
+              hoverable
+              glowColor={task.priority === 'high' ? 'cyan' : 'none'}
+              padding="sm"
               draggable
               onDragStart={(e) => onDragStart(e, task.id)}
               onClick={() => setSelectedTask(task)}
-              className={`glass-panel p-4 rounded-2xl cursor-grab active:cursor-grabbing transition-all group animate-slide-up border hover:shadow-lg hover:-translate-y-1 ${
-                theme === "dark"
-                  ? "border-transparent hover:border-brand-500"
-                  : "border-slate-200 hover:border-brand-300 hover:bg-orange-50/50" // Light mode: visible border + tint hover
-              }`}>
-              <div className="flex justify-between items-start mb-2">
-                <div className="flex gap-2">
-                  <span
-                    className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase border ${getPriorityColor(
-                      task.priority,
-                    )}`}>
+              className="cursor-grab active:cursor-grabbing"
+            >
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <Badge
+                    variant={
+                      task.priority === 'high'
+                        ? 'danger'
+                        : task.priority === 'medium'
+                        ? 'warning'
+                        : 'cyan'
+                    }
+                    size="sm"
+                    pulse={task.priority === 'high'}
+                  >
                     {task.priority}
-                  </span>
+                  </Badge>
+
                   {task.recurring && (
-                    <span
-                      className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase border flex items-center gap-1 ${
-                        theme === "dark"
-                          ? "bg-blue-900/40 text-blue-400 border-blue-900"
-                          : "bg-blue-100 text-blue-600 border-blue-200"
-                      }`}>
-                      <Repeat className="w-3 h-3" /> Daily
-                    </span>
+                    <Badge variant="violet" size="sm">
+                      <Repeat className="w-3 h-3 mr-0.5" /> Daily
+                    </Badge>
                   )}
-                  {task.category && task.category !== "Personal" && (
-                    <span
-                      className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase border ${
-                        theme === "dark"
-                          ? "bg-purple-900/40 text-purple-400 border-purple-900"
-                          : "bg-purple-100 text-purple-600 border-purple-200"
-                      }`}>
+
+                  {task.category && task.category !== 'Personal' && (
+                    <Badge variant="neutral" size="sm">
                       {task.category}
-                    </span>
+                    </Badge>
                   )}
                 </div>
-                <button
-                  className={`opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-lg ${
-                    theme === "dark"
-                      ? "hover:bg-slate-800 bg-slate-800/50"
-                      : "hover:bg-brand-100 bg-white shadow-sm border border-slate-100" // Light mode: distinct button
-                  }`}>
-                  <MoreHorizontal className="w-4 h-4 text-slate-400" />
+
+                <button className="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors">
+                  <MoreHorizontal className="w-4 h-4" />
                 </button>
               </div>
-              <h4
-                className={`font-bold mb-1 ${
-                  theme === "dark" ? "text-slate-200" : "text-slate-800"
-                }`}>
+
+              <h4 className="font-bold text-sm text-[var(--text-primary)] mb-1">
                 {task.title}
               </h4>
-              <p
-                className={`text-sm line-clamp-2 mb-3 ${
-                  theme === "dark" ? "text-slate-400" : "text-slate-500"
-                }`}>
-                {task.description}
-              </p>
+              {task.description && (
+                <p className="text-xs text-[var(--text-secondary)] line-clamp-2 mb-3">
+                  {task.description}
+                </p>
+              )}
 
-              <div
-                className={`flex items-center justify-between pt-3 border-t ${
-                  theme === "dark" ? "border-slate-800" : "border-slate-100"
-                }`}>
-                <div className="flex -space-x-2">
-                  <div
-                    className={`w-6 h-6 rounded-full bg-brand-100 border-2 flex items-center justify-center text-[10px] font-bold text-brand-600 ${
-                      theme === "dark" ? "border-slate-800" : "border-white"
-                    }`}>
-                    AM
-                  </div>
+              {task.reasonNotDone && (
+                <div className="mb-3 p-2 rounded-lg bg-[var(--danger)]/10 border border-[var(--danger)]/30 text-[11px] text-[var(--danger)]">
+                  <strong>Reason:</strong> {task.reasonNotDone}
                 </div>
-                <div
-                  className={`flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded-lg ${
-                    theme === "dark"
-                      ? "text-slate-500 bg-slate-900"
-                      : "text-slate-500 bg-slate-50"
-                  }`}>
-                  <Clock className="w-3.5 h-3.5" />
-                  {task.dueDate}
-                </div>
+              )}
+
+              <div className="flex items-center justify-between pt-2 border-t border-[var(--border-rim)] text-[11px] text-[var(--text-muted)] font-mono">
+                <span className="flex items-center gap-1">
+                  <Clock className="w-3 h-3" /> {task.dueDate}
+                </span>
               </div>
-            </div>
+            </Card>
           ))}
+
         {filteredTasks.filter((t) => t.status === status).length === 0 && (
-          <div className="h-32 flex flex-col items-center justify-center text-slate-400 dark:text-slate-600 border-2 border-dashed border-slate-300/50 dark:border-slate-700/50 rounded-2xl">
-            <p className="text-sm font-medium">Drop items here</p>
+          <div className="h-32 flex items-center justify-center border-2 border-dashed border-[var(--border-rim)] rounded-xl text-xs font-mono text-[var(--text-muted)]">
+            Drop task here
           </div>
         )}
       </div>
@@ -328,562 +292,357 @@ const Tasks = () => {
   );
 
   return (
-    <div className="space-y-6 h-[calc(100vh-140px)] flex flex-col pb-6 animate-fade-in">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-end gap-4 shrink-0">
+    <div className="space-y-6 pb-20 animate-fade-in">
+      {/* Header Bar */}
+      <section className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold text-slate-800 dark:text-white tracking-tight mb-1">
-            {view === "notes" ? "Notes" : "Task Board"}
+          <h1 className="text-3xl font-bold font-display text-[var(--text-primary)] tracking-tight">
+            Task Operations Kanban
           </h1>
-          <p className="text-slate-500 dark:text-slate-400 font-medium">
-            {view === "notes"
-              ? "AI-powered notes with smart features."
-              : "Manage your projects and daily to-dos."}
+          <p className="text-sm font-medium text-[var(--text-secondary)] mt-0.5">
+            Agile task board, priority tracking, and rescheduling calendar
           </p>
         </div>
-        <div className="flex gap-3">
-          <div className="flex bg-white dark:bg-slate-800/40 rounded-xl p-1 border border-slate-200 dark:border-slate-700/50 backdrop-blur-md">
+
+        <div className="flex items-center gap-3">
+          {/* View Mode Toggle Switcher */}
+          <div className="flex p-1 rounded-xl glass-panel">
             <button
-              onClick={() => setView("board")}
-              className={`p-2 rounded-lg transition-all ${
-                view === "board"
-                  ? "bg-slate-100 dark:bg-slate-700 shadow-sm text-brand-600 dark:text-brand-400"
-                  : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+              onClick={() => setView('board')}
+              className={`p-2 rounded-lg transition-all cursor-pointer ${
+                view === 'board'
+                  ? 'bg-[var(--accent-primary)] text-[var(--text-inverted)] shadow-sm'
+                  : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
               }`}
-              title="Board View">
-              <LayoutGrid className="w-5 h-5" />
+              title="Board View"
+            >
+              <LayoutGrid className="w-4 h-4" />
             </button>
             <button
-              onClick={() => setView("list")}
-              className={`p-2 rounded-lg transition-all ${
-                view === "list"
-                  ? "bg-slate-100 dark:bg-slate-700 shadow-sm text-brand-600 dark:text-brand-400"
-                  : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+              onClick={() => setView('list')}
+              className={`p-2 rounded-lg transition-all cursor-pointer ${
+                view === 'list'
+                  ? 'bg-[var(--accent-primary)] text-[var(--text-inverted)] shadow-sm'
+                  : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
               }`}
-              title="List View">
-              <List className="w-5 h-5" />
+              title="List View"
+            >
+              <List className="w-4 h-4" />
             </button>
             <button
-              onClick={() => setView("calendar")}
-              className={`p-2 rounded-lg transition-all ${
-                view === "calendar"
-                  ? "bg-slate-100 dark:bg-slate-700 shadow-sm text-brand-600 dark:text-brand-400"
-                  : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+              onClick={() => setView('calendar')}
+              className={`p-2 rounded-lg transition-all cursor-pointer ${
+                view === 'calendar'
+                  ? 'bg-[var(--accent-primary)] text-[var(--text-inverted)] shadow-sm'
+                  : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
               }`}
-              title="Calendar View">
-              <CalendarIcon className="w-5 h-5" />
+              title="Calendar View"
+            >
+              <CalendarIcon className="w-4 h-4" />
             </button>
           </div>
-          <button
+
+          <Button
+            variant="primary"
+            size="sm"
             onClick={() => setIsAddModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition-all shadow-lg shadow-brand-500/30 hover:shadow-brand-500/40 active:scale-95 border border-transparent">
-            <Plus className="w-5 h-5" /> Add Task
-          </button>
+            leftIcon={<Plus className="w-4 h-4" />}
+          >
+            Add Task
+          </Button>
         </div>
-      </div>
+      </section>
 
-      {/* Filters - only shown when not in notes view */}
-      {view !== "notes" && (
-        <div className="flex gap-4 shrink-0">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <input
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-              type="text"
-              placeholder="Search tasks..."
-              className={`w-full pl-10 pr-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-brand-200 outline-none transition-all text-sm font-medium glass-input ${
-                theme === "dark"
-                  ? "bg-slate-800/40 border-slate-700/50 focus:bg-slate-900 text-white"
-                  : "bg-white border-slate-200 focus:bg-white text-slate-800"
-              }`}
-            />
-          </div>
-
-          {/* Functional Priority Filter */}
-          <div className="relative">
-            <select
-              value={priorityFilter}
-              onChange={(e) => setPriorityFilter(e.target.value)}
-              className={`appearance-none pl-10 pr-10 py-2.5 border rounded-xl font-bold transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-500/50 ${
-                theme === "dark"
-                  ? "bg-slate-800/40 border-slate-700/50 text-slate-300 hover:bg-slate-800"
-                  : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
-              }`}>
-              <option value="all">All Priorities</option>
-              <option value="high">High Priority</option>
-              <option value="medium">Medium Priority</option>
-              <option value="low">Low Priority</option>
-            </select>
-            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
-            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
-          </div>
-
-          {/* Category Filter */}
-          <div className="relative">
-            <select
-              value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value)}
-              className={`appearance-none pl-10 pr-10 py-2.5 border rounded-xl font-bold transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-500/50 ${
-                theme === "dark"
-                  ? "bg-slate-800/40 border-slate-700/50 text-slate-300 hover:bg-slate-800"
-                  : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
-              }`}>
-              <option value="all">All Categories</option>
-              {TASK_CATEGORIES.map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat}
-                </option>
-              ))}
-            </select>
-            <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
-            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
-          </div>
-
-          {/* Date Filter Inputs */}
-          <div className="flex items-center gap-2">
-            <div className="relative">
-              <input
-                type="date"
-                className={`pl-8 pr-3 py-2.5 border rounded-xl font-medium transition-all focus:outline-none focus:ring-2 focus:ring-brand-500/50 ${
-                  theme === "dark"
-                    ? "bg-slate-800/40 border-slate-700/50 text-slate-300"
-                    : "bg-white border-slate-200 text-slate-600"
-                }`}
-                value={startDate ? startDate.toISOString().split("T")[0] : ""}
-                onChange={(e) =>
-                  setStartDate(e.target.value ? new Date(e.target.value) : null)
-                }
-              />
-              <CalendarIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
-            </div>
-            <span className="text-slate-400 font-medium">-</span>
-            <div className="relative">
-              <input
-                type="date"
-                className={`pl-8 pr-3 py-2.5 border rounded-xl font-medium transition-all focus:outline-none focus:ring-2 focus:ring-brand-500/50 ${
-                  theme === "dark"
-                    ? "bg-slate-800/40 border-slate-700/50 text-slate-300"
-                    : "bg-white border-slate-200 text-slate-600"
-                }`}
-                value={endDate ? endDate.toISOString().split("T")[0] : ""}
-                onChange={(e) =>
-                  setEndDate(e.target.value ? new Date(e.target.value) : null)
-                }
-              />
-              <CalendarIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
-            </div>
-            {(startDate || endDate) && (
-              <button
-                onClick={() => {
-                  setStartDate(null);
-                  setEndDate(null);
-                }}
-                className="p-2 rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-colors"
-                title="Clear Date Filter">
-                <X className="w-5 h-5" />
-              </button>
-            )}
-          </div>
+      {/* Filters Bar */}
+      <Card variant="glass" className="flex flex-wrap gap-3 items-center">
+        <div className="flex-1 min-w-[200px]">
+          <Input
+            placeholder="Search tasks..."
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            leftIcon={<Search className="w-4 h-4 text-[var(--text-muted)]" />}
+            className="py-1.5 text-xs"
+          />
         </div>
-      )}
+
+        <div className="w-36">
+          <Select
+            value={priorityFilter}
+            onChange={(e) => setPriorityFilter(e.target.value)}
+            options={[
+              { value: 'all', label: 'All Priorities' },
+              { value: 'high', label: 'High Priority' },
+              { value: 'medium', label: 'Medium Priority' },
+              { value: 'low', label: 'Low Priority' },
+            ]}
+            className="py-1.5 text-xs"
+          />
+        </div>
+
+        <div className="w-36">
+          <Select
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+            options={[
+              { value: 'all', label: 'All Categories' },
+              ...TASK_CATEGORIES.map((c) => ({ value: c, label: c })),
+            ]}
+            className="py-1.5 text-xs"
+          />
+        </div>
+
+        {(filter || priorityFilter !== 'all' || categoryFilter !== 'all') && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setFilter('');
+              setPriorityFilter('all');
+              setCategoryFilter('all');
+            }}
+            leftIcon={<X className="w-3.5 h-3.5" />}
+          >
+            Clear
+          </Button>
+        )}
+      </Card>
 
       {/* View Content */}
-      {view === "board" && (
-        <div className="flex-1 overflow-x-auto pb-4">
-          <div className="flex gap-6 h-full min-w-[1000px]">
+      {view === 'board' && (
+        <div className="overflow-x-auto pb-4">
+          <div className="flex gap-4 min-w-[1000px]">
             <KanbanColumn
               title="To Do"
               status="todo"
-              count={filteredTasks.filter((t) => t.status === "todo").length}
+              count={filteredTasks.filter((t) => t.status === 'todo').length}
             />
             <KanbanColumn
               title="In Progress"
               status="in-progress"
-              count={
-                filteredTasks.filter((t) => t.status === "in-progress").length
-              }
+              count={filteredTasks.filter((t) => t.status === 'in-progress').length}
             />
             <KanbanColumn
               title="Completed"
               status="completed"
-              count={
-                filteredTasks.filter((t) => t.status === "completed").length
-              }
+              count={filteredTasks.filter((t) => t.status === 'completed').length}
+            />
+            <KanbanColumn
+              title="Not Done"
+              status="not-done"
+              count={filteredTasks.filter((t) => t.status === 'not-done').length}
             />
           </div>
         </div>
       )}
 
-      {view === "list" && (
-        <div className="glass-panel rounded-3xl overflow-hidden flex-1">
-          <div className="overflow-auto max-h-full">
-            <table className="w-full">
-              <thead className="bg-white/30 dark:bg-slate-900/30 border-b border-white/20 dark:border-white/5">
+      {view === 'list' && (
+        <Card variant="glass">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead className="border-b border-[var(--border-rim)] text-[var(--text-muted)] uppercase tracking-wider font-mono">
                 <tr>
-                  <th className="text-left py-4 px-6 text-sm font-bold text-slate-500 dark:text-slate-400">
-                    Task Name
-                  </th>
-                  <th className="text-left py-4 px-6 text-sm font-bold text-slate-500 dark:text-slate-400">
-                    Status
-                  </th>
-                  <th className="text-left py-4 px-6 text-sm font-bold text-slate-500 dark:text-slate-400">
-                    Priority
-                  </th>
-                  <th className="text-left py-4 px-6 text-sm font-bold text-slate-500 dark:text-slate-400">
-                    Due Date
-                  </th>
-                  <th className="text-right py-4 px-6 text-sm font-bold text-slate-500 dark:text-slate-400">
-                    Actions
-                  </th>
+                  <th className="py-3 px-4">Task Title</th>
+                  <th className="py-3 px-4">Status</th>
+                  <th className="py-3 px-4">Priority</th>
+                  <th className="py-3 px-4">Due Date</th>
+                  <th className="py-3 px-4 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-[var(--border-rim)]">
                 {filteredTasks.map((task) => (
                   <tr
                     key={task.id}
                     onClick={() => setSelectedTask(task)}
-                    className={`border-b transition-colors group cursor-pointer ${
-                      theme === "dark"
-                        ? "border-white/5 hover:bg-white/5"
-                        : "border-white/10 hover:bg-white/30"
-                    }`}>
-                    <td className="py-4 px-6">
-                      <div className="flex items-center gap-3">
-                        <div
-                          className={`w-5 h-5 rounded-md border-2 flex items-center justify-center ${
-                            task.status === "completed"
-                              ? "bg-brand-500 border-brand-500"
-                              : theme === "dark"
-                                ? "border-slate-600"
-                                : "border-slate-300"
-                          }`}>
-                          {task.status === "completed" && (
-                            <CheckCircle2 className="w-3.5 h-3.5 text-white" />
-                          )}
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <p
-                              className={`font-bold ${
-                                theme === "dark"
-                                  ? "text-slate-200"
-                                  : "text-slate-800"
-                              }`}>
-                              {task.title}
-                            </p>
-                            {task.recurring && (
-                              <Repeat className="w-3 h-3 text-blue-500" />
-                            )}
-                          </div>
-                          <p
-                            className={`text-xs truncate max-w-[200px] ${
-                              theme === "dark"
-                                ? "text-slate-400"
-                                : "text-slate-500"
-                            }`}>
-                            {task.description}
-                          </p>
-                        </div>
-                      </div>
+                    className="hover:bg-[var(--surface-l2)] transition-colors cursor-pointer"
+                  >
+                    <td className="py-3 px-4 font-bold text-[var(--text-primary)]">
+                      {task.title}
                     </td>
-                    <td className="py-4 px-6">
-                      <span
-                        className={`px-2.5 py-1 rounded-full text-xs font-bold uppercase ${
-                          task.status === "completed"
-                            ? theme === "dark"
-                              ? "bg-emerald-900/30 text-emerald-400"
-                              : "bg-emerald-500 text-white"
-                            : task.status === "in-progress"
-                              ? theme === "dark"
-                                ? "bg-blue-900/30 text-blue-400"
-                                : "bg-blue-500 text-white"
-                              : theme === "dark"
-                                ? "bg-slate-800 text-slate-400"
-                                : "bg-slate-100 text-slate-600"
-                        }`}>
-                        {task.status.replace("-", " ")}
-                      </span>
+                    <td className="py-3 px-4">
+                      <Badge
+                        variant={
+                          task.status === 'completed'
+                            ? 'success'
+                            : task.status === 'in-progress'
+                            ? 'cyan'
+                            : task.status === 'not-done'
+                            ? 'danger'
+                            : 'neutral'
+                        }
+                        size="sm"
+                      >
+                        {task.status.replace('-', ' ')}
+                      </Badge>
                     </td>
-                    <td className="py-4 px-6">
-                      <span
-                        className={`px-2.5 py-1 rounded-full text-xs font-bold uppercase border ${getPriorityColor(
-                          task.priority,
-                        )}`}>
+                    <td className="py-3 px-4">
+                      <Badge
+                        variant={
+                          task.priority === 'high'
+                            ? 'danger'
+                            : task.priority === 'medium'
+                            ? 'warning'
+                            : 'cyan'
+                        }
+                        size="sm"
+                      >
                         {task.priority}
-                      </span>
+                      </Badge>
                     </td>
-                    <td className="py-4 px-6">
-                      <div
-                        className={`flex items-center gap-2 text-sm font-medium ${
-                          theme === "dark" ? "text-slate-400" : "text-slate-500"
-                        }`}>
-                        <CalendarIcon className="w-4 h-4" />
-                        <div className="flex flex-col">
-                          <span>
-                            {task.dueDate.includes("T")
-                              ? new Date(task.dueDate).toLocaleDateString()
-                              : task.dueDate.split(",")[0]}
-                          </span>
-                          {task.dueDate.includes("T") && (
-                            <div className="flex items-center gap-1 text-xs text-brand-500 font-bold">
-                              <Clock className="w-3 h-3" />
-                              {new Date(task.dueDate).toLocaleTimeString([], {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              })}
-                            </div>
-                          )}
-                        </div>
-                      </div>
+                    <td className="py-3 px-4 font-mono text-[var(--text-muted)]">
+                      {task.dueDate}
                     </td>
-                    <td className="py-4 px-6 text-right">
-                      <button
-                        className={`p-2 rounded-lg transition-colors ${
-                          theme === "dark"
-                            ? "hover:bg-slate-800 text-slate-400 hover:text-slate-200"
-                            : "hover:bg-white/50 text-slate-400 hover:text-slate-600"
-                        }`}>
-                        <MoreHorizontal className="w-5 h-5" />
-                      </button>
+                    <td className="py-3 px-4 text-right">
+                      <Button variant="ghost" size="icon" onClick={() => setSelectedTask(task)}>
+                        <MoreHorizontal className="w-4 h-4 text-[var(--text-muted)]" />
+                      </Button>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-        </div>
+        </Card>
       )}
 
-      {view === "calendar" && (
-        <div className="flex-1">
+      {view === 'calendar' && (
+        <Card variant="glass">
           <TaskCalendar tasks={tasks} onTaskClick={setSelectedTask} />
-        </div>
+        </Card>
       )}
 
       {/* Add Task Modal */}
       <Modal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
-        title="Add Task">
+        title="Add New Task"
+        subtitle="Create an action item for your project backlog"
+      >
         <form onSubmit={handleAddTask} className="space-y-4">
+          <Input
+            label="Title"
+            required
+            value={newTask.title}
+            onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
+            placeholder="Task description title"
+          />
+
           <div>
-            <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">
-              Title
-            </label>
-            <input
-              required
-              type="text"
-              value={newTask.title}
-              onChange={(e) =>
-                setNewTask({ ...newTask, title: e.target.value })
-              }
-              className={`w-full px-4 py-3 rounded-xl glass-input font-medium ${
-                theme === "dark"
-                  ? "bg-slate-800/50 text-white placeholder:text-slate-500 border-slate-700"
-                  : "bg-white text-slate-800 placeholder:text-slate-400 border-slate-200"
-              }`}
-              placeholder="Task title"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">
+            <label className="block text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-1">
               Description
             </label>
             <textarea
               value={newTask.description}
-              onChange={(e) =>
-                setNewTask({ ...newTask, description: e.target.value })
-              }
-              className={`w-full px-4 py-3 rounded-xl glass-input font-medium ${
-                theme === "dark"
-                  ? "bg-slate-800/50 text-white placeholder:text-slate-500 border-slate-700"
-                  : "bg-white text-slate-800 placeholder:text-slate-400 border-slate-200"
-              }`}
-              placeholder="Description"
+              onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
+              className="w-full glass-input rounded-xl p-3 text-xs placeholder-[var(--text-muted)]"
+              rows={3}
+              placeholder="Task instructions or notes..."
             />
           </div>
 
-          {/* Category Selection */}
+          <div className="grid grid-cols-2 gap-3">
+            <Select
+              label="Priority"
+              value={newTask.priority}
+              onChange={(e) => setNewTask({ ...newTask, priority: e.target.value as any })}
+              options={[
+                { value: 'low', label: 'Low Priority' },
+                { value: 'medium', label: 'Medium Priority' },
+                { value: 'high', label: 'High Priority' },
+              ]}
+            />
+
+            <Select
+              label="Category"
+              value={newTask.category}
+              onChange={(e) => setNewTask({ ...newTask, category: e.target.value })}
+              options={TASK_CATEGORIES.map((c) => ({ value: c, label: c }))}
+            />
+          </div>
+
           <div>
-            <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">
-              Category
+            <label className="block text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-1">
+              Due Date & Time
             </label>
-            <div className="flex gap-2 flex-wrap">
-              {TASK_CATEGORIES.map((cat) => (
-                <button
-                  key={cat}
-                  type="button"
-                  onClick={() => setNewTask({ ...newTask, category: cat })}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                    newTask.category === cat
-                      ? "bg-brand-500 text-white shadow-md shadow-brand-500/20"
-                      : theme === "dark"
-                        ? "bg-slate-800 text-slate-500 hover:bg-slate-700"
-                        : "bg-slate-100 text-slate-500 hover:bg-slate-200"
-                  }`}>
-                  {cat}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">
-                Priority
-              </label>
-              <div className="relative">
-                <select
-                  value={newTask.priority}
-                  onChange={(e) =>
-                    setNewTask({ ...newTask, priority: e.target.value as any })
-                  }
-                  className={`w-full px-4 py-3 rounded-xl glass-input font-medium appearance-none ${
-                    theme === "dark"
-                      ? "bg-slate-800/50 text-white border-slate-700"
-                      : "bg-white text-slate-800 border-slate-200"
-                  }`}>
-                  <option value="low">Low</option>
-                  <option value="medium">Medium</option>
-                  <option value="high">High</option>
-                </select>
-                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">
-                Due Date & Time
-              </label>
-              <CustomDatePicker
-                includeTime={true}
-                value={newTask.dueDate || new Date()}
-                onChange={(date) => {
-                  setNewTask({ ...newTask, dueDate: date.toISOString() });
-                }}
-              />
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3 p-1">
-            <input
-              type="checkbox"
-              id="recurring"
-              checked={newTask.recurring}
-              onChange={(e) =>
-                setNewTask({ ...newTask, recurring: e.target.checked })
-              }
-              className={`w-5 h-5 rounded text-brand-500 focus:ring-brand-500 border-gray-300 ${
-                theme === "dark"
-                  ? "bg-slate-800 border-gray-600"
-                  : "bg-white/50"
-              }`}
+            <CustomDatePicker
+              includeTime={true}
+              value={newTask.dueDate || new Date()}
+              onChange={(date) => setNewTask({ ...newTask, dueDate: date.toISOString() })}
             />
-            <label
-              htmlFor="recurring"
-              className="text-sm font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2 cursor-pointer select-none">
-              <Repeat className="w-4 h-4 text-slate-500" />
-              Repeat Daily
-            </label>
           </div>
 
-          <button
-            type="submit"
-            className="w-full py-2.5 text-sm font-medium bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition-colors shadow-lg shadow-brand-500/30 hover:shadow-brand-500/40 border border-transparent">
+          <Button type="submit" variant="primary" className="w-full mt-2">
             Create Task
-          </button>
+          </Button>
         </form>
+      </Modal>
+
+      {/* Reason for Not Done Modal */}
+      <Modal
+        isOpen={!!notDoneTaskId}
+        onClose={() => setNotDoneTaskId(null)}
+        title="Reason for Not Done"
+        subtitle="Explain why this task was abandoned or left incomplete"
+      >
+        <div className="space-y-4">
+          <textarea
+            value={reasonNotDoneInput}
+            onChange={(e) => setReasonNotDoneInput(e.target.value)}
+            placeholder="Provide a reason (e.g. Low priority, blocked by dependency)..."
+            className="w-full glass-input rounded-xl p-3 text-xs"
+            rows={3}
+          />
+          <div className="flex gap-2">
+            <Button variant="danger" className="flex-1" onClick={handleConfirmNotDone}>
+              Confirm Not Done
+            </Button>
+            <Button variant="glass" onClick={() => setNotDoneTaskId(null)}>
+              Cancel
+            </Button>
+          </div>
+        </div>
       </Modal>
 
       {/* View Task Details Modal */}
       <Modal
         isOpen={!!selectedTask}
         onClose={() => setSelectedTask(null)}
-        title="Task Details">
+        title="Task Specifications"
+      >
         {selectedTask && (
-          <div className="space-y-6">
-            {/* Header with Status and Priority */}
-            <div className="flex items-center justify-between">
-              <div className="flex gap-2">
-                <span
-                  className={`px-3 py-1 rounded-full text-xs font-bold uppercase border ${getPriorityColor(
-                    selectedTask.priority,
-                  )}`}>
-                  {selectedTask.priority}
-                </span>
-                <span
-                  className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${
-                    selectedTask.status === "completed"
-                      ? "bg-emerald-500 text-white dark:bg-emerald-900/40 dark:text-emerald-400"
-                      : selectedTask.status === "in-progress"
-                        ? "bg-blue-500 text-white dark:bg-blue-900/40 dark:text-blue-400"
-                        : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400"
-                  }`}>
-                  {selectedTask.status.replace("-", " ")}
-                </span>
-              </div>
-              {selectedTask.recurring && (
-                <span className="flex items-center gap-1.5 text-blue-500 text-sm font-bold">
-                  <Repeat className="w-4 h-4" /> Daily
-                </span>
-              )}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <Badge variant={selectedTask.priority === 'high' ? 'danger' : 'warning'}>
+                {selectedTask.priority}
+              </Badge>
+              <Badge variant="cyan">{selectedTask.status.replace('-', ' ')}</Badge>
             </div>
 
-            {/* Title & Date */}
             <div>
-              <h3 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">
+              <h3 className="text-xl font-bold font-display text-[var(--text-primary)]">
                 {selectedTask.title}
               </h3>
-              <div className="flex items-center gap-4 text-slate-500 dark:text-slate-400">
-                <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-lg">
-                  <CalendarIcon className="w-4 h-4" />
-                  <span className="font-medium text-sm">
-                    {selectedTask.dueDate || "No Date"}
-                  </span>
-                </div>
-                {(selectedTask.category ||
-                  (selectedTask.tags && selectedTask.tags.length > 0)) && (
-                  <div className="flex items-center gap-2">
-                    {selectedTask.category && (
-                      <span className="flex items-center gap-1 text-xs font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md">
-                        <Tag className="w-3 h-3" /> {selectedTask.category}
-                      </span>
-                    )}
-                    {selectedTask.tags &&
-                      selectedTask.tags.map((tag) => (
-                        <span
-                          key={tag}
-                          className="flex items-center gap-1 text-xs font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md">
-                          <Tag className="w-3 h-3" /> {tag}
-                        </span>
-                      ))}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Description */}
-            <div className="bg-white/50 dark:bg-slate-800/50 p-5 rounded-2xl border border-white/50 dark:border-slate-700/50">
-              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
-                Description
-              </label>
-              <p className="text-slate-700 dark:text-slate-300 leading-relaxed">
-                {selectedTask.description || "No description provided."}
+              <p className="text-xs text-[var(--text-muted)] font-mono mt-1">
+                Due: {selectedTask.dueDate || 'No Date'}
               </p>
             </div>
 
-            {/* Actions */}
-            <div className="flex gap-3 pt-4 border-t border-slate-200 dark:border-slate-700">
-              <button
-                onClick={handleDeleteTask}
-                className="flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-medium bg-rose-50 text-rose-600 dark:bg-rose-900/20 dark:text-rose-400 rounded-lg hover:bg-rose-100 dark:hover:bg-rose-900/40 transition-colors">
-                <Trash2 className="w-4 h-4" /> Delete Task
-              </button>
-              <button
-                onClick={() => setSelectedTask(null)}
-                className="flex-1 py-2.5 text-sm font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+            <div className="p-4 rounded-xl bg-[var(--surface-l2)] border border-[var(--border-rim)] text-xs text-[var(--text-secondary)]">
+              {selectedTask.description || 'No description provided.'}
+            </div>
+
+            {selectedTask.reasonNotDone && (
+              <div className="p-3 rounded-xl bg-[var(--danger)]/15 border border-[var(--danger)]/30 text-xs text-[var(--danger)]">
+                <strong>Reason Not Done:</strong> {selectedTask.reasonNotDone}
+              </div>
+            )}
+
+            <div className="flex gap-2 pt-2">
+              <Button variant="danger" size="sm" onClick={handleDeleteTask} leftIcon={<Trash2 className="w-3.5 h-3.5" />}>
+                Delete
+              </Button>
+              <Button variant="glass" size="sm" onClick={() => setSelectedTask(null)}>
                 Close
-              </button>
+              </Button>
             </div>
           </div>
         )}

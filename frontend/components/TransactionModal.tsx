@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { ChevronDown, CreditCard, Receipt, Plus } from "lucide-react";
+import { ChevronDown, CreditCard, Receipt } from "lucide-react";
 import Modal from "./Modal";
 import CustomDatePicker from "./CustomDatePicker";
 import { useData } from "../contexts/DataContext";
@@ -26,6 +26,7 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
     addRecurringRule,
     categories,
     user,
+    currencySymbol,
   } = useData();
 
   const [newTrans, setNewTrans] = useState<
@@ -50,7 +51,6 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
   const [scanning, setScanning] = useState(false);
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
 
-  // Initialize form when opening
   useEffect(() => {
     if (isOpen && initialData) {
       setNewTrans({
@@ -67,7 +67,6 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
         type: initialData.type || "expense",
       });
     } else if (isOpen && !isEditMode) {
-      // Reset on new open if not edit
       setNewTrans({
         title: "",
         amount: 0,
@@ -107,7 +106,6 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
       }
 
       if (newTrans.id) {
-        // Update existing
         await updateTransaction({
           id: newTrans.id,
           title: newTrans.title || "Untitled",
@@ -119,7 +117,6 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
           paymentMethod: newTrans.paymentMethod,
         });
       } else {
-        // Create new
         await addTransaction({
           id: crypto.randomUUID(),
           title: newTrans.title || "Untitled",
@@ -150,7 +147,7 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
         });
       }
 
-      onClose(); // Close modal on success
+      onClose();
       setReceiptFile(null);
     } catch (error) {
       console.error("Error saving transaction:", error);
@@ -165,9 +162,9 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
       isOpen={isOpen}
       onClose={onClose}
       title={isEditMode ? "Edit Transaction" : "Add Transaction"}>
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4 font-sans">
         <div>
-          <label className="block text-sm font-bold text-text-primary mb-1">
+          <label className="block text-xs font-bold font-display uppercase tracking-wider text-[var(--text-secondary)] mb-1">
             Title
           </label>
           <input
@@ -177,14 +174,14 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
             onChange={(e) =>
               setNewTrans({ ...newTrans, title: e.target.value })
             }
-            className="w-full px-4 py-3 rounded-lg font-medium bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 placeholder:text-slate-400 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 transition-all shadow-sm"
+            className="w-full glass-input rounded-xl px-4 py-2.5 text-xs font-medium"
             placeholder="e.g. Grocery Shopping"
           />
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-bold text-text-primary mb-1">
-              Amount ($)
+            <label className="block text-xs font-bold font-display uppercase tracking-wider text-[var(--text-secondary)] mb-1">
+              Amount ({currencySymbol})
             </label>
             <input
               required
@@ -197,12 +194,12 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
                   amount: parseFloat(e.target.value),
                 })
               }
-              className="w-full px-4 py-3 rounded-lg font-medium bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 placeholder:text-slate-400 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 transition-all shadow-sm"
+              className="w-full glass-input rounded-xl px-4 py-2.5 text-xs font-mono font-bold"
               placeholder="0.00"
             />
           </div>
           <div>
-            <label className="block text-sm font-bold text-text-primary mb-1">
+            <label className="block text-xs font-bold font-display uppercase tracking-wider text-[var(--text-secondary)] mb-1">
               Type
             </label>
             <div className="relative">
@@ -211,17 +208,17 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
                 onChange={(e) =>
                   setNewTrans({ ...newTrans, type: e.target.value as any })
                 }
-                className="w-full px-4 py-3 rounded-lg font-medium appearance-none bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 transition-all shadow-sm">
+                className="w-full glass-input rounded-xl px-4 py-2.5 text-xs font-semibold appearance-none">
                 <option value="expense">Expense</option>
                 <option value="income">Income</option>
               </select>
-              <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted pointer-events-none" />
+              <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)] pointer-events-none" />
             </div>
           </div>
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-bold text-text-primary mb-1">
+            <label className="block text-xs font-bold font-display uppercase tracking-wider text-[var(--text-secondary)] mb-1">
               Date
             </label>
             <CustomDatePicker
@@ -239,7 +236,7 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
             />
           </div>
           <div>
-            <label className="block text-sm font-bold text-text-primary mb-1">
+            <label className="block text-xs font-bold font-display uppercase tracking-wider text-[var(--text-secondary)] mb-1">
               Category
             </label>
             <div className="relative">
@@ -248,7 +245,7 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
                 onChange={(e) =>
                   setNewTrans({ ...newTrans, category: e.target.value })
                 }
-                className="w-full px-4 py-3 rounded-lg font-medium appearance-none bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 transition-all shadow-sm">
+                className="w-full glass-input rounded-xl px-4 py-2.5 text-xs font-semibold appearance-none">
                 {categoryNames
                   .filter((c) => c !== "All")
                   .map((c) => (
@@ -257,18 +254,18 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
                     </option>
                   ))}
               </select>
-              <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted pointer-events-none" />
+              <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)] pointer-events-none" />
             </div>
           </div>
         </div>
 
         {/* Recurring Toggle */}
-        <div className="flex items-center gap-4 bg-bg-primary/50 p-4 rounded-lg border border-border-primary">
+        <div className="flex items-center gap-4 bg-[var(--surface-l2)]/60 p-3.5 rounded-xl border border-[var(--border-rim)]">
           <div className="flex-1">
-            <label className="text-sm font-bold text-text-primary">
+            <label className="text-xs font-bold text-[var(--text-primary)]">
               Repeat Transaction
             </label>
-            <p className="text-xs text-text-muted">
+            <p className="text-[11px] text-[var(--text-muted)]">
               Automatically create this transaction?
             </p>
           </div>
@@ -278,23 +275,23 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
                 <select
                   value={frequency}
                   onChange={(e) => setFrequency(e.target.value)}
-                  className="pl-3 pr-8 py-1.5 text-sm rounded-lg bg-bg-secondary border border-border-primary focus:ring-2 focus:ring-brand-500 outline-none appearance-none font-medium text-text-primary">
+                  className="pl-3 pr-8 py-1 text-xs rounded-lg glass-input font-medium appearance-none">
                   <option value="weekly">Weekly</option>
                   <option value="monthly">Monthly</option>
                   <option value="yearly">Yearly</option>
                 </select>
-                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-text-muted pointer-events-none" />
+                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-[var(--text-muted)] pointer-events-none" />
               </div>
             )}
             <button
               type="button"
               onClick={() => setIsRecurring(!isRecurring)}
-              className={`w-12 h-6 rounded-full transition-colors relative ${
-                isRecurring ? "bg-brand-500" : "bg-slate-300 dark:bg-slate-600"
+              className={`w-11 h-6 rounded-full transition-colors relative cursor-pointer ${
+                isRecurring ? "bg-[var(--accent-primary)]" : "bg-[var(--surface-l2)] border border-[var(--border-rim)]"
               }`}>
               <div
                 className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform ${
-                  isRecurring ? "translate-x-6" : "translate-x-0"
+                  isRecurring ? "translate-x-5" : "translate-x-0"
                 }`}
               />
             </button>
@@ -304,7 +301,7 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
         {/* Payment Method & Receipt */}
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-bold text-text-primary mb-1">
+            <label className="block text-xs font-bold font-display uppercase tracking-wider text-[var(--text-secondary)] mb-1">
               Payment Method
             </label>
             <div className="relative">
@@ -313,23 +310,23 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
                 onChange={(e) =>
                   setNewTrans({ ...newTrans, paymentMethod: e.target.value })
                 }
-                className="w-full px-4 py-3 rounded-lg font-medium appearance-none bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 transition-all shadow-sm">
+                className="w-full glass-input rounded-xl px-4 py-2.5 text-xs font-semibold appearance-none">
                 <option>Card</option>
                 <option>Cash</option>
                 <option>UPI</option>
                 <option>Bank Transfer</option>
               </select>
-              <CreditCard className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted pointer-events-none" />
+              <CreditCard className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)] pointer-events-none" />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-bold text-text-primary mb-1">
+            <label className="block text-xs font-bold font-display uppercase tracking-wider text-[var(--text-secondary)] mb-1">
               Receipt
             </label>
-            <label className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg glass-input font-medium cursor-pointer hover:bg-bg-secondary border-dashed border-2 border-border-primary transition-colors">
-              <Receipt className="w-4 h-4 text-text-muted" />
-              <span className="text-xs text-text-muted">
+            <label className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl glass-input font-medium cursor-pointer border-dashed border border-[var(--border-rim)] hover:border-[var(--accent-primary)] transition-colors">
+              <Receipt className="w-4 h-4 text-[var(--text-muted)]" />
+              <span className="text-xs text-[var(--text-muted)]">
                 {scanning
                   ? "Scanning..."
                   : receiptFile
@@ -345,7 +342,6 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
                     const file = e.target.files[0];
                     setReceiptFile(file);
 
-                    // Trigger AI Scan
                     try {
                       setScanning(true);
                       const result = await parseReceiptImage(file);
@@ -382,7 +378,7 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
         <button
           type="submit"
           disabled={uploading}
-          className="w-full py-2.5 bg-brand-500 text-white text-sm font-medium rounded-lg hover:bg-brand-600 transition-colors shadow-lg shadow-brand-500/30 hover:shadow-brand-500/40 active:scale-95 border border-transparent disabled:opacity-50 flex items-center justify-center gap-2">
+          className="w-full py-3 bg-[var(--accent-primary)] text-[var(--text-inverted)] text-xs font-bold rounded-xl hover:scale-[1.01] active:scale-[0.99] transition-all shadow-lg cursor-pointer flex items-center justify-center gap-2">
           {uploading ? (
             <>
               <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />

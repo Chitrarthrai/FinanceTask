@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useData } from '../contexts/DataContext';
 import { MonthlyMetrics, CategoryDistribution, SpendingTrend } from '../types';
 import { useThemeColors } from '../lib/theme';
@@ -27,6 +27,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Sparkles,
+  Camera,
 } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
@@ -43,13 +44,14 @@ export const Analytics: React.FC = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [loading, setLoading] = useState(true);
   const [showMonthPicker, setShowMonthPicker] = useState(false);
+  const velocityChartRef = useRef<HTMLDivElement>(null);
 
   const CHART_COLORS = [
-    '#00f2ff', // Electric Cyan
-    '#7c3aed', // Hyper Violet
-    '#00ff9d', // Luminous Mint
-    '#ffb800', // Cyber Amber
-    '#ff3b5c', // Crimson Pulse
+    '#00f2ff',
+    '#7c3aed',
+    '#00ff9d',
+    '#ffb800',
+    '#ff3b5c',
   ];
 
   const velocityGradientColor =
@@ -99,6 +101,24 @@ export const Analytics: React.FC = () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [showMonthPicker]);
+
+  const handleExportChartImage = () => {
+    if (!velocityChartRef.current) return;
+    const svgElement = velocityChartRef.current.querySelector('svg');
+    if (!svgElement) return;
+
+    const svgData = new XMLSerializer().serializeToString(svgElement);
+    const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+    const URL = window.URL || window.webkitURL || window;
+    const blobURL = URL.createObjectURL(svgBlob);
+
+    const link = document.createElement('a');
+    link.href = blobURL;
+    link.download = `financial_velocity_chart_${currentDate.toISOString().slice(0, 7)}.svg`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   if (loading) {
     return (
@@ -231,6 +251,15 @@ export const Analytics: React.FC = () => {
               </div>
             )}
           </div>
+
+          <Button
+            variant="glass"
+            size="sm"
+            onClick={handleExportChartImage}
+            leftIcon={<Camera className="w-4 h-4 text-[var(--accent-primary)]" />}
+          >
+            Export Chart
+          </Button>
 
           <Button
             variant="glass"
@@ -379,11 +408,16 @@ export const Analytics: React.FC = () => {
           <h3 className="text-base font-bold font-display text-[var(--text-primary)]">
             Weekly Velocity Trend
           </h3>
-          <Badge variant="cyan" size="sm">
-            Live Trajectory
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" onClick={handleExportChartImage} leftIcon={<Camera className="w-3.5 h-3.5" />}>
+              Export SVG
+            </Button>
+            <Badge variant="cyan" size="sm">
+              Live Trajectory
+            </Badge>
+          </div>
         </div>
-        <div className="h-[280px]">
+        <div className="h-[280px]" ref={velocityChartRef}>
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={trend} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
               <defs>

@@ -16,6 +16,7 @@ import Notes from "./pages/Notes";
 import { DataProvider } from "./contexts/DataContext";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { AIChatBot } from "./components/AIChatBot";
+import { OnboardingTour } from "./components/ui/OnboardingTour";
 import { Loader2 } from "lucide-react";
 
 const AppLayout = ({
@@ -36,6 +37,7 @@ const AppLayout = ({
           </main>
         </div>
         <AIChatBot />
+        <OnboardingTour />
       </div>
     </div>
   );

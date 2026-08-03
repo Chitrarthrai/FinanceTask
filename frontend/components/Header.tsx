@@ -1,12 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Search, Bell, Settings, LogOut, Plus } from 'lucide-react';
+import { Search, Bell, Settings, LogOut, Plus, Command } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
 import { ThemeToggle } from './ui/ThemeToggle';
 import { CurrencySelector } from './ui/CurrencySelector';
 import { Button } from './ui/Button';
-import { Input } from './ui/Input';
+import { CommandPalette } from './ui/CommandPalette';
 import TransactionModal from './TransactionModal';
 
 interface HeaderProps {
@@ -22,9 +22,19 @@ const Header: React.FC<HeaderProps> = ({ theme, setTheme }) => {
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchScope, setSearchScope] = useState<'transactions' | 'tasks'>('transactions');
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setIsCommandPaletteOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -35,24 +45,6 @@ const Header: React.FC<HeaderProps> = ({ theme, setTheme }) => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
-
-  useEffect(() => {
-    if (location.pathname.includes('/tasks')) {
-      setSearchScope('tasks');
-    } else {
-      setSearchScope('transactions');
-    }
-  }, [location.pathname]);
-
-  const handleSearch = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && searchQuery.trim()) {
-      if (searchScope === 'transactions') {
-        navigate(`/app/transactions?search=${encodeURIComponent(searchQuery)}`);
-      } else {
-        navigate(`/app/tasks?search=${encodeURIComponent(searchQuery)}`);
-      }
-    }
-  };
 
   const handleSignOut = async () => {
     await signOut();
@@ -95,17 +87,17 @@ const Header: React.FC<HeaderProps> = ({ theme, setTheme }) => {
 
         {/* Global Controls */}
         <div className="flex items-center gap-3 w-full md:w-auto justify-end flex-wrap">
-          {/* Quick Search */}
-          <div className="hidden lg:flex items-center w-64">
-            <Input
-              placeholder={searchScope === 'transactions' ? 'Search transactions...' : 'Search tasks...'}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyDown={handleSearch}
-              leftIcon={<Search className="w-4 h-4 text-[var(--text-muted)]" />}
-              className="py-1.5 text-xs"
-            />
-          </div>
+          {/* Command Palette Quick Trigger */}
+          <button
+            onClick={() => setIsCommandPaletteOpen(true)}
+            className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-xl glass-panel text-xs font-mono text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:border-[var(--border-highlight)] transition-all cursor-pointer"
+          >
+            <Search className="w-3.5 h-3.5 text-[var(--accent-primary)]" />
+            <span>Search or command...</span>
+            <kbd className="px-1.5 py-0.5 rounded bg-[var(--surface-l2)] border border-[var(--border-rim)] text-[10px] font-bold">
+              ⌘K
+            </kbd>
+          </button>
 
           {/* Quick Add Action Button */}
           <Button
@@ -181,6 +173,15 @@ const Header: React.FC<HeaderProps> = ({ theme, setTheme }) => {
           </div>
         </div>
       </header>
+
+      {/* Command Palette Modal */}
+      <CommandPalette
+        isOpen={isCommandPaletteOpen}
+        onClose={() => setIsCommandPaletteOpen(false)}
+        theme={theme}
+        setTheme={setTheme}
+        onOpenTransactionModal={() => setIsAddModalOpen(true)}
+      />
 
       {/* Quick Add Transaction Modal */}
       {isAddModalOpen && (

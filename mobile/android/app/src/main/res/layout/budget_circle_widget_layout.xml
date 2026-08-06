@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="@drawable/widget_background">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Daily Budget"
+        android:textColor="#818cf8"
+        android:textSize="11sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="4dp" />
+
+    <TextView
+        android:id="@+id/widget_spent_today"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="$0"
+        android:textColor="#ffffff"
+        android:textSize="22sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/widget_spent_details"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="spent of $2,000 limit"
+        android:textColor="#94a3b8"
+        android:textSize="10sp"
+        android:layout_marginBottom="12dp" />
+
+    <ProgressBar
+        android:id="@+id/widget_progress_bar"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="8dp"
+        android:progress="0"
+        android:max="100"
+        android:progressTint="#06b6d4"
+        android:progressBackgroundTint="#22ffffff" />
+
+</LinearLayout>

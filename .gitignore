@@ -51,5 +51,3 @@ frontend/public/mockServiceWorker.js
 .expo/
 *.jks
 *.keystore
-mobile/android/
-mobile/ios/

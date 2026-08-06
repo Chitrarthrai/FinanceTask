@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="@drawable/widget_background">
+
+    <!-- Header -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Priority Tasks"
+            android:textColor="#ffffff"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:text="Alarms"
+            android:textColor="#f59e0b"
+            android:textSize="10sp"
+            android:textStyle="bold" />
+    </RelativeLayout>
+
+    <!-- Task Slot 1 -->
+    <LinearLayout
+        android:id="@+id/task_slot_1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginBottom="8dp">
+        <TextView
+            android:id="@+id/task_title_1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="No upcoming task"
+            android:textColor="#e2e8f0"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+        <TextView
+            android:id="@+id/task_date_1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#64748b"
+            android:textSize="10sp" />
+    </LinearLayout>
+
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#22ffffff"
+        android:layout_marginBottom="8dp" />
+
+    <!-- Task Slot 2 -->
+    <LinearLayout
+        android:id="@+id/task_slot_2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginBottom="8dp">
+        <TextView
+            android:id="@+id/task_title_2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#e2e8f0"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+        <TextView
+            android:id="@+id/task_date_2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#64748b"
+            android:textSize="10sp" />
+    </LinearLayout>
+
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#22ffffff"
+        android:layout_marginBottom="8dp" />
+
+    <!-- Task Slot 3 -->
+    <LinearLayout
+        android:id="@+id/task_slot_3"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+        <TextView
+            android:id="@+id/task_title_3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#e2e8f0"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+        <TextView
+            android:id="@+id/task_date_3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#64748b"
+            android:textSize="10sp" />
+    </LinearLayout>
+
+</LinearLayout>

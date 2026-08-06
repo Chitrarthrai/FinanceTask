@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="@drawable/widget_background"
+    android:gravity="center_vertical">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Toffee AI Assistant"
+        android:textColor="#a78bfa"
+        android:textSize="12sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="4dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Ask questions about your budget and savings goals"
+        android:textColor="#94a3b8"
+        android:textSize="10sp"
+        android:layout_marginBottom="12dp" />
+
+    <TextView
+        android:id="@+id/btn_ai_chat"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="✨ Ask Toffee AI"
+        android:textColor="#ffffff"
+        android:textSize="12sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:padding="10dp"
+        android:background="@drawable/widget_background"
+        android:backgroundTint="#8b5cf6" />
+
+</LinearLayout>

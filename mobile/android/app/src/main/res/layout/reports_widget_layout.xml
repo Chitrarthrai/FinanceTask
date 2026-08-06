@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="@drawable/widget_background">
+
+    <!-- Header -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Financial Report"
+        android:textColor="#818cf8"
+        android:textSize="12sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="12dp" />
+
+    <!-- Income Slot -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="10dp">
+        <TextView
+            android:layout_width="80dp"
+            android:layout_height="wrap_content"
+            android:text="Income"
+            android:textColor="#e2e8f0"
+            android:textSize="11sp" />
+        <ProgressBar
+            android:id="@+id/progress_income"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="6dp"
+            android:progress="100"
+            android:max="100"
+            android:progressTint="#10b981"
+            android:progressBackgroundTint="#11ffffff"
+            android:layout_marginHorizontal="8dp" />
+        <TextView
+            android:id="@+id/text_income"
+            android:layout_width="60dp"
+            android:layout_height="wrap_content"
+            android:text="$0.00"
+            android:textColor="#ffffff"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:gravity="right" />
+    </LinearLayout>
+
+    <!-- Fixed Expense Slot -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="10dp">
+        <TextView
+            android:layout_width="80dp"
+            android:layout_height="wrap_content"
+            android:text="Fixed Exp"
+            android:textColor="#e2e8f0"
+            android:textSize="11sp" />
+        <ProgressBar
+            android:id="@+id/progress_fixed"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="6dp"
+            android:progress="0"
+            android:max="100"
+            android:progressTint="#6366f1"
+            android:progressBackgroundTint="#11ffffff"
+            android:layout_marginHorizontal="8dp" />
+        <TextView
+            android:id="@+id/text_fixed"
+            android:layout_width="60dp"
+            android:layout_height="wrap_content"
+            android:text="$0.00"
+            android:textColor="#ffffff"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:gravity="right" />
+    </LinearLayout>
+
+    <!-- Variable Expense Slot -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+        <TextView
+            android:layout_width="80dp"
+            android:layout_height="wrap_content"
+            android:text="Variable Exp"
+            android:textColor="#e2e8f0"
+            android:textSize="11sp" />
+        <ProgressBar
+            android:id="@+id/progress_variable"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="6dp"
+            android:progress="0"
+            android:max="100"
+            android:progressTint="#f59e0b"
+            android:progressBackgroundTint="#11ffffff"
+            android:layout_marginHorizontal="8dp" />
+        <TextView
+            android:id="@+id/text_variable"
+            android:layout_width="60dp"
+            android:layout_height="wrap_content"
+            android:text="$0.00"
+            android:textColor="#ffffff"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:gravity="right" />
+    </LinearLayout>
+
+</LinearLayout>

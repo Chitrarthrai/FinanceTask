@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="@drawable/widget_background">
+
+    <!-- Header -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp">
+        <TextView
+            android:id="@+id/widget_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="FinanceTask"
+            android:textColor="#ffffff"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:text="Live"
+            android:textColor="#818cf8"
+            android:textSize="10sp"
+            android:textStyle="bold" />
+    </RelativeLayout>
+
+    <!-- Main Metric -->
+    <TextView
+        android:id="@+id/widget_balance"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="$0 / $2,000"
+        android:textColor="#ffffff"
+        android:textSize="24sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/widget_limit_info"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Today's Limit Utilisation"
+        android:textColor="#94a3b8"
+        android:textSize="10sp"
+        android:layout_marginBottom="14dp" />
+
+    <!-- Divider -->
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#22ffffff"
+        android:layout_marginBottom="12dp" />
+
+    <!-- Recent Activity -->
+    <TextView
+        android:id="@+id/widget_recent_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Recent Activity"
+        android:textColor="#818cf8"
+        android:textSize="10sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/widget_recent_desc"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="No transaction"
+        android:textColor="#e2e8f0"
+        android:textSize="12sp"
+        android:layout_marginTop="2dp" />
+
+</LinearLayout>

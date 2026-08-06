@@ -40,3 +40,5 @@ This document serves as persistent workspace memory for the **FinanceTask (Toffe
 1. **Supabase Realtime & Row-Level Security**: Ensure all new PostgreSQL tables enable RLS restricting access via `auth.uid() = user_id`.
 2. **Web & Mobile Parity**: Any changes to metric calculation formulas or task statuses must be synchronized across both `frontend/contexts/DataContext.tsx` and `mobile/context/DataContext.tsx`.
 3. **MCP Configuration Location**: Always ensure MCP server changes are updated in `C:\Users\chitr\.gemini\antigravity-ide\mcp_config.json` for IDE tool discovery.
+4. **Supabase Security**: All RPCs (like `process_recurring_transactions`) must enforce `auth.uid()` checks explicitly to prevent unauthorized execution.
+5. **Mobile Build Configuration**: The project uses a tracked `mobile/android` directory (bare workflow setup). ABI splits are enabled in `app/build.gradle` to generate customized APKs (`FinanceTask-<ABI>-<Date>.apk`). Releases are automatically generated via the GitHub Actions `.github/workflows/release-apk.yml` when a `v*` tag is pushed.

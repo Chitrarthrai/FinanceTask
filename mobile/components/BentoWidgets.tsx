@@ -26,18 +26,24 @@ export const QuickActionsWidget = ({
       <View className="flex-row justify-around items-center gap-3">
         <TouchableOpacity
           testID="btn-scan-receipt"
+          accessible={true}
+          accessibilityLabel="btn-scan-receipt"
           onPress={onScanReceipt}
           className="w-12 h-12 rounded-2xl bg-indigo-600 items-center justify-center border border-indigo-500">
           <Camera size={20} color="white" />
         </TouchableOpacity>
         <TouchableOpacity
           testID="btn-open-add-tx"
+          accessible={true}
+          accessibilityLabel="btn-open-add-tx"
           onPress={onAddTransaction}
           className="w-12 h-12 rounded-2xl bg-cyan-600 items-center justify-center border border-cyan-500">
           <Plus size={20} color="white" />
         </TouchableOpacity>
         <TouchableOpacity
           testID="btn-open-add-task"
+          accessible={true}
+          accessibilityLabel="btn-open-add-task"
           onPress={onAddTask}
           className="w-12 h-12 rounded-2xl bg-violet-600 items-center justify-center border border-violet-500">
           <CheckSquare size={20} color="white" />

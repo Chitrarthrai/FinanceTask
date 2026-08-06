@@ -12,6 +12,8 @@ import { supabase } from "../lib/supabase";
 import { ScreenWrapper } from "../components/ui/ScreenWrapper";
 import { GlassView } from "../components/ui/GlassView";
 
+import { useAuth } from "../context/AuthContext";
+
 const LoginScreen = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

@@ -1,13 +1,23 @@
 appId: com.boxow35525.mobile
-env:
-  EXPO_PUBLIC_TEST_MODE: "true"
 ---
 - launchApp:
     clearState: true
     permissions:
       all: allow
 
-# 1. Automatic Biometric Lock Bypass (or interaction via testID)
+# 1. Login with Real Credentials
+- assertVisible: "Email"
+- tapOn:
+    below: "Email"
+- inputText: "chitrarthrai10@gmail.com"
+- tapOn:
+    below: "Password"
+- inputText: "123*#*raisahab"
+- hideKeyboard
+- tapOn:
+    id: "btn-login-submit"
+
+# 2. Automatic Biometric Lock Bypass (or interaction via testID)
 - runFlow:
     when:
       visible:
@@ -29,6 +39,8 @@ env:
     id: "btn-save-task"
 
 # 3. Add Transaction via testID Selector Contract
+- assertVisible:
+    id: "btn-open-add-tx"
 - tapOn:
     id: "btn-open-add-tx"
 - tapOn:

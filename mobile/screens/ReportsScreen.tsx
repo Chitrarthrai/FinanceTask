@@ -279,12 +279,13 @@ const ReportsScreen = () => {
               <View className="flex-row gap-3">
                 <TouchableOpacity
                   onPress={handleExport}
-                  className="p-3 bg-white/40 dark:bg-white/10 rounded-xl border border-black/5 dark:border-white/10">
+                  className="p-3 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
                   <Share2 size={20} color="#6366f1" />
                 </TouchableOpacity>
                 <TouchableOpacity
+                  testID="btn-export-pdf"
                   onPress={handleExport}
-                  className="p-3 bg-indigo-500 rounded-xl shadow-lg shadow-indigo-500/40 border border-white/20">
+                  className="p-3 bg-indigo-600 rounded-xl border border-indigo-500">
                   <Download size={20} color="white" />
                 </TouchableOpacity>
               </View>
@@ -359,7 +360,7 @@ const ReportsScreen = () => {
                       </Text>
                       <View className="flex-row items-center gap-1">
                         <Text className="text-lg font-extrabold text-emerald-600 dark:text-emerald-400">
-                          ${metrics.total_income.toLocaleString()}
+                          ${(metrics.total_income || 0).toLocaleString()}
                         </Text>
                         <TrendingUp size={12} color="#10b981" />
                       </View>
@@ -369,7 +370,7 @@ const ReportsScreen = () => {
                         Total Expenses
                       </Text>
                       <Text className="text-lg font-extrabold text-rose-500 dark:text-rose-400">
-                        ${metrics.total_expenses.toLocaleString()}
+                        ${(metrics.total_expenses || 0).toLocaleString()}
                       </Text>
                     </View>
                     <View className="flex-1 space-y-2 bg-white/40 dark:bg-white/5 p-3 rounded-2xl border border-black/5 dark:border-white/5">
@@ -377,7 +378,7 @@ const ReportsScreen = () => {
                         Net Savings
                       </Text>
                       <Text className="text-lg font-extrabold text-indigo-600 dark:text-indigo-400">
-                        ${metrics.net_savings.toLocaleString()}
+                        ${(metrics.net_savings || 0).toLocaleString()}
                       </Text>
                     </View>
                   </View>

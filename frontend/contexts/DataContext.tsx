@@ -442,9 +442,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
   }, [budgetSettings, transactions]);
 
   const addTransaction = async (transaction: Transaction) => {
+    setTransactions((prev) => [transaction, ...prev]);
     if (!user) return;
     try {
-      setTransactions((prev) => [transaction, ...prev]);
 
       const dateObj = new Date(transaction.date);
       const isoDate = !isNaN(dateObj.getTime())
@@ -519,8 +519,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
   };
 
   const addTask = async (task: Task) => {
-    if (!user) return;
     setTasks((prev) => [...prev, task]);
+    if (!user) return;
 
     let isoDate = new Date().toISOString();
     if (task.dueDate) {
@@ -691,10 +691,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
   };
 
   const addNote = async (noteData: Partial<Note>) => {
-    if (!user) return;
     const newNote: Note = {
       id: noteData.id || crypto.randomUUID(),
-      userId: user.id,
+      userId: user?.id || "guest",
       taskId: noteData.taskId,
       title: noteData.title || "Untitled Note",
       content: noteData.content || "",
@@ -708,6 +707,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     };
 
     setNotes((prev) => [newNote, ...prev]);
+    if (!user) return;
 
     await supabase.from("notes").insert({
       id: newNote.id,

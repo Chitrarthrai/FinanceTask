@@ -8,10 +8,12 @@ const Stack = createNativeStackNavigator();
 const TasksStackNavigator = () => {
   return (
     <Stack.Navigator
+      id="TasksStack"
       initialRouteName="TasksList"
       screenOptions={{
         headerShown: false,
-        animation: "none", // Instant switch to prevent flashing
+        animation: "slide_from_right",
+        gestureEnabled: true,
       }}>
       <Stack.Screen name="TasksList" component={TasksScreen} />
       <Stack.Screen name="NotesList" component={NotesView} />

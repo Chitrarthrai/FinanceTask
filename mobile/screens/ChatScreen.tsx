@@ -356,6 +356,7 @@ const ChatScreen = () => {
             intensity={20}
             className="flex-row items-center rounded-full px-1">
             <TextInput
+              testID="input-chat-prompt"
               className="flex-1 text-slate-800 dark:text-white px-4 py-3.5 text-base"
               placeholder="Type a message..."
               placeholderTextColor="#94a3b8"
@@ -365,6 +366,7 @@ const ChatScreen = () => {
               returnKeyType="send"
             />
             <TouchableOpacity
+              testID="btn-send-chat"
               onPress={handleSend}
               disabled={loading || !inputText.trim()}
               style={{

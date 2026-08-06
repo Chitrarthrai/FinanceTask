@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -7,7 +7,9 @@ import {
   Alert,
   ActivityIndicator,
   ScrollView,
+  Switch,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { ScreenWrapper } from "../components/ui/ScreenWrapper";
 import { GlassView } from "../components/ui/GlassView";
 import { supabase } from "../lib/supabase";
@@ -17,14 +19,46 @@ import {
   Key,
   ShieldCheck,
   AlertTriangle,
+  Fingerprint,
 } from "lucide-react-native";
 import { useNavigation } from "@react-navigation/native";
+import { checkBiometricHardware, authenticateWithBiometrics } from "../services/biometrics";
 
 const SecurityScreen = () => {
   const navigation = useNavigation();
   const [loading, setLoading] = useState(false);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [biometricsEnabled, setBiometricsEnabled] = useState(false);
+  const [biometricAvailable, setBiometricAvailable] = useState(false);
+
+  useEffect(() => {
+    const initBiometrics = async () => {
+      const status = await checkBiometricHardware();
+      setBiometricAvailable(status.hasHardware && status.isEnrolled);
+      const enabled = await AsyncStorage.getItem("biometrics_enabled");
+      setBiometricsEnabled(enabled === "true");
+    };
+    initBiometrics();
+  }, []);
+
+  const handleToggleBiometrics = async (val: boolean) => {
+    if (val) {
+      const auth = await authenticateWithBiometrics("Confirm FaceID/Fingerprint enabling");
+      if (auth.success) {
+        setBiometricsEnabled(true);
+        await AsyncStorage.setItem("biometrics_enabled", "true");
+        Alert.alert("Success", "FaceID / Fingerprint lock enabled for app resume!");
+      } else {
+        setBiometricsEnabled(false);
+        await AsyncStorage.setItem("biometrics_enabled", "false");
+        Alert.alert("Authentication Failed", auth.error || "Failed to verify biometrics");
+      }
+    } else {
+      setBiometricsEnabled(false);
+      await AsyncStorage.setItem("biometrics_enabled", "false");
+    }
+  };
 
   const handleUpdatePassword = async () => {
     if (password.length < 6) {
@@ -90,7 +124,7 @@ const SecurityScreen = () => {
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 24 }}>
-        <View className="items-center mb-8">
+        <View className="items-center mb-6">
           <View className="w-20 h-20 rounded-full items-center justify-center bg-emerald-100 dark:bg-emerald-500/20 mb-4 border border-emerald-200 dark:border-emerald-500/30">
             <ShieldCheck
               size={40}
@@ -98,9 +132,37 @@ const SecurityScreen = () => {
             />
           </View>
           <Text className="text-slate-600 dark:text-slate-300 text-center font-medium">
-            Manage your account security and password settings.
+            Manage your account security, biometrics, and password settings.
           </Text>
         </View>
+
+        {/* Local Biometrics Section */}
+        <GlassView intensity={20} className="p-4 rounded-2xl mb-6 bg-white/40 dark:bg-white/5 border border-black/5 dark:border-white/10">
+          <View className="flex-row items-center justify-between">
+            <View className="flex-row items-center gap-3 flex-1 mr-2">
+              <View className="p-2.5 rounded-xl bg-cyan-500/20 border border-cyan-500/30">
+                <Fingerprint size={22} className="text-cyan-400" color="#00f2ff" />
+              </View>
+              <View className="flex-1">
+                <Text className="text-base font-bold text-slate-900 dark:text-white">
+                  Biometric App Lock
+                </Text>
+                <Text className="text-xs text-slate-500 dark:text-slate-400">
+                  {biometricAvailable
+                    ? "FaceID / Fingerprint required on app launch"
+                    : "Biometrics not available on this device"}
+                </Text>
+              </View>
+            </View>
+            <Switch
+              value={biometricsEnabled}
+              onValueChange={handleToggleBiometrics}
+              disabled={!biometricAvailable}
+              trackColor={{ false: "#334155", true: "#00f2ff" }}
+              thumbColor={biometricsEnabled ? "#ffffff" : "#94a3b8"}
+            />
+          </View>
+        </GlassView>
 
         <View className="space-y-6">
           <View>
@@ -148,20 +210,17 @@ const SecurityScreen = () => {
           <TouchableOpacity
             onPress={handleUpdatePassword}
             disabled={loading}
-            className="flex-row items-center justify-center bg-emerald-500 p-4 rounded-2xl shadow-lg shadow-emerald-500/30 mt-4 h-14">
+            className="flex-row items-center justify-center bg-emerald-600 p-4 rounded-2xl border border-emerald-500 mt-4 h-14">
             {loading ? (
               <ActivityIndicator color="white" />
             ) : (
-              <>
-                <Text className="text-white font-bold text-lg">
-                  Update Password
-                </Text>
-              </>
+              <Text className="text-white font-bold text-lg">
+                Update Password
+              </Text>
             )}
           </TouchableOpacity>
         </View>
 
-        {/* Danger Zone */}
         <View className="mt-8 bg-rose-50 dark:bg-rose-500/10 p-5 rounded-2xl border border-rose-200 dark:border-rose-500/20">
           <View className="flex-row items-center mb-2">
             <AlertTriangle

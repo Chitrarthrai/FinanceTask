@@ -4,6 +4,8 @@ import React, {
   useState,
   ReactNode,
   useEffect,
+  useMemo,
+  useRef,
 } from "react";
 import {
   Transaction,
@@ -16,10 +18,14 @@ import {
   CategoryDistribution,
   SpendingTrend,
   Note,
+  UndoItem,
 } from "../types";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "./AuthContext";
 import { User } from "@supabase/supabase-js";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { cancelScheduledAlarm } from "../services/notifications";
+import { Platform, NativeModules } from "react-native";
 
 interface DataContextType {
   transactions: Transaction[];
@@ -28,12 +34,21 @@ interface DataContextType {
   budgetSettings: BudgetSettings;
   categories: Category[];
   metrics: FinancialMetrics;
+  isDataLoaded: boolean;
+  undoItem: UndoItem | null;
+
+  undoLastDelete: () => void;
+  categoryWarnings: { category: string; limit: number; spent: number; percent: number; level: "warning" | "critical" }[];
   addTransaction: (transaction: Transaction) => Promise<void>;
   updateTransaction: (transaction: Transaction) => Promise<void>;
   addTask: (task: Task) => Promise<void>;
   deleteTransaction: (id: string) => Promise<void>;
   deleteTask: (id: string) => Promise<void>;
-  updateTaskStatus: (id: string, status: TaskStatus) => Promise<void>;
+  updateTaskStatus: (
+    id: string,
+    status: TaskStatus,
+    reasonNotDone?: string,
+  ) => Promise<void>;
   updateBudgetSettings: (settings: Partial<BudgetSettings>) => Promise<void>;
   addCategory: (
     name: string,
@@ -62,6 +77,16 @@ interface DataContextType {
   setIsNavHidden: (hidden: boolean) => void;
   isNavCollapsed: boolean;
   setIsNavCollapsed: (collapsed: boolean) => void;
+  isSearching: boolean;
+  setIsSearching: (searching: boolean) => void;
+  searchText: string;
+  setSearchText: (text: string) => void;
+  searchScope: "transactions" | "tasks";
+  setSearchScope: (scope: "transactions" | "tasks") => void;
+  isGlobalAddTransactionOpen: boolean;
+  setIsGlobalAddTransactionOpen: (val: boolean) => void;
+  isGlobalAddTaskOpen: boolean;
+  setIsGlobalAddTaskOpen: (val: boolean) => void;
 }
 
 const defaultBudgetSettings: BudgetSettings = {
@@ -87,239 +112,62 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     defaultBudgetSettings,
   );
   const [categories, setCategories] = useState<Category[]>([]);
+  const [isDataLoaded, setIsDataLoaded] = useState(false);
+  const [undoItem, setUndoItem] = useState<UndoItem | null>(null);
+
+  const undoTimeoutRef = useRef<any>(null);
+
+  const categoryWarnings = useMemo(() => {
+    const warnings: {
+      category: string;
+      limit: number;
+      spent: number;
+      percent: number;
+      level: "warning" | "critical";
+    }[] = [];
+    const expenseTrans = transactions.filter((t) => t.type === "expense");
+
+    categories.forEach((cat) => {
+      if (cat.budgetLimit && cat.budgetLimit > 0) {
+        const spent = expenseTrans
+          .filter((t) => t.category === cat.name)
+          .reduce((sum, t) => sum + t.amount, 0);
+        const percent = Math.round((spent / cat.budgetLimit) * 100);
+        if (percent >= 100) {
+          warnings.push({
+            category: cat.name,
+            limit: cat.budgetLimit,
+            spent,
+            percent,
+            level: "critical",
+          });
+        } else if (percent >= 80) {
+          warnings.push({
+            category: cat.name,
+            limit: cat.budgetLimit,
+            spent,
+            percent,
+            level: "warning",
+          });
+        }
+      }
+    });
+    return warnings;
+  }, [transactions, categories]);
+
   const [navPosition, setNavPosition] = useState<
     "bottom" | "top" | "left" | "right"
   >("bottom");
   const [isNavHidden, setIsNavHidden] = useState(false);
   const [isNavCollapsed, setIsNavCollapsed] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchText, setSearchText] = useState("");
+  const [searchScope, setSearchScope] = useState<"transactions" | "tasks">("transactions");
+  const [isGlobalAddTransactionOpen, setIsGlobalAddTransactionOpen] = useState(false);
+  const [isGlobalAddTaskOpen, setIsGlobalAddTaskOpen] = useState(false);
 
-  // Derived Metrics State
-  const [metrics, setMetrics] = useState<FinancialMetrics>({
-    totalIncome: 0,
-    totalFixedExpenses: 0,
-    totalVariableExpenses: 0,
-    totalSavings: 0,
-    pocketMoneyPool: 0,
-    dailyLimit: 0,
-    spentToday: 0,
-    remainingToday: 0,
-    daysRemaining: 0,
-    budgetHealth: "Healthy",
-  });
-
-  const fetchData = async () => {
-    if (!user) return;
-
-    try {
-      // 1. Fetch Budget Settings
-      const { data: budgetData } = await supabase
-        .from("budget_settings")
-        .select("*")
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      if (budgetData) {
-        setBudgetSettings({
-          id: budgetData.id,
-          monthlySalary: Number(budgetData.monthly_salary),
-          savingsTarget: 0,
-          savingsTargetPercent: Number(budgetData.savings_target_percent),
-          fixedExpenses: budgetData.fixed_expenses || [],
-          variableExpenses: budgetData.variable_expenses || [],
-          emergencyFund: Number(budgetData.emergency_fund_amount),
-        });
-      } else {
-        const { data: newBudget } = await supabase
-          .from("budget_settings")
-          .insert({
-            user_id: user.id,
-            monthly_salary: 0,
-            fixed_expenses: [],
-            variable_expenses: [],
-          })
-          .select()
-          .single();
-
-        if (newBudget) {
-          setBudgetSettings({
-            id: newBudget.id,
-            monthlySalary: 0,
-            savingsTarget: 0,
-            savingsTargetPercent: 20,
-            fixedExpenses: [],
-            variableExpenses: [],
-            emergencyFund: 0,
-          });
-        }
-      }
-
-      // 2. Fetch Categories
-      const { data: catData } = await supabase
-        .from("categories")
-        .select("*")
-        .eq("user_id", user.id);
-
-      if (catData && catData.length > 0) {
-        setCategories(
-          catData.map((c) => ({
-            id: c.id,
-            name: c.name,
-            type: c.type as any,
-            color: c.color,
-            icon: c.icon,
-            budgetedAmount: 0,
-          })),
-        );
-      } else {
-        const defaults = [
-          {
-            name: "Food",
-            type: "variable",
-            color: "var(--chart-4)",
-            icon: "Coffee",
-          },
-          {
-            name: "Transport",
-            type: "variable",
-            color: "var(--chart-1)",
-            icon: "Car",
-          },
-          {
-            name: "Housing",
-            type: "fixed",
-            color: "var(--chart-2)",
-            icon: "Home",
-          },
-          {
-            name: "Income",
-            type: "income",
-            color: "var(--chart-5)",
-            icon: "DollarSign",
-          },
-        ];
-        // In mobile we might want to ensure these exist too, but for now we skip auto-create to safe bandwidth
-      }
-
-      // 3. Fetch Transactions
-      const { data: transData } = await supabase
-        .from("transactions")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("date", { ascending: false });
-
-      if (transData) {
-        setTransactions(
-          transData.map((t) => ({
-            id: t.id,
-            title: t.title,
-            amount: Number(t.amount),
-            type: t.type as any,
-            category: t.category,
-            date: t.date, // Pass raw date string
-            paymentMethod: t.payment_method,
-            receipt_url: t.receipt_url,
-          })),
-        );
-      }
-
-      // 4. Fetch Tasks
-      const { data: taskData } = await supabase
-        .from("tasks")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("due_date", { ascending: true });
-
-      if (taskData) {
-        // Helper to normalize status
-        const normalizeStatus = (s: string): TaskStatus => {
-          const lower = s.toLowerCase();
-          if (lower === "in_progress" || lower === "in progress")
-            return "in-progress";
-          return lower as TaskStatus;
-        };
-
-        setTasks(
-          taskData.map((t) => ({
-            id: t.id,
-            title: t.title,
-            description: t.description || "",
-            status: normalizeStatus(t.status),
-            priority: t.priority as any,
-            dueDate: t.due_date || "", // Pass raw date string
-            recurring: t.recurring,
-            tags: t.tags || [],
-            category: t.category || "Personal",
-          })),
-        );
-      }
-
-      // 5. Fetch Global Metrics for Sidebar (Current Month)
-      const dateForMetrics = new Date();
-      const monthStr = `${dateForMetrics.getFullYear()}-${String(
-        dateForMetrics.getMonth() + 1,
-      ).padStart(2, "0")}-01`;
-
-      const { data: metricsData } = await supabase.rpc("get_monthly_metrics", {
-        month_str: monthStr,
-      });
-
-      if (metricsData && metricsData.length > 0) {
-        // We could merge this with calculated metrics if needed, but for now we use local calculation overriding
-        // actually local calculation is better for instant updates on transaction add
-      }
-
-      // 6. Fetch Notes
-      const { data: notesData } = await supabase
-        .from("notes")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("is_pinned", { ascending: false })
-        .order("updated_at", { ascending: false });
-
-      if (notesData) {
-        setNotes(
-          notesData.map((n) => ({
-            id: n.id,
-            userId: n.user_id,
-            taskId: n.task_id,
-            title: n.title || "",
-            content: n.content || "",
-            summary: n.summary,
-            tags: n.tags || [],
-            extractedTasks: n.extracted_tasks || [],
-            isPinned: n.is_pinned || false,
-            color: n.color || "default",
-            createdAt: n.created_at,
-            updatedAt: n.updated_at,
-          })),
-        );
-      }
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    }
-  };
-
-  const checkRecurringTransactions = async () => {
-    try {
-      if (!user) return;
-      const { error } = await supabase.rpc("process_recurring_transactions", {
-        p_user_id: user.id,
-      });
-      if (error) console.error("Error processing recurring:", error);
-    } catch (err) {
-      console.error("Error checking recurring:", err);
-    }
-  };
-
-  useEffect(() => {
-    if (user) {
-      fetchData();
-      checkRecurringTransactions();
-    }
-  }, [user]);
-
-  // Calculate Metrics
-  useEffect(() => {
+  // Derived Metrics State computed synchronously via useMemo
+  const metrics = useMemo<FinancialMetrics>(() => {
     const today = new Date();
     const daysInMonth = new Date(
       today.getFullYear(),
@@ -379,12 +227,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
       totalIncome - totalFixedExpenses - totalVariableExpenses - totalSavings,
     );
 
-    const todayStr = today.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
-
     // Calculate spent today
     const spentToday = transactions
       .filter((t) => {
@@ -420,7 +262,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     else if (remainingPocketMoney < pocketMoneyPool * 0.5)
       budgetHealth = "At Risk";
 
-    setMetrics({
+    return {
       totalIncome,
       totalFixedExpenses,
       totalVariableExpenses,
@@ -431,22 +273,172 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
       remainingToday,
       daysRemaining,
       budgetHealth,
-    });
+    };
   }, [budgetSettings, transactions, categories]);
+
+  const fetchData = async () => {
+    if (!user) return;
+
+    try {
+      // 1. Fetch Budget Settings
+      const { data: budgetData } = await supabase
+        .from("budget_settings")
+        .select("*")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (budgetData) {
+        setBudgetSettings({
+          id: budgetData.id,
+          monthlySalary: Number(budgetData.monthly_salary),
+          savingsTarget: 0,
+          savingsTargetPercent: Number(budgetData.savings_target_percent),
+          fixedExpenses: budgetData.fixed_expenses || [],
+          variableExpenses: budgetData.variable_expenses || [],
+          emergencyFund: Number(budgetData.emergency_fund_amount),
+        });
+      }
+
+      // 2. Fetch Categories
+      const { data: catData } = await supabase
+        .from("categories")
+        .select("*")
+        .eq("user_id", user.id);
+
+      if (catData && Array.isArray(catData) && catData.length > 0) {
+        setCategories(
+          catData.map((c) => ({
+            id: c.id,
+            name: c.name,
+            type: c.type as any,
+            color: c.color,
+            icon: c.icon,
+            budgetLimit: c.budget_limit ? Number(c.budget_limit) : undefined,
+            budgetedAmount: 0,
+          })),
+        );
+      }
+
+      // 3. Fetch Transactions
+      const { data: transData } = await supabase
+        .from("transactions")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("date", { ascending: false });
+
+      if (transData && Array.isArray(transData)) {
+        setTransactions(
+          transData.map((t) => ({
+            id: t.id,
+            title: t.title,
+            amount: Number(t.amount),
+            type: t.type as any,
+            category: t.category,
+            date: t.date,
+            paymentMethod: t.payment_method,
+            receipt_url: t.receipt_url,
+          })),
+        );
+      }
+
+      // 4. Fetch Tasks
+      const { data: taskData } = await supabase
+        .from("tasks")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("due_date", { ascending: true });
+
+      if (taskData && Array.isArray(taskData)) {
+        const normalizeStatus = (s: string): TaskStatus => {
+          const lower = s.toLowerCase();
+          if (lower === "in_progress" || lower === "in progress")
+            return "in-progress";
+          return lower as TaskStatus;
+        };
+
+        setTasks(
+          taskData.map((t) => ({
+            id: t.id,
+            title: t.title,
+            description: t.description || "",
+            status: normalizeStatus(t.status),
+            priority: t.priority as any,
+            dueDate: t.due_date || "",
+            recurring: t.recurring,
+            tags: t.tags || [],
+            category: t.category || "Personal",
+            reasonNotDone: t.reason_not_done || undefined,
+            completionTime: t.completion_time || undefined,
+          })),
+        );
+      }
+
+      // 5. Fetch Notes
+      const { data: notesData } = await supabase
+        .from("notes")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("is_pinned", { ascending: false })
+        .order("updated_at", { ascending: false });
+
+      if (notesData && Array.isArray(notesData)) {
+        setNotes(
+          notesData.map((n) => ({
+            id: n.id,
+            userId: n.user_id,
+            taskId: n.task_id,
+            title: n.title || "",
+            content: n.content || "",
+            summary: n.summary,
+            tags: n.tags || [],
+            extractedTasks: n.extracted_tasks || [],
+            isPinned: n.is_pinned || false,
+            color: n.color || "default",
+            createdAt: n.created_at,
+            updatedAt: n.updated_at,
+          })),
+        );
+      }
+      setIsDataLoaded(true);
+    } catch (error) {
+
+      console.error("Error fetching data:", error);
+      setIsDataLoaded(true);
+    }
+  };
+
+
+
+  const checkRecurringTransactions = async () => {
+    try {
+      if (!user) return;
+      await supabase.rpc("process_recurring_transactions", {
+        p_user_id: user.id,
+      });
+    } catch (err) {
+      console.error("Error checking recurring:", err);
+    }
+  };
+
+  useEffect(() => {
+    if (user) {
+      fetchData();
+      checkRecurringTransactions();
+    }
+  }, [user]);
+
+
 
   // Actions
   const addTransaction = async (transaction: Transaction) => {
     if (!user) return;
     try {
-      setTransactions((prev) => [transaction, ...prev]);
-
       const dateObj = new Date(transaction.date);
       const isoDate = !isNaN(dateObj.getTime())
         ? dateObj.toISOString()
         : new Date().toISOString();
 
-      await supabase.from("transactions").insert({
-        id: transaction.id,
+      const payload: any = {
         user_id: user.id,
         title: transaction.title,
         amount: transaction.amount,
@@ -454,8 +446,36 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
         category: transaction.category,
         receipt_url: transaction.receipt_url,
         date: isoDate,
-        payment_method: transaction.paymentMethod,
-      });
+        payment_method: transaction.paymentMethod || "Cash",
+      };
+
+      // Validate if transaction.id is a valid UUID, otherwise let Supabase auto-generate it
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (transaction.id && uuidRegex.test(transaction.id)) {
+        payload.id = transaction.id;
+      }
+
+      const { data, error } = await supabase
+        .from("transactions")
+        .insert(payload)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        const newTx: Transaction = {
+          id: data.id,
+          title: data.title,
+          amount: Number(data.amount),
+          type: data.type,
+          category: data.category,
+          receipt_url: data.receipt_url,
+          date: data.date,
+          paymentMethod: data.payment_method,
+        };
+        setTransactions((prev) => [newTx, ...prev.filter((t) => t.id !== transaction.id)]);
+      }
     } catch (e) {
       console.error("Add Transaction Error", e);
     }
@@ -492,41 +512,140 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
 
   const deleteTransaction = async (id: string) => {
     if (!user) return;
+    const target = transactions.find((t) => t.id === id);
+    if (!target) return;
+
     setTransactions((prev) => prev.filter((t) => t.id !== id));
-    await supabase.from("transactions").delete().eq("id", id);
+
+    if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
+    const item: UndoItem = {
+      id,
+      type: "transaction",
+      data: target,
+      expiryTime: Date.now() + 10000,
+    };
+    setUndoItem(item);
+
+    undoTimeoutRef.current = setTimeout(async () => {
+      await supabase.from("transactions").delete().eq("id", id);
+      setUndoItem(null);
+    }, 10000);
   };
 
   const addTask = async (task: Task) => {
     if (!user) return;
-    setTasks((prev) => [...prev, task]);
+    try {
+      let isoDate = new Date().toISOString();
+      if (task.dueDate) {
+        const d = new Date(task.dueDate);
+        if (!isNaN(d.getTime())) isoDate = d.toISOString();
+      }
 
-    let isoDate = new Date().toISOString();
-    if (task.dueDate) {
-      const d = new Date(task.dueDate);
-      if (!isNaN(d.getTime())) isoDate = d.toISOString();
+      const payload: any = {
+        user_id: user.id,
+        title: task.title,
+        description: task.description,
+        status: task.status,
+        priority: task.priority,
+        recurring: task.recurring,
+        due_date: isoDate,
+        tags: task.tags,
+        category: task.category || "Personal",
+      };
+
+      // Validate if task.id is a valid UUID, otherwise let Supabase auto-generate it
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (task.id && uuidRegex.test(task.id)) {
+        payload.id = task.id;
+      }
+
+      const { data, error } = await supabase
+        .from("tasks")
+        .insert(payload)
+        .select()
+        .single();
+      console.log('[DEBUG] Supabase insert result:', data, error);
+
+      if (error) throw error;
+
+      if (data) {
+        const normalizeStatus = (s: string): TaskStatus => {
+          const lower = s.toLowerCase();
+          if (lower === "in_progress" || lower === "in progress")
+            return "in-progress";
+          return lower as TaskStatus;
+        };
+
+        const newTsk: Task = {
+          id: data.id,
+          title: data.title,
+          description: data.description || "",
+          status: normalizeStatus(data.status),
+          priority: data.priority as any,
+          dueDate: data.due_date || "",
+          recurring: data.recurring,
+          tags: data.tags || [],
+          category: data.category || "Personal",
+          reasonNotDone: data.reason_not_done || undefined,
+          completionTime: data.completion_time || undefined,
+        };
+
+        setTasks((prev) => [newTsk, ...prev.filter((t) => t.id !== task.id)]);
+        console.log('[DEBUG] setTasks completed');
+      }
+    } catch (e) {
+      console.error("Add Task Error", e);
     }
-
-    await supabase.from("tasks").insert({
-      id: task.id,
-      user_id: user.id,
-      title: task.title,
-      description: task.description,
-      status: task.status,
-      priority: task.priority,
-      recurring: task.recurring,
-      due_date: isoDate,
-      tags: task.tags,
-      category: task.category || "Personal",
-    });
   };
+
 
   const deleteTask = async (id: string) => {
     if (!user) return;
+    const target = tasks.find((t) => t.id === id);
+    if (!target) return;
+
     setTasks((prev) => prev.filter((t) => t.id !== id));
-    await supabase.from("tasks").delete().eq("id", id);
+
+    if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
+    const item: UndoItem = {
+      id,
+      type: "task",
+      data: target,
+      expiryTime: Date.now() + 10000,
+    };
+    setUndoItem(item);
+
+    undoTimeoutRef.current = setTimeout(async () => {
+      await supabase.from("tasks").delete().eq("id", id);
+      try {
+        const alarmId = await AsyncStorage.getItem("task_alarm_" + id);
+        if (alarmId) {
+          await cancelScheduledAlarm(alarmId);
+          await AsyncStorage.removeItem("task_alarm_" + id);
+        }
+      } catch (err) {
+        console.warn("Failed to cancel alarm during task deletion:", err);
+      }
+      setUndoItem(null);
+    }, 10000);
   };
 
-  const updateTaskStatus = async (id: string, status: TaskStatus) => {
+  const undoLastDelete = () => {
+    if (!undoItem) return;
+    if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
+    if (undoItem.type === "transaction") {
+      setTransactions((prev) => [undoItem.data as Transaction, ...prev]);
+    } else if (undoItem.type === "task") {
+      setTasks((prev) => [...prev, undoItem.data as Task]);
+    }
+    setUndoItem(null);
+  };
+
+  const updateTaskStatus = async (
+    id: string,
+    status: TaskStatus,
+    reasonNotDone?: string,
+  ) => {
     if (!user) return;
     // Helper to normalize status
     const normalizeStatus = (s: string): TaskStatus => {
@@ -536,11 +655,28 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
       return lower as TaskStatus;
     };
     const normalized = normalizeStatus(status);
+    const completionTime = normalized === "completed" ? new Date().toISOString() : undefined;
 
     setTasks((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, status: normalized } : t)),
+      prev.map((t) =>
+        t.id === id
+          ? {
+              ...t,
+              status: normalized,
+              reasonNotDone: reasonNotDone || t.reasonNotDone,
+              completionTime: completionTime || t.completionTime,
+            }
+          : t,
+      ),
     );
-    await supabase.from("tasks").update({ status: normalized }).eq("id", id);
+    await supabase
+      .from("tasks")
+      .update({
+        status: normalized,
+        reason_not_done: reasonNotDone || null,
+        completion_time: completionTime || null,
+      })
+      .eq("id", id);
   };
 
   const updateBudgetSettings = async (settings: Partial<BudgetSettings>) => {
@@ -622,35 +758,52 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
   // Notes Operations
   const addNote = async (note: Partial<Note>) => {
     if (!user) return;
-    const newNote: Note = {
-      id: note.id || crypto.randomUUID(),
-      userId: user.id,
-      taskId: note.taskId,
-      title: note.title || "Untitled Note",
-      content: note.content || "",
-      summary: note.summary,
-      tags: note.tags || [],
-      extractedTasks: note.extractedTasks || [],
-      isPinned: note.isPinned || false,
-      color: note.color || "default",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+    try {
+      const payload: any = {
+        user_id: user.id,
+        task_id: note.taskId,
+        title: note.title || "Untitled Note",
+        content: note.content || "",
+        summary: note.summary,
+        tags: note.tags || [],
+        extracted_tasks: note.extractedTasks || [],
+        is_pinned: note.isPinned || false,
+        color: note.color || "default",
+      };
 
-    setNotes((prev) => [newNote, ...prev]);
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (note.id && uuidRegex.test(note.id)) {
+        payload.id = note.id;
+      }
 
-    await supabase.from("notes").insert({
-      id: newNote.id,
-      user_id: user.id,
-      task_id: newNote.taskId,
-      title: newNote.title,
-      content: newNote.content,
-      summary: newNote.summary,
-      tags: newNote.tags,
-      extracted_tasks: newNote.extractedTasks,
-      is_pinned: newNote.isPinned,
-      color: newNote.color,
-    });
+      const { data, error } = await supabase
+        .from("notes")
+        .insert(payload)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        const newNote: Note = {
+          id: data.id,
+          userId: data.user_id,
+          taskId: data.task_id,
+          title: data.title,
+          content: data.content,
+          summary: data.summary,
+          tags: data.tags,
+          extractedTasks: data.extracted_tasks,
+          isPinned: data.is_pinned,
+          color: data.color,
+          createdAt: data.created_at,
+          updatedAt: data.updated_at,
+        };
+        setNotes((prev) => [newNote, ...prev.filter((n) => n.id !== note.id)]);
+      }
+    } catch (e) {
+      console.error("Error adding note:", e);
+    }
   };
 
   const updateNote = async (note: Partial<Note>) => {
@@ -685,6 +838,57 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     await supabase.from("notes").delete().eq("id", id);
   };
 
+  // Synchronise widget data on state updates
+  useEffect(() => {
+    if (metrics) {
+      const sortedTxs = [...transactions].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      const latestTx = sortedTxs[0];
+      const spentToday = metrics.spentToday || 0;
+      const dailyLimit = metrics.dailyLimit || 2000;
+
+      const upcomingTasks = tasks
+        .filter(t => t.status !== 'completed')
+        .slice(0, 3)
+        .map(t => {
+          let dueDateStr = "No deadline";
+          if (t.dueDate) {
+            const d = new Date(t.dueDate);
+            if (!isNaN(d.getTime())) {
+              dueDateStr = d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+            } else {
+              dueDateStr = t.dueDate;
+            }
+          }
+          return {
+            title: t.title,
+            dueDate: dueDateStr
+          };
+        });
+
+      const totalIncome = metrics.totalIncome || 0;
+      const totalFixedExpenses = metrics.totalFixedExpenses || 0;
+      const totalVariableExpenses = metrics.totalVariableExpenses || 0;
+
+      if (process.env.NODE_ENV !== "test" && Platform.OS === "android" && NativeModules?.WidgetSharedData) {
+        try {
+          const payload = JSON.stringify({
+            spentToday: spentToday.toFixed(0),
+            dailyLimit: dailyLimit.toFixed(0),
+            recentMerchant: latestTx ? latestTx.title : "No activity",
+            recentAmount: latestTx ? latestTx.amount.toFixed(2) : "0.00",
+            tasks: upcomingTasks,
+            totalIncome: totalIncome.toFixed(0),
+            totalFixedExpenses: totalFixedExpenses.toFixed(0),
+            totalVariableExpenses: totalVariableExpenses.toFixed(0),
+          });
+          NativeModules.WidgetSharedData.setWidgetData(payload);
+        } catch (e) {
+          console.warn("Failed to update home screen widget:", e);
+        }
+      }
+    }
+  }, [transactions, metrics, tasks]);
+
   const pinNote = async (id: string, isPinned: boolean) => {
     if (!user) return;
     setNotes((prev) => prev.map((n) => (n.id === id ? { ...n, isPinned } : n)));
@@ -701,6 +905,11 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
         budgetSettings,
         categories,
         metrics,
+        isDataLoaded,
+        undoItem,
+
+        undoLastDelete,
+        categoryWarnings,
         addTransaction,
         updateTransaction,
         addTask,
@@ -744,6 +953,16 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
         setIsNavHidden,
         isNavCollapsed,
         setIsNavCollapsed,
+        isSearching,
+        setIsSearching,
+        searchText,
+        setSearchText,
+        searchScope,
+        setSearchScope,
+        isGlobalAddTransactionOpen,
+        setIsGlobalAddTransactionOpen,
+        isGlobalAddTaskOpen,
+        setIsGlobalAddTaskOpen,
       }}>
       {children}
     </DataContext.Provider>

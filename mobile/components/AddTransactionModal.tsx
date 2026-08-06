@@ -18,7 +18,9 @@ import {
   Tag,
   Camera,
   Receipt,
+  Trash2,
 } from "lucide-react-native";
+import { useData } from "../context/DataContext";
 import { GlassView } from "./ui/GlassView";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../context/AuthContext";
@@ -28,6 +30,8 @@ import * as ImagePicker from "expo-image-picker";
 import { decode } from "base64-arraybuffer";
 import * as FileSystem from "expo-file-system/legacy";
 import { parseReceiptImage } from "../utils/gemini";
+
+import { useColorScheme } from "nativewind";
 
 interface AddTransactionModalProps {
   isOpen: boolean;
@@ -63,7 +67,10 @@ const AddTransactionModal = ({
   onSuccess,
   transactionToEdit,
 }: AddTransactionModalProps) => {
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
   const { user } = useAuth();
+  const { deleteTransaction } = useData();
   const [loading, setLoading] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [title, setTitle] = useState("");
@@ -96,6 +103,33 @@ const AddTransactionModal = ({
     setReceiptUri(null);
   };
 
+  const handleDelete = () => {
+    if (!transactionToEdit) return;
+    Alert.alert(
+      "Confirm Delete",
+      "Are you sure you want to delete this transaction?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            setLoading(true);
+            try {
+              await deleteTransaction(transactionToEdit.id);
+              onSuccess();
+              onClose();
+            } catch (err: any) {
+              Alert.alert("Error", err.message);
+            } finally {
+              setLoading(false);
+            }
+          }
+        }
+      ]
+    );
+  };
+
   const pickImage = async () => {
     // Ask for permission
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -109,6 +143,29 @@ const AddTransactionModal = ({
 
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      quality: 0.7,
+    });
+
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      const uri = result.assets[0].uri;
+      setReceiptUri(uri);
+      analyzeReceipt(uri);
+    }
+  };
+
+  const takePhoto = async () => {
+    // Ask for permission
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert(
+        "Permission needed",
+        "Sorry, we need camera permissions to make this work!",
+      );
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
       allowsEditing: true,
       quality: 0.7,
     });
@@ -201,7 +258,6 @@ const AddTransactionModal = ({
       } else {
         const { error } = await supabase.from("transactions").insert({
           ...payload,
-          id: Math.random().toString(36).substr(2, 9),
         });
         if (error) throw error;
       }
@@ -216,8 +272,36 @@ const AddTransactionModal = ({
     }
   };
 
+  const hasChanges = () => {
+    if (transactionToEdit) {
+      return (
+        title !== transactionToEdit.title ||
+        amount !== transactionToEdit.amount.toString() ||
+        type !== transactionToEdit.type ||
+        category !== transactionToEdit.category ||
+        date.getTime() !== new Date(transactionToEdit.date).getTime()
+      );
+    }
+    return title.trim().length > 0 || amount.trim().length > 0 || receiptUri !== null;
+  };
+
+  const handleBackGesture = () => {
+    if (hasChanges()) {
+      Alert.alert(
+        "Discard Changes",
+        "You have unsaved changes. Are you sure you want to discard them?",
+        [
+          { text: "Cancel", style: "cancel" },
+          { text: "Discard", style: "destructive", onPress: onClose }
+        ]
+      );
+    } else {
+      onClose();
+    }
+  };
+
   return (
-    <Modal visible={isOpen} animationType="fade" transparent>
+    <Modal visible={isOpen} animationType="fade" transparent onRequestClose={handleBackGesture}>
       <View className="flex-1 justify-end bg-black/80 dark:bg-black/80">
         <GlassView
           intensity={40}
@@ -225,17 +309,18 @@ const AddTransactionModal = ({
           {/* Header */}
           <View className="flex-row justify-between items-center p-5 border-b border-black/5 dark:border-white/10">
             <TouchableOpacity
-              onPress={onClose}
-              className="p-2 bg-slate-100 dark:bg-white/10 rounded-full">
+              onPress={handleBackGesture}
+              className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full">
               <X size={20} color={user ? "#64748b" : "white"} />
             </TouchableOpacity>
             <Text className="text-xl font-bold text-slate-900 dark:text-white tracking-wide">
               {transactionToEdit ? "Edit Transaction" : "New Transaction"}
             </Text>
             <TouchableOpacity
+              testID="btn-save-tx"
               onPress={handleSubmit}
               disabled={loading || scanning}
-              className="p-2 bg-indigo-500 rounded-full shadow-lg shadow-indigo-500/40">
+              className="p-2 bg-indigo-600 rounded-full">
               {loading ? (
                 <ActivityIndicator color="white" />
               ) : (
@@ -245,14 +330,11 @@ const AddTransactionModal = ({
           </View>
 
           <ScrollView className="p-6">
-            {/* AI Scan Button */}
+            {/* AI Scan Buttons */}
             {!transactionToEdit && (
-              <TouchableOpacity
-                onPress={pickImage}
-                disabled={scanning}
-                className="flex-row items-center justify-center p-4 mb-6 bg-indigo-50 dark:bg-indigo-500/20 rounded-2xl border border-dashed border-indigo-200 dark:border-indigo-400/50">
+              <View className="mb-6">
                 {scanning ? (
-                  <>
+                  <View className="flex-row items-center justify-center p-4 bg-indigo-50 dark:bg-indigo-500/20 rounded-2xl border border-dashed border-indigo-200 dark:border-indigo-400/50">
                     <ActivityIndicator
                       size="small"
                       color="#818cf8"
@@ -261,16 +343,30 @@ const AddTransactionModal = ({
                     <Text className="text-indigo-600 dark:text-indigo-300 font-bold">
                       Scanning Receipt...
                     </Text>
-                  </>
+                  </View>
                 ) : (
-                  <>
-                    <Receipt size={20} color="#6366f1" className="mr-2" />
-                    <Text className="text-indigo-600 dark:text-indigo-300 font-bold">
-                      Scan Receipt with AI
-                    </Text>
-                  </>
+                  <View className="flex-row gap-3">
+                    <TouchableOpacity
+                      onPress={takePhoto}
+                      disabled={scanning}
+                      className="flex-1 flex-row items-center justify-center p-4 bg-indigo-50 dark:bg-indigo-950 rounded-2xl border border-dashed border-indigo-200 dark:border-indigo-900">
+                      <Camera size={18} color="#6366f1" className="mr-2" />
+                      <Text className="text-indigo-600 dark:text-indigo-300 font-bold text-xs">
+                        Take Photo
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={pickImage}
+                      disabled={scanning}
+                      className="flex-1 flex-row items-center justify-center p-4 bg-indigo-50 dark:bg-indigo-950 rounded-2xl border border-dashed border-indigo-200 dark:border-indigo-900">
+                      <Receipt size={18} color="#6366f1" className="mr-2" />
+                      <Text className="text-indigo-600 dark:text-indigo-300 font-bold text-xs">
+                        Upload Receipt
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
                 )}
-              </TouchableOpacity>
+              </View>
             )}
 
             {receiptUri && (
@@ -303,10 +399,11 @@ const AddTransactionModal = ({
                   $
                 </Text>
                 <TextInput
+                  testID="input-tx-amount"
                   className="text-5xl font-bold text-slate-900 dark:text-white min-w-[100px] text-center"
                   keyboardType="numeric"
                   placeholder="0.00"
-                  placeholderTextColor="rgba(148,163,184,0.4)"
+                  placeholderTextColor={isDark ? "#475569" : "#94a3b8"}
                   value={amount}
                   onChangeText={setAmount}
                   autoFocus={!transactionToEdit && !scanning}
@@ -319,7 +416,7 @@ const AddTransactionModal = ({
               <TouchableOpacity
                 className={`flex-1 py-3 rounded-xl items-center ${
                   type === "expense"
-                    ? "bg-rose-100 dark:bg-rose-500/20 shadow-sm border border-rose-200 dark:border-rose-500/30"
+                    ? "bg-rose-100 dark:bg-rose-950 border border-rose-200 dark:border-rose-900"
                     : ""
                 }`}
                 onPress={() => setType("expense")}>
@@ -327,7 +424,7 @@ const AddTransactionModal = ({
                   className={`font-bold ${
                     type === "expense"
                       ? "text-rose-600 dark:text-rose-400"
-                      : "text-slate-500"
+                      : "text-slate-500 dark:text-slate-400"
                   }`}>
                   Expense
                 </Text>
@@ -335,7 +432,7 @@ const AddTransactionModal = ({
               <TouchableOpacity
                 className={`flex-1 py-3 rounded-xl items-center ${
                   type === "income"
-                    ? "bg-emerald-100 dark:bg-emerald-500/20 shadow-sm border border-emerald-200 dark:border-emerald-500/30"
+                    ? "bg-emerald-100 dark:bg-emerald-950 border border-emerald-200 dark:border-emerald-900"
                     : ""
                 }`}
                 onPress={() => setType("income")}>
@@ -343,7 +440,7 @@ const AddTransactionModal = ({
                   className={`font-bold ${
                     type === "income"
                       ? "text-emerald-600 dark:text-emerald-400"
-                      : "text-slate-500"
+                      : "text-slate-500 dark:text-slate-400"
                   }`}>
                   Income
                 </Text>
@@ -356,9 +453,10 @@ const AddTransactionModal = ({
                 Title
               </Text>
               <TextInput
-                className="bg-white dark:bg-white/5 p-4 rounded-xl text-slate-900 dark:text-white font-medium border border-slate-100 dark:border-white/10 text-base"
+                testID="input-tx-title"
+                className="bg-white dark:bg-white/5 p-4 rounded-xl text-slate-900 dark:text-white font-medium border border-slate-200 dark:border-slate-800 text-base"
                 placeholder="What is this for?"
-                placeholderTextColor="rgba(148,163,184,0.5)"
+                placeholderTextColor={isDark ? "#64748b" : "#cbd5e1"}
                 value={title}
                 onChangeText={setTitle}
               />
@@ -376,14 +474,14 @@ const AddTransactionModal = ({
                     onPress={() => setCategory(cat.name)}
                     className={`px-4 py-2 rounded-xl border ${
                       category === cat.name
-                        ? "bg-indigo-600 border-indigo-500 shadow-lg shadow-indigo-500/40"
-                        : "bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10"
+                        ? "bg-indigo-600 border-indigo-500"
+                        : "bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700"
                     }`}>
                     <Text
                       className={`font-medium ${
                         category === cat.name
                           ? "text-white"
-                          : "text-slate-600 dark:text-slate-400"
+                          : "text-slate-700 dark:text-slate-300"
                       }`}>
                       {cat.name}
                     </Text>
@@ -399,7 +497,7 @@ const AddTransactionModal = ({
               </Text>
               <TouchableOpacity
                 onPress={() => setShowDatePicker(true)}
-                className="flex-row items-center bg-white dark:bg-white/5 p-4 rounded-xl border border-slate-100 dark:border-white/10">
+                className="flex-row items-center bg-white dark:bg-slate-850 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
                 <Calendar size={20} color="#94a3b8" className="mr-3" />
                 <Text className="text-slate-900 dark:text-white font-medium text-base">
                   {date.toLocaleDateString(undefined, {
@@ -423,6 +521,17 @@ const AddTransactionModal = ({
                   if (selectedDate) setDate(selectedDate);
                 }}
               />
+            )}
+            {transactionToEdit && (
+              <TouchableOpacity
+                onPress={handleDelete}
+                disabled={loading}
+                className="mt-4 mb-8 py-4 bg-rose-100 dark:bg-rose-950 border border-rose-200 dark:border-rose-900 rounded-2xl items-center justify-center flex-row gap-2">
+                <Trash2 size={18} color="#fb7185" />
+                <Text className="text-rose-400 font-bold text-base">
+                  Delete Transaction
+                </Text>
+              </TouchableOpacity>
             )}
           </ScrollView>
         </GlassView>

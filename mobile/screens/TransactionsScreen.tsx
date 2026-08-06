@@ -6,22 +6,18 @@ import {
   TouchableOpacity,
   TextInput,
   ScrollView,
+  Alert,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { ScreenWrapper } from "../components/ui/ScreenWrapper";
 import { GlassView } from "../components/ui/GlassView";
 import { useData } from "../context/DataContext";
 import { Transaction } from "../types";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   Plus,
   Search,
   ArrowUpRight,
   ArrowDownLeft,
-  Filter,
-  Trash2,
-  Edit,
-  X,
-  CreditCard,
   ShoppingBag,
   Home,
   Coffee,
@@ -32,14 +28,18 @@ import {
   Briefcase,
   ChevronLeft,
   ChevronRight,
+  MessageSquareCode,
+  Check,
+  X,
 } from "lucide-react-native";
 import { useColorScheme } from "nativewind";
 import AddTransactionModal from "../components/AddTransactionModal";
+import { MOCK_SMS_FEED, parseTransactionSMS, ParsedSMSTransaction } from "../services/smsScraper";
 
 const TransactionsScreen = (props: any) => {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
-  const { transactions, deleteTransaction, categories } = useData();
+  const { transactions, deleteTransaction, categories, addTransaction, undoItem, undoLastDelete } = useData();
   const [filterType, setFilterType] = useState<"all" | "expense" | "income">(
     "all",
   );
@@ -49,19 +49,74 @@ const TransactionsScreen = (props: any) => {
   const [selectedTransaction, setSelectedTransaction] =
     useState<Transaction | null>(null);
 
-  // Initialize from params if available
+  const [pendingSMS, setPendingSMS] = useState<ParsedSMSTransaction[]>([]);
+
+  React.useEffect(() => {
+    const loadPendingSMS = async () => {
+      try {
+        const saved = await AsyncStorage.getItem("pending_sms_reviews");
+        if (saved) {
+          setPendingSMS(JSON.parse(saved));
+        }
+      } catch (err) {
+        console.warn("Failed to load pending SMS reviews:", err);
+      }
+    };
+    loadPendingSMS();
+  }, []);
+
+  const updatePendingSMS = async (newList: ParsedSMSTransaction[]) => {
+    setPendingSMS(newList);
+    try {
+      await AsyncStorage.setItem("pending_sms_reviews", JSON.stringify(newList));
+    } catch (err) {
+      console.warn("Failed to save pending SMS reviews:", err);
+    }
+  };
+
   React.useEffect(() => {
     if ((props.route.params as any)?.search) {
       setSearchQuery((props.route.params as any).search);
-      // Optional: Clear params to avoid sticky search?
-      // props.navigation.setParams({ search: undefined });
     }
   }, [props.route.params]);
 
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [viewAllDates, setViewAllDates] = useState(true);
 
-  // Filter Logic
+  const handleScanSMS = async () => {
+    const parsed: ParsedSMSTransaction[] = [];
+    MOCK_SMS_FEED.forEach((item) => {
+      const res = parseTransactionSMS(item.body, item.sender);
+      if (res) parsed.push(res);
+    });
+
+    try {
+      const saved = await AsyncStorage.getItem("pending_sms_reviews");
+      let existing: ParsedSMSTransaction[] = saved ? JSON.parse(saved) : [];
+      const newItems = parsed.filter(p => !existing.some(e => e.rawText === p.rawText));
+      const updated = [...existing, ...newItems];
+      await updatePendingSMS(updated);
+      Alert.alert("SMS Auto-Scraper", `Found ${newItems.length} new bank transaction alerts for review!`);
+    } catch (err) {
+      console.warn("Failed to process scan results:", err);
+    }
+  };
+
+  const handleApproveSMS = async (sms: ParsedSMSTransaction) => {
+    await addTransaction({
+      id: sms.id,
+      title: sms.merchant,
+      amount: sms.amount,
+      type: sms.type,
+      category: sms.category,
+      date: new Date().toISOString(),
+      paymentMethod: sms.bankName,
+    });
+    const updated = pendingSMS.filter((item) => item.id !== sms.id);
+    await updatePendingSMS(updated);
+    Alert.alert("Success", `Added '${sms.merchant}' transaction (${sms.type === 'income' ? '+' : '-'}$${sms.amount}) to ledger!`);
+  };
+
   const filteredTransactions = useMemo(() => {
     return transactions.filter((t) => {
       let matchesDate = true;
@@ -131,10 +186,6 @@ const TransactionsScreen = (props: any) => {
 
   const categoryNames = ["All", ...new Set(categories.map((c) => c.name))];
   if (!categoryNames.includes("Income")) categoryNames.push("Income");
-
-  const handleDelete = (id: string) => {
-    deleteTransaction(id);
-  };
 
   const handleEdit = (transaction: Transaction) => {
     setSelectedTransaction(transaction);
@@ -208,24 +259,59 @@ const TransactionsScreen = (props: any) => {
               {filteredTransactions.length} items found
             </Text>
           </View>
-          <TouchableOpacity
-            onPress={() => {
-              setSelectedTransaction(null);
-              setIsModalOpen(true);
-            }}
-            className="w-12 h-12 bg-indigo-500 rounded-full items-center justify-center shadow-lg shadow-indigo-500/40 border border-white/20">
-            <Plus size={24} color="white" />
-          </TouchableOpacity>
+
+          <View className="flex-row gap-2">
+            <TouchableOpacity
+              onPress={handleScanSMS}
+              className="p-3 bg-cyan-950 rounded-full border border-cyan-800">
+              <MessageSquareCode size={20} color="#00f2ff" />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => {
+                setSelectedTransaction(null);
+                setIsModalOpen(true);
+              }}
+              className="w-12 h-12 bg-indigo-600 rounded-full items-center justify-center border border-indigo-500">
+              <Plus size={24} color="white" />
+            </TouchableOpacity>
+          </View>
         </View>
 
-        {/* Date Filter */}
+        {/* SMS Pending Review Banner */}
+        {pendingSMS.length > 0 && (
+          <View className="px-4 mb-3">
+            <GlassView intensity={30} className="p-3.5 rounded-2xl bg-cyan-500/10 border border-cyan-500/30">
+              <Text className="text-xs font-bold text-cyan-400 uppercase tracking-wider mb-2">
+                📩 Auto-Scraped Bank SMS Alerts ({pendingSMS.length})
+              </Text>
+              {pendingSMS.map((item) => (
+                <View key={item.id} className="flex-row items-center justify-between py-1.5 border-b border-cyan-500/20">
+                  <View className="flex-1 mr-2">
+                    <Text className="text-xs font-bold text-slate-900 dark:text-white">{item.merchant}</Text>
+                    <Text className="text-[10px] text-slate-400">{item.bankName} • {item.category}</Text>
+                  </View>
+                  <Text className={`text-xs font-bold mr-3 ${item.type === 'income' ? 'text-emerald-400' : 'text-rose-400'}`}>
+                    {item.type === 'income' ? '+' : '-'}${item.amount}
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => handleApproveSMS(item)}
+                    className="p-1.5 bg-emerald-500 rounded-lg">
+                    <Check size={14} color="white" />
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </GlassView>
+          </View>
+        )}
+
         <View className="px-4 mb-3 flex-row items-center justify-between">
           <TouchableOpacity
             onPress={() => {
               const newDate = new Date(selectedDate);
               newDate.setMonth(newDate.getMonth() - 1);
               setSelectedDate(newDate);
-              setViewAllDates(false); // Enable strict date mode
+              setViewAllDates(false);
             }}
             className="p-2 rounded-full bg-white/40 dark:bg-white/10 border border-black/5 dark:border-white/10">
             <ChevronLeft size={20} color={isDark ? "white" : "black"} />
@@ -252,14 +338,13 @@ const TransactionsScreen = (props: any) => {
               const newDate = new Date(selectedDate);
               newDate.setMonth(newDate.getMonth() + 1);
               setSelectedDate(newDate);
-              setViewAllDates(false); // Enable strict date mode
+              setViewAllDates(false);
             }}
             className="p-2 rounded-full bg-white/40 dark:bg-white/10 border border-black/5 dark:border-white/10">
             <ChevronRight size={20} color={isDark ? "white" : "black"} />
           </TouchableOpacity>
         </View>
 
-        {/* Search Bar */}
         <View className="px-4 mb-4">
           <GlassView
             intensity={20}
@@ -280,7 +365,6 @@ const TransactionsScreen = (props: any) => {
           </GlassView>
         </View>
 
-        {/* Category Filters */}
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -308,7 +392,6 @@ const TransactionsScreen = (props: any) => {
         </ScrollView>
       </View>
 
-      {/* Summary Stats for Filtered View */}
       {filterType === "all" &&
         selectedCategory === "All" &&
         searchQuery === "" && (
@@ -364,9 +447,26 @@ const TransactionsScreen = (props: any) => {
       <AddTransactionModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onSuccess={() => {}} // DataContext updates automatically via subscription or refresh
+        onSuccess={() => {}}
         transactionToEdit={selectedTransaction}
       />
+      {undoItem && undoItem.type === "transaction" && (
+        <View className="absolute bottom-40 left-6 right-6 z-50">
+          <GlassView
+            intensity={40}
+            className="flex-row items-center justify-between p-4 rounded-2xl bg-slate-900/95 border border-indigo-500/40 shadow-lg shadow-black/40">
+            <View>
+              <Text className="text-white font-bold text-sm">Transaction deleted</Text>
+              <Text className="text-slate-400 text-xs mt-0.5">Undo within 10 seconds</Text>
+            </View>
+            <TouchableOpacity
+              onPress={undoLastDelete}
+              className="bg-indigo-500 px-4 py-2 rounded-xl border border-white/20">
+              <Text className="text-white font-bold text-sm">Undo</Text>
+            </TouchableOpacity>
+          </GlassView>
+        </View>
+      )}
     </ScreenWrapper>
   );
 };

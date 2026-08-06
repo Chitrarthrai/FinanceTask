@@ -32,6 +32,13 @@ import {
 } from "lucide-react-native";
 import { BarChart, PieChart, LineChart } from "react-native-gifted-charts";
 import AddTransactionModal from "../components/AddTransactionModal";
+import AddTaskModal from "../components/AddTaskModal";
+import {
+  QuickActionsWidget,
+  BudgetCircleWidget,
+  PriorityTasksWidget,
+  CategoryAlertsWidget,
+} from "../components/BentoWidgets";
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -91,10 +98,11 @@ const KPICard = ({ data }: { data: any }) => {
 };
 
 const DashboardScreen = () => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<any>();
   const { user } = useAuth();
-  const { transactions, tasks, metrics, refreshData } = useData();
+  const { transactions, tasks, metrics, refreshData, categoryWarnings } = useData();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [timeRange, setTimeRange] = useState("Week");
   const { colorScheme } = useColorScheme();
@@ -339,77 +347,35 @@ const DashboardScreen = () => {
           </View>
         </View>
 
-        {/* KPIs - Horizontal Scroll */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          className="mb-6 -mx-6"
-          contentContainerStyle={{ paddingHorizontal: 24 }}>
-          {kpiData.map((kpi, index) => (
-            <KPICard key={index} data={kpi} />
-          ))}
-        </ScrollView>
-
-        {/* Daily Limit Progress */}
-        <GlassView
-          intensity={40}
-          className="p-6 rounded-3xl mb-8 relative overflow-hidden">
-          <View className="flex-row justify-between items-center mb-4 relative z-10">
-            <Text className="text-slate-800 dark:text-white text-lg font-bold">
-              Daily Limit
-            </Text>
-            <View
-              className="px-3 py-1 rounded-full"
-              style={{
-                backgroundColor:
-                  percentUsed >= 100 ? "#f43f5e" : "rgba(255,255,255,0.2)",
-              }}>
-              <Text
-                className={`text-xs font-bold ${
-                  percentUsed >= 100
-                    ? "text-white"
-                    : "text-indigo-600 dark:text-white"
-                }`}>
-                {percentUsed}% Used
-              </Text>
-            </View>
-          </View>
-          <View className="flex-row items-baseline gap-2 mb-4 relative z-10">
-            <Text className="text-5xl font-extrabold text-slate-900 dark:text-white tracking-tighter">
-              ${metrics.spentToday.toFixed(0)}
-            </Text>
-            <Text
-              style={{ color: "rgba(255,255,255,0.5)" }}
-              className="text-xl font-medium">
-              / ${metrics.dailyLimit.toFixed(0)}
-            </Text>
-          </View>
-          <View
-            style={{ backgroundColor: "rgba(255,255,255,0.1)" }}
-            className="h-3 rounded-full overflow-hidden relative z-10">
-            <View
-              style={[
-                { width: `${Math.min(100, percentUsed)}%` },
-                percentUsed >= 100
-                  ? { backgroundColor: "#f43f5e" }
-                  : {
-                      backgroundColor: "#6366f1",
-                      shadowColor: "#6366f1",
-                      shadowOffset: { width: 0, height: 0 },
-                      shadowOpacity: 0.6,
-                      shadowRadius: 15,
-                    },
-              ]}
-              className="h-full rounded-full"
+        {/* Bento Grid Widgets */}
+        <View className="mb-6 gap-4">
+          <View className="flex-row gap-4">
+            <QuickActionsWidget
+              onScanReceipt={() => setIsModalOpen(true)}
+              onAddTransaction={() => setIsModalOpen(true)}
+              onAddTask={() => setIsTaskModalOpen(true)}
+            />
+            <BudgetCircleWidget
+              todaySpent={metrics.spentToday}
+              dailyLimit={metrics.dailyLimit}
             />
           </View>
-
-          {/* Decor */}
-          <View
-            style={{ backgroundColor: "rgba(99,102,241,0.3)", opacity: 0.5 }}
-            className="absolute top-[-30] right-[-30] w-40 h-40 rounded-full"
-          />
-        </GlassView>
+          <View className="flex-row gap-4">
+            <View className="flex-1">
+              <PriorityTasksWidget
+                tasks={tasks}
+                onNavigateToTasks={() => navigation.navigate("TasksTab")}
+              />
+            </View>
+            <View className="flex-1">
+              <CategoryAlertsWidget
+                warnings={categoryWarnings.map(
+                  (w) => `${w.category} (${w.percent.toFixed(0)}%)`
+                )}
+              />
+            </View>
+          </View>
+        </View>
 
         {/* Spending Chart */}
         <GlassView intensity={40} className="mb-8 p-5 rounded-3xl">
@@ -681,6 +647,12 @@ const DashboardScreen = () => {
       <AddTransactionModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
+        onSuccess={onRefresh}
+      />
+
+      <AddTaskModal
+        isOpen={isTaskModalOpen}
+        onClose={() => setIsTaskModalOpen(false)}
         onSuccess={onRefresh}
       />
     </ScreenWrapper>

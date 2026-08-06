@@ -139,6 +139,7 @@ const NotesView = () => {
             className="flex-row items-center rounded-2xl px-4 py-3 border border-black/5 dark:border-white/20 bg-white/40 dark:bg-white/10 mb-3">
             <Search size={20} color="#94a3b8" />
             <TextInput
+              testID="input-notes-search"
               placeholder="Search notes..."
               placeholderTextColor="#94a3b8"
               className="flex-1 ml-3 font-medium text-slate-900 dark:text-white text-base"
@@ -226,7 +227,8 @@ const NotesView = () => {
 
         {/* Floating Action Button */}
         <TouchableOpacity
-          className="absolute bottom-28 right-6 w-14 h-14 bg-purple-500 rounded-full items-center justify-center shadow-lg shadow-purple-500/40 border border-white/20 z-50"
+          testID="btn-new-note"
+          className="absolute bottom-28 right-6 w-14 h-14 bg-purple-600 rounded-full items-center justify-center border border-purple-500 z-50"
           onPress={handleNewNote}>
           <Plus color="white" size={30} />
         </TouchableOpacity>

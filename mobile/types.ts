@@ -25,7 +25,7 @@ export interface Transaction {
   paymentMethod?: string; // Added
 }
 
-export type TaskStatus = "todo" | "in-progress" | "completed";
+export type TaskStatus = "todo" | "in-progress" | "completed" | "not-done";
 export type TaskPriority = "low" | "medium" | "high";
 
 export interface Task {
@@ -40,6 +40,15 @@ export interface Task {
   recurring?: boolean;
   category?: string;
   amount?: number;
+  reasonNotDone?: string;
+  completionTime?: string;
+}
+
+export interface UndoItem {
+  id: string;
+  type: "transaction" | "task";
+  data: Transaction | Task;
+  expiryTime: number; // Timestamp
 }
 
 export interface ChartData {

@@ -290,7 +290,7 @@ const AnalyticsScreen = () => {
 
             <TouchableOpacity
               onPress={handleExport}
-              className="flex-row items-center bg-indigo-500 px-4 py-3 rounded-xl shadow-lg shadow-indigo-500/40 border border-white/20">
+              className="flex-row items-center bg-indigo-600 px-4 py-3 rounded-xl border border-indigo-500">
               <Download size={18} color="white" />
               <Text className="text-white font-bold ml-2">Export</Text>
             </TouchableOpacity>

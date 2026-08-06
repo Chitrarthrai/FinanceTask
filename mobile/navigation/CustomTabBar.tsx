@@ -8,7 +8,6 @@ import {
   Animated as RNAnimated,
   Vibration,
   Text,
-  TextInput,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { GlassView } from "../components/ui/GlassView";
@@ -18,26 +17,17 @@ import Animated, {
   useAnimatedStyle,
   withSpring,
   useSharedValue,
-  withTiming,
-  runOnJS,
-  Layout,
   FadeIn,
   FadeOut,
 } from "react-native-reanimated";
 import {
-  GripHorizontal,
-  GripVertical,
-  Search,
   Menu,
-  X,
   ChevronLeft,
   ChevronRight,
-  Maximize2,
   Minimize2,
-  List,
-  Wallet,
   PanelLeftClose,
   PanelRightClose,
+  Search,
 } from "lucide-react-native";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -50,6 +40,8 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
     setIsNavHidden,
     isNavCollapsed,
     setIsNavCollapsed,
+    isSearching,
+    setIsSearching,
   } = useData();
   const navPositionRef = useRef(navPosition);
 
@@ -62,18 +54,7 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
   const isDark = colorScheme === "dark";
 
   const isVertical = navPosition === "left" || navPosition === "right";
-
-  // States
-  // const [isCollapsed, setIsCollapsed] = useState(false); // MOVED TO CONTEXT
   const [showSidebarLabels, setShowSidebarLabels] = useState(false);
-  // const [isHidden, setIsHidden] = useState(false); // MOVED TO CONTEXT
-
-  // Search States
-  const [isSearching, setIsSearching] = useState(false);
-  const [searchScope, setSearchScope] = useState<"transactions" | "tasks">(
-    "transactions",
-  );
-  const [searchText, setSearchText] = useState("");
 
   // Drag State
   const [isDragging, setIsDragging] = useState(false);
@@ -122,27 +103,12 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
         else if (min === bottomDist) newPos = "bottom";
 
         if (newPos !== currentPos) {
-          runOnJS(setNavPosition)(newPos);
+          setNavPosition(newPos);
           Vibration.vibrate(20);
         }
       },
     }),
   ).current;
-
-  // Handlers
-  const handleSearchSubmit = () => {
-    if (!searchText.trim()) return;
-
-    const targetScreen =
-      searchScope === "transactions" ? "TransactionsTab" : "TasksTab";
-    navigation.navigate(targetScreen, { search: searchText });
-
-    // Close search mode after submitting? Or keep it?
-    // Let's close it to show results
-    setIsSearching(false);
-    setIsNavCollapsed(false); // Maybe expand back to normal nav?
-    setSearchText("");
-  };
 
   // Dynamic Styles
   const getContainerStyle = () => {
@@ -154,51 +120,22 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
       transform: isDragging ? pan.getTranslateTransform() : [],
     };
 
-    // SEARCH MODE (Overrides everything when active)
-    if (isSearching) {
-      return {
-        ...baseStyle,
-        top: Platform.OS === "ios" ? insets.top + 10 : 30, // Always top for search? Or relative?
-        // Let's keep it mostly centered or at top.
-        // If user drags to bottom, Search UI at bottom might be weird.
-        // For now, let's respect current position but force width.
-        [navPosition === "bottom" ? "bottom" : "top"]:
-          navPosition === "bottom"
-            ? Platform.OS === "ios"
-              ? insets.bottom + 10
-              : 20
-            : Platform.OS === "ios"
-              ? insets.top + 10
-              : 30,
-        [navPosition === "left" ? "left" : "right"]: isVertical
-          ? 15
-          : undefined,
-        alignSelf: "center",
-        width: isVertical ? 250 : "90%", // Wider for search
-        height: isVertical ? 300 : 60, // Taller if vertical? Or force horizontal layout for search?
-        // Let's force a horizontal pill for Search even if sidebar is active,
-        // OR make a nice vertical search card.
-        // Simpler: Force standard horizontal pill look for search mode to match web header.
-        flexDirection: isVertical ? "column" : "row",
-        borderRadius: 30,
-      };
-    }
-
     // HIDDEN MODE (Edge Arrow)
     if (isNavHidden && isVertical) {
       return {
         ...baseStyle,
-        [navPosition]: 5, // Tighter float
+        [navPosition]: 5,
         top: "50%",
-        marginTop: -16, // Center vertically (half of height)
-        width: 32, // Mini Circle
-        height: 32, // Mini Circle
-        borderRadius: 16, // Fully rounded
+        marginTop: -16,
+        width: 32,
+        height: 32,
+        borderRadius: 16,
         alignItems: "center",
         justifyContent: "center",
       };
     }
 
+    // COLLAPSED PILL MODE
     if (isNavCollapsed) {
       switch (navPosition) {
         case "top":
@@ -214,9 +151,9 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
                   ? insets.bottom + 10
                   : 20,
             alignSelf: "center",
-            width: 60,
-            height: 60,
-            borderRadius: 30,
+            width: 110, // Pill width
+            height: 50, // Pill height
+            borderRadius: 25,
             alignItems: "center",
             justifyContent: "center",
           };
@@ -227,7 +164,7 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
             [navPosition]: 15,
             top: "45%",
             width: 60,
-            height: 60,
+            height: 100, // Vertical pill
             borderRadius: 30,
             alignItems: "center",
             justifyContent: "center",
@@ -235,15 +172,15 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
       }
     }
 
-    // Expanded Nav
+    // EXPANDED NAV
     switch (navPosition) {
       case "top":
         return {
           ...baseStyle,
           top: Platform.OS === "ios" ? insets.top + 10 : 30,
           alignSelf: "center",
-          width: "85%",
-          height: 60,
+          width: "90%",
+          height: 60, // Back to standard height
           flexDirection: "row",
           borderRadius: 35,
         };
@@ -252,8 +189,8 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
           ...baseStyle,
           bottom: Platform.OS === "ios" ? insets.bottom + 10 : 20,
           alignSelf: "center",
-          width: "85%",
-          height: 65,
+          width: "90%",
+          height: 65, // Back to standard height
           flexDirection: "row",
           borderRadius: 35,
         };
@@ -304,7 +241,6 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
           style={{ borderRadius: isNavHidden ? 16 : 35 }}
         />
 
-        {/* CONTENT SWITCHER */}
         {isNavHidden && isVertical ? (
           /* --- HIDDEN ARROW MODE --- */
           <TouchableOpacity
@@ -314,85 +250,13 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
               setIsNavHidden(false);
             }}>
             {navPosition === "left" ? (
-              <ChevronRight size={16} color={isDark ? "white" : "black"} /> // Smaller icon
+              <ChevronRight size={16} color={isDark ? "white" : "black"} />
             ) : (
-              <ChevronLeft size={16} color={isDark ? "white" : "black"} /> // Smaller icon
+              <ChevronLeft size={16} color={isDark ? "white" : "black"} />
             )}
           </TouchableOpacity>
-        ) : isSearching ? (
-          /* --- SEARCH MODE UI --- */
-          <View
-            className={`flex-1 ${isVertical ? "flex-col p-4" : "flex-row px-4"} items-center gap-2`}>
-            {/* Scope Selector */}
-            <TouchableOpacity
-              onPress={() =>
-                setSearchScope(
-                  searchScope === "transactions" ? "tasks" : "transactions",
-                )
-              }
-              className="flex-row items-center gap-1 bg-black/5 dark:bg-white/10 px-3 py-1.5 rounded-full">
-              {searchScope === "transactions" ? (
-                <Wallet size={14} color={isDark ? "#ccc" : "#555"} />
-              ) : (
-                <List size={14} color={isDark ? "#ccc" : "#555"} />
-              )}
-              <Text className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase">
-                {searchScope === "transactions" ? "Trans" : "Tasks"}
-              </Text>
-            </TouchableOpacity>
-
-            {/* Input */}
-            <TextInput
-              autoFocus
-              placeholder={`Search ${searchScope}...`}
-              placeholderTextColor={isDark ? "#64748b" : "#94a3b8"}
-              className="flex-1 text-base font-medium text-slate-900 dark:text-white h-full"
-              value={searchText}
-              onChangeText={setSearchText}
-              onSubmitEditing={handleSearchSubmit}
-              returnKeyType="search"
-            />
-
-            {/* Close/Submit */}
-            <View className="flex-row items-center gap-1">
-              {searchText.length > 0 && (
-                <TouchableOpacity
-                  onPress={handleSearchSubmit}
-                  className="bg-indigo-500 rounded-full p-1.5">
-                  <Search size={14} color="white" />
-                </TouchableOpacity>
-              )}
-              <TouchableOpacity
-                onPress={() => {
-                  setIsSearching(false);
-                  setSearchText("");
-                }}
-                className="p-1">
-                <X size={18} color={isDark ? "#ccc" : "#555"} />
-              </TouchableOpacity>
-            </View>
-          </View>
-        ) : isNavCollapsed ? (
-          /* --- MICRO MODE (SEARCH BUTTON) --- */
-          <TouchableOpacity
-            className="w-full h-full items-center justify-center p-2"
-            onPress={() => {
-              Vibration.vibrate(10);
-              // Toggle straight to SEARCH mode instead of just expanding?
-              // User said "show work like the header in website code"
-              // The website header IS searching.
-              // So clicking this should open Search Mode.
-              setIsSearching(true);
-            }}
-            onLongPress={() => {
-              // Determine if we should expand to normal nav on long press?
-              Vibration.vibrate(20);
-              setIsNavCollapsed(false);
-            }}>
-            <Search size={24} color={isDark ? "white" : "#333"} />
-          </TouchableOpacity>
         ) : (
-          /* --- NORMAL NAV MODE --- */
+          /* --- MAIN NAV CONTENT --- */
           <View
             style={{
               flex: 1,
@@ -402,127 +266,144 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
               paddingVertical: isVertical ? 20 : 0,
               paddingHorizontal: isVertical ? 0 : 20,
             }}>
-            {state.routes.map((route: any, index: number) => {
-              const { options } = descriptors[route.key];
-              const isFocused = state.index === index;
-
-              const onPress = () => {
-                if (isDragging) return;
-                const event = navigation.emit({
-                  type: "tabPress",
-                  target: route.key,
-                  canPreventDefault: true,
-                });
-                if (!isFocused && !event.defaultPrevented) {
-                  navigation.navigate(route.name, route.params);
-                }
-              };
-
-              const activeColor = isDark ? "#fbbf24" : "#4f46e5";
-              const inactiveColor = isDark
-                ? "rgba(255,255,255,0.5)"
-                : "rgba(71,85,105,0.5)";
-
-              return (
-                <TabItem
-                  key={route.key}
-                  isFocused={isFocused}
-                  onPress={onPress}
-                  options={options}
-                  activeColor={activeColor}
-                  inactiveColor={inactiveColor}
-                  isVertical={isVertical}
-                  isDragging={isDragging}
-                  showLabel={isVertical && showSidebarLabels}
-                  label={options.tabBarLabel || route.name}
-                />
-              );
-            })}
-
-            {/* CONTROLS */}
-            <View
-              className={
-                isVertical
-                  ? "mt-2 pt-2 border-t border-black/5 dark:border-white/10"
-                  : "ml-2 pl-2 border-l border-black/5 dark:border-white/10"
-              }>
-              {isVertical ? (
-                <View className="items-center gap-4">
-                  <TouchableOpacity
-                    onPress={() => {
-                      Vibration.vibrate(10);
-                      setShowSidebarLabels(!showSidebarLabels);
-                    }}
-                    hitSlop={10}>
-                    {showSidebarLabels ? (
-                      navPosition === "left" ? (
-                        <ChevronLeft
-                          size={20}
-                          color={isDark ? "white" : "black"}
-                          opacity={0.5}
-                        />
-                      ) : (
-                        <ChevronRight
-                          size={20}
-                          color={isDark ? "white" : "black"}
-                          opacity={0.5}
-                        />
-                      )
-                    ) : navPosition === "left" ? (
-                      <ChevronRight
-                        size={20}
-                        color={isDark ? "white" : "black"}
-                        opacity={0.5}
-                      />
-                    ) : (
-                      <ChevronLeft
-                        size={20}
-                        color={isDark ? "white" : "black"}
-                        opacity={0.5}
-                      />
-                    )}
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={() => setIsNavCollapsed(true)}
-                    hitSlop={10}>
-                    <Minimize2
-                      size={16}
-                      color={isDark ? "white" : "black"}
-                      opacity={0.5}
-                    />
-                  </TouchableOpacity>
-
-                  {/* Hide Completely */}
-                  <TouchableOpacity
-                    onPress={() => setIsNavHidden(true)}
-                    hitSlop={10}>
-                    {navPosition === "left" ? (
-                      <PanelLeftClose
-                        size={16}
-                        color={isDark ? "white" : "black"}
-                        opacity={0.5}
-                      />
-                    ) : (
-                      <PanelRightClose
-                        size={16}
-                        color={isDark ? "white" : "black"}
-                        opacity={0.5}
-                      />
-                    )}
-                  </TouchableOpacity>
-                </View>
-              ) : (
+            
+            {/* Collapsed Pill (shows Menu and Search buttons side by side) */}
+            {isNavCollapsed ? (
+              <View
+                style={{
+                  flex: 1,
+                  flexDirection: isVertical ? "column" : "row",
+                  alignItems: "center",
+                  justifyContent: "space-around",
+                  width: "100%",
+                  height: "100%",
+                  paddingHorizontal: isVertical ? 0 : 8,
+                  paddingVertical: isVertical ? 8 : 0,
+                }}>
                 <TouchableOpacity
-                  onPress={() => setIsNavCollapsed(true)}
-                  hitSlop={10}>
-                  <Minimize2
-                    size={18}
-                    color={isDark ? "white" : "black"}
-                    opacity={0.5}
-                  />
+                  onPress={() => {
+                    Vibration.vibrate(10);
+                    setIsNavCollapsed(false);
+                  }}
+                  className="p-2">
+                  <Menu size={18} color={isDark ? "white" : "#6366f1"} />
                 </TouchableOpacity>
-              )}
-            </View>
+
+                <View className={isVertical ? "h-[1px] w-8 bg-white/20 dark:bg-white/10 my-1" : "w-[1px] h-6 bg-black/5 dark:bg-white/10 mx-1"} />
+
+                <TouchableOpacity
+                  onPress={() => {
+                    Vibration.vibrate(10);
+                    setIsSearching(true);
+                  }}
+                  className="p-2">
+                  <Search size={18} color={isDark ? "white" : "#64748b"} />
+                </TouchableOpacity>
+              </View>
+            ) : (
+              /* --- NORMAL EXPANDED TABS --- */
+              <>
+                {state.routes.map((route: any, index: number) => {
+                  const { options } = descriptors[route.key];
+                  const isFocused = state.index === index;
+
+                  const onPress = () => {
+                    if (isDragging) return;
+                    const event = navigation.emit({
+                      type: "tabPress",
+                      target: route.key,
+                      canPreventDefault: true,
+                    });
+                    if (!isFocused && !event.defaultPrevented) {
+                      navigation.navigate(route.name, route.params);
+                    }
+                  };
+
+                  const activeColor = isDark ? "#fbbf24" : "#4f46e5";
+                  const inactiveColor = isDark
+                    ? "rgba(255,255,255,0.5)"
+                    : "rgba(71,85,105,0.5)";
+
+                  return (
+                    <TabItem
+                      key={route.key}
+                      isFocused={isFocused}
+                      onPress={onPress}
+                      options={options}
+                      activeColor={activeColor}
+                      inactiveColor={inactiveColor}
+                      isVertical={isVertical}
+                      isDragging={isDragging}
+                      showLabel={isVertical && showSidebarLabels}
+                      label={options.tabBarLabel || route.name}
+                    />
+                  );
+                })}
+
+                {/* EXPANDED CONTROLS */}
+                <View
+                  className={
+                    isVertical
+                      ? "mt-2 pt-2 border-t border-black/5 dark:border-white/10"
+                      : "ml-2 pl-2 border-l border-black/5 dark:border-white/10"
+                  }>
+                  {isVertical ? (
+                    <View className="items-center gap-4">
+                      <TouchableOpacity
+                        onPress={() => {
+                          Vibration.vibrate(10);
+                          setShowSidebarLabels(!showSidebarLabels);
+                        }}
+                        hitSlop={10}>
+                        {showSidebarLabels ? (
+                          navPosition === "left" ? (
+                            <ChevronLeft size={20} color={isDark ? "white" : "black"} opacity={0.5} />
+                          ) : (
+                            <ChevronRight size={20} color={isDark ? "white" : "black"} opacity={0.5} />
+                          )
+                        ) : navPosition === "left" ? (
+                          <ChevronRight size={20} color={isDark ? "white" : "black"} opacity={0.5} />
+                        ) : (
+                          <ChevronLeft size={20} color={isDark ? "white" : "black"} opacity={0.5} />
+                        )}
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        onPress={() => setIsSearching(true)}
+                        hitSlop={10}>
+                        <Search size={16} color={isDark ? "white" : "black"} opacity={0.5} />
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        onPress={() => setIsNavCollapsed(true)}
+                        hitSlop={10}>
+                        <Minimize2 size={16} color={isDark ? "white" : "black"} opacity={0.5} />
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        onPress={() => setIsNavHidden(true)}
+                        hitSlop={10}>
+                        {navPosition === "left" ? (
+                          <PanelLeftClose size={16} color={isDark ? "white" : "black"} opacity={0.5} />
+                        ) : (
+                          <PanelRightClose size={16} color={isDark ? "white" : "black"} opacity={0.5} />
+                        )}
+                      </TouchableOpacity>
+                    </View>
+                  ) : (
+                    <View className="flex-row items-center gap-3">
+                      <TouchableOpacity
+                        onPress={() => setIsSearching(true)}
+                        hitSlop={10}>
+                        <Search size={18} color={isDark ? "white" : "black"} opacity={0.5} />
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        onPress={() => setIsNavCollapsed(true)}
+                        hitSlop={10}>
+                        <Minimize2 size={18} color={isDark ? "white" : "black"} opacity={0.5} />
+                      </TouchableOpacity>
+                    </View>
+                  )}
+                </View>
+              </>
+            )}
           </View>
         )}
       </Animated.View>

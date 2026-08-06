@@ -1,0 +1,41 @@
+appId: com.boxow35525.mobile
+env:
+  EXPO_PUBLIC_TEST_MODE: "true"
+---
+- launchApp:
+    clearState: true
+    permissions:
+      all: allow
+
+# 1. Automatic Biometric Lock Bypass (or interaction via testID)
+- runFlow:
+    when:
+      visible:
+        id: "biometric-lock-screen"
+    commands:
+      - tapOn:
+          id: "btn-unlock-biometric"
+
+# 2. Add Task via testID Selector Contract
+- tapOn:
+    id: "btn-open-add-task"
+- tapOn:
+    id: "input-task-title"
+- inputText: "Maestro E2E Task"
+- tapOn:
+    id: "input-task-desc"
+- inputText: "Created via automated Maestro run"
+- tapOn:
+    id: "btn-save-task"
+
+# 3. Add Transaction via testID Selector Contract
+- tapOn:
+    id: "btn-open-add-tx"
+- tapOn:
+    id: "input-tx-amount"
+- inputText: "3500"
+- tapOn:
+    id: "input-tx-title"
+- inputText: "Maestro Income"
+- tapOn:
+    id: "btn-save-tx"

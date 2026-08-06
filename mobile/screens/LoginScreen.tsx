@@ -50,6 +50,7 @@ const LoginScreen = () => {
               intensity={30}
               className="rounded-xl overflow-hidden border border-black/5 dark:border-white/30 bg-white/50 dark:bg-white/5">
               <TextInput
+                testID="input-login-email"
                 className="w-full text-slate-900 dark:text-white p-4 text-lg"
                 placeholder="entry.stack@gmail.com"
                 placeholderTextColor="rgba(148,163,184,0.6)"
@@ -68,6 +69,7 @@ const LoginScreen = () => {
               intensity={30}
               className="rounded-xl overflow-hidden border border-black/5 dark:border-white/30 bg-white/50 dark:bg-white/5">
               <TextInput
+                testID="input-login-password"
                 className="w-full text-slate-900 dark:text-white p-4 text-lg"
                 placeholder="••••••••"
                 placeholderTextColor="rgba(148,163,184,0.6)"
@@ -79,9 +81,10 @@ const LoginScreen = () => {
           </View>
 
           <TouchableOpacity
+            testID="btn-login-submit"
             onPress={handleSignIn}
             disabled={loading}
-            className="w-full bg-indigo-500 p-4 rounded-xl items-center mt-6 shadow-lg shadow-indigo-500/30 border border-indigo-400/50">
+            className="w-full bg-indigo-600 p-4 rounded-xl items-center mt-6 border border-indigo-500">
             {loading ? (
               <ActivityIndicator color="white" />
             ) : (

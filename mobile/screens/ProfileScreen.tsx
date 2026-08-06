@@ -106,7 +106,7 @@ const ProfileScreen = () => {
           <TouchableOpacity
             onPress={handleUpdateProfile}
             disabled={loading}
-            className="flex-row items-center justify-center bg-indigo-500 p-4 rounded-2xl shadow-lg shadow-indigo-500/30 mt-4 h-14">
+            className="flex-row items-center justify-center bg-indigo-600 p-4 rounded-2xl border border-indigo-500 mt-4 h-14">
             {loading ? (
               <ActivityIndicator color="white" />
             ) : (

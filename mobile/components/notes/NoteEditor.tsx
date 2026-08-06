@@ -122,6 +122,42 @@ const NoteEditor: React.FC<NoteEditorProps> = ({
     }
   };
 
+  const hasChanges = () => {
+    return (
+      title !== (note?.title || "") ||
+      content !== (note?.content || "") ||
+      isPinned !== (note?.isPinned || false) ||
+      color !== (note?.color || "default") ||
+      taskId !== note?.taskId
+    );
+  };
+
+  const handleBackGesture = () => {
+    if (hasChanges()) {
+      Alert.alert(
+        "Unsaved Changes",
+        "Do you want to save your changes before leaving?",
+        [
+          {
+            text: "Discard",
+            style: "destructive",
+            onPress: onClose,
+          },
+          {
+            text: "Cancel",
+            style: "cancel",
+          },
+          {
+            text: "Save",
+            onPress: handleSave,
+          },
+        ]
+      );
+    } else {
+      onClose();
+    }
+  };
+
   const handleDelete = () => {
     Alert.alert("Delete Note", "Are you sure you want to delete this note?", [
       { text: "Cancel", style: "cancel" },
@@ -152,12 +188,12 @@ const NoteEditor: React.FC<NoteEditorProps> = ({
   const selectedTask = tasks.find((t) => t.id === taskId);
 
   return (
-    <Modal visible={isOpen} animationType="slide" presentationStyle="pageSheet">
+    <Modal visible={isOpen} animationType="slide" presentationStyle="pageSheet" onRequestClose={handleBackGesture}>
       <View className="flex-1 bg-slate-50 dark:bg-slate-900">
         {/* Header */}
         <View className="flex-row justify-between items-center p-4 border-b border-slate-200 dark:border-slate-800">
           <TouchableOpacity
-            onPress={onClose}
+            onPress={handleBackGesture}
             className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full">
             <X size={20} color="#64748b" />
           </TouchableOpacity>
@@ -185,7 +221,7 @@ const NoteEditor: React.FC<NoteEditorProps> = ({
               onPress={() => setIsPinned(!isPinned)}
               className={`flex-row items-center px-3 py-2 rounded-lg ${
                 isPinned
-                  ? "bg-amber-100 dark:bg-amber-900/30"
+                  ? "bg-amber-100 dark:bg-amber-950"
                   : "bg-slate-100 dark:bg-slate-800"
               }`}>
               <Pin
@@ -197,7 +233,7 @@ const NoteEditor: React.FC<NoteEditorProps> = ({
                 className={`ml-1 text-xs font-bold ${
                   isPinned
                     ? "text-amber-600 dark:text-amber-400"
-                    : "text-slate-500"
+                    : "text-slate-600 dark:text-slate-400"
                 }`}>
                 Pin
               </Text>
@@ -214,13 +250,13 @@ const NoteEditor: React.FC<NoteEditorProps> = ({
                     "#94a3b8",
                 }}
               />
-              <Text className="text-xs font-bold text-slate-500">Color</Text>
+              <Text className="text-xs font-bold text-slate-600 dark:text-slate-400">Color</Text>
               <ChevronDown size={12} color="#64748b" />
             </TouchableOpacity>
 
             <TouchableOpacity
               onPress={() => setShowAISheet(true)}
-              className="flex-row items-center px-3 py-2 rounded-lg bg-purple-100 dark:bg-purple-900/30">
+              className="flex-row items-center px-3 py-2 rounded-lg bg-purple-100 dark:bg-purple-950">
               <Sparkles size={16} color="#8b5cf6" />
               <Text className="ml-1 text-xs font-bold text-purple-600 dark:text-purple-400">
                 AI
@@ -368,7 +404,7 @@ const NoteEditor: React.FC<NoteEditorProps> = ({
                     }}
                     className="flex-row items-center gap-2 p-3 border-b border-slate-100 dark:border-slate-700">
                     <Link2Off size={14} color="#94a3b8" />
-                    <Text className="text-slate-500">No task</Text>
+                    <Text className="text-slate-600 dark:text-slate-400">No task</Text>
                   </TouchableOpacity>
                   {tasks.map((task) => (
                     <TouchableOpacity
@@ -379,7 +415,7 @@ const NoteEditor: React.FC<NoteEditorProps> = ({
                       }}
                       className={`flex-row items-center gap-2 p-3 border-b border-slate-100 dark:border-slate-700 ${
                         taskId === task.id
-                          ? "bg-purple-50 dark:bg-purple-900/20"
+                          ? "bg-purple-50 dark:bg-purple-950"
                           : ""
                       }`}>
                       <View
@@ -444,7 +480,7 @@ const NoteEditor: React.FC<NoteEditorProps> = ({
           {note && onDelete && (
             <TouchableOpacity
               onPress={handleDelete}
-              className="flex-row items-center justify-center gap-2 p-4 bg-red-50 dark:bg-red-900/20 rounded-xl mb-4">
+              className="flex-row items-center justify-center gap-2 p-4 bg-red-50 dark:bg-red-950 rounded-xl mb-4">
               <Trash2 size={18} color="#ef4444" />
               <Text className="text-red-500 font-bold">Delete Note</Text>
             </TouchableOpacity>

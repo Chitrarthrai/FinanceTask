@@ -4,9 +4,11 @@ import { BlurView } from "expo-blur";
 import { cssInterop, useColorScheme } from "nativewind";
 
 // Enable generic styling for BlurView if needed, though usually we wrap it.
-cssInterop(BlurView, {
-  className: "style",
-});
+if (typeof cssInterop === "function") {
+  try {
+    cssInterop(BlurView, { className: "style" });
+  } catch (_e) {}
+}
 
 interface GlassViewProps extends ViewProps {
   intensity?: number;

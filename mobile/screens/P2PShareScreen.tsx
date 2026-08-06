@@ -339,7 +339,7 @@ export default function P2PShareScreen() {
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 0 }}
                         style={{ borderRadius: 24 }}
-                        className="w-full py-4 px-6 rounded-3xl flex-row items-center justify-center shadow-lg shadow-indigo-500/40 border border-white/20">
+                        className="w-full py-4 px-6 rounded-3xl flex-row items-center justify-center border border-indigo-500">
                         <Text className="text-white font-bold text-xl mr-3 tracking-wide">
                           Send Now
                         </Text>
@@ -391,7 +391,7 @@ export default function P2PShareScreen() {
                     onPress={handleConnectReceiver}>
                     <LinearGradient
                       colors={["#6366f1", "#4f46e5"]}
-                      className="w-full py-5 rounded-2xl items-center shadow-xl shadow-indigo-500/20">
+                      className="w-full py-5 rounded-2xl items-center border border-indigo-500">
                       <Text className="text-white font-bold text-xl">
                         Connect & Download
                       </Text>

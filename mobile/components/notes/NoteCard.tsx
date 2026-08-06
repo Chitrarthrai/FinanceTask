@@ -21,32 +21,32 @@ const NOTE_COLORS: Record<
   },
   red: {
     bg: "bg-red-50",
-    darkBg: "dark:bg-red-900/20",
+    darkBg: "dark:bg-red-950",
     border: "border-red-200",
   },
   orange: {
     bg: "bg-orange-50",
-    darkBg: "dark:bg-orange-900/20",
+    darkBg: "dark:bg-orange-950",
     border: "border-orange-200",
   },
   yellow: {
     bg: "bg-yellow-50",
-    darkBg: "dark:bg-yellow-900/20",
+    darkBg: "dark:bg-amber-950",
     border: "border-yellow-200",
   },
   green: {
     bg: "bg-green-50",
-    darkBg: "dark:bg-green-900/20",
+    darkBg: "dark:bg-green-950",
     border: "border-green-200",
   },
   blue: {
     bg: "bg-blue-50",
-    darkBg: "dark:bg-blue-900/20",
+    darkBg: "dark:bg-blue-950",
     border: "border-blue-200",
   },
   purple: {
     bg: "bg-purple-50",
-    darkBg: "dark:bg-purple-900/20",
+    darkBg: "dark:bg-purple-950",
     border: "border-purple-200",
   },
 };
@@ -86,7 +86,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
           onPress={() => onPin(note.id, !note.isPinned)}
           className={`p-1.5 rounded-lg ${
             note.isPinned
-              ? "bg-amber-100 dark:bg-amber-900/30"
+              ? "bg-amber-100 dark:bg-amber-950"
               : "bg-slate-100 dark:bg-slate-700"
           }`}>
           <Pin

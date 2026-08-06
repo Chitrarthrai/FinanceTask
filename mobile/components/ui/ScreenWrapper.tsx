@@ -1,7 +1,10 @@
 import React from "react";
-import { View, StatusBar, Platform } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { View, StatusBar, Platform, TextInput, TouchableOpacity, Text, BackHandler } from "react-native";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
+import { useNavigation } from "@react-navigation/native";
+import { X } from "lucide-react-native";
+import { GlassView } from "./GlassView";
 
 import { useColorScheme } from "nativewind";
 import { useData } from "../../context/DataContext";
@@ -15,9 +18,33 @@ export const ScreenWrapper: React.FC<ScreenWrapperProps> = ({
   children,
   className = "",
 }) => {
+  const navigation = useNavigation<any>();
+  const insets = useSafeAreaInsets();
   const { colorScheme } = useColorScheme();
-  const { navPosition, isNavHidden, isNavCollapsed } = useData();
+  const {
+    navPosition,
+    isNavHidden,
+    isNavCollapsed,
+    isSearching,
+    setIsSearching,
+    searchText,
+    setSearchText,
+    searchScope,
+    setSearchScope,
+  } = useData();
   const isDark = colorScheme === "dark";
+
+  React.useEffect(() => {
+    if (isSearching) {
+      const onBackPress = () => {
+        setIsSearching(false);
+        return true;
+      };
+
+      const subscription = BackHandler.addEventListener("hardwareBackPress", onBackPress);
+      return () => subscription.remove();
+    }
+  }, [isSearching, setIsSearching]);
 
   // Calculate dynamic padding based on nav position
   const getNavPadding = () => {
@@ -94,7 +121,62 @@ export const ScreenWrapper: React.FC<ScreenWrapperProps> = ({
         }}
       />
 
-      <SafeAreaView className={`flex-1 ${navPaddingClass} ${className}`}>
+      {isSearching && (
+        <View
+          style={{
+            position: "absolute",
+            top: Platform.OS === "ios" ? insets.top + 10 : 35,
+            left: 20,
+            right: 20,
+            height: 52,
+            zIndex: 999,
+          }}>
+          <GlassView
+            intensity={95}
+            className="flex-1 flex-row px-4 items-center gap-2 border border-white/30 dark:border-white/10 bg-white/70 dark:bg-black/60 shadow-xl shadow-black/20 rounded-full">
+            <TouchableOpacity
+              onPress={() =>
+                setSearchScope(
+                  searchScope === "transactions" ? "tasks" : "transactions"
+                )
+              }
+              className="flex-row items-center gap-1 bg-black/5 dark:bg-white/10 px-2.5 py-1 rounded-full">
+              <Text className="text-[10px] font-bold text-slate-600 dark:text-slate-300 uppercase">
+                {searchScope === "transactions" ? "Trans" : "Tasks"}
+              </Text>
+            </TouchableOpacity>
+
+            <TextInput
+              autoFocus
+              value={searchText}
+              onChangeText={setSearchText}
+              onSubmitEditing={() => {
+                if (searchText.trim()) {
+                  const targetScreen = searchScope === "transactions" ? "TransactionsTab" : "TasksTab";
+                  navigation.navigate(targetScreen, { search: searchText });
+                  setIsSearching(false);
+                  setSearchText("");
+                }
+              }}
+              placeholder={`Search ${searchScope}...`}
+              placeholderTextColor={isDark ? "#64748b" : "#94a3b8"}
+              className="flex-1 text-sm font-medium text-slate-900 dark:text-white h-full p-0"
+              returnKeyType="search"
+            />
+
+            <TouchableOpacity
+              onPress={() => {
+                setIsSearching(false);
+                setSearchText("");
+              }}
+              className="p-1">
+              <X size={16} color={isDark ? "#ccc" : "#555"} />
+            </TouchableOpacity>
+          </GlassView>
+        </View>
+      )}
+
+      <SafeAreaView className={`flex-1 ${navPaddingClass} ${isSearching ? "pt-16" : ""} ${className}`}>
         {children}
       </SafeAreaView>
     </View>

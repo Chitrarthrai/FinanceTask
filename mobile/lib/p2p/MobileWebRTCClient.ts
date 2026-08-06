@@ -2,7 +2,6 @@ import {
   RTCPeerConnection,
   RTCIceCandidate,
   RTCSessionDescription,
-  RTCDataChannel,
 } from "react-native-webrtc";
 import * as FileSystem from "expo-file-system/legacy";
 import { encode, decode } from "base64-arraybuffer";
@@ -25,7 +24,7 @@ interface FileMetadata {
 
 export class MobileWebRTCClient {
   private peerConnection: RTCPeerConnection;
-  private dataChannel: RTCDataChannel | null = null;
+  private dataChannel: any = null;
   private signaling: SignalingClient;
   private isInitiator: boolean = false;
 
@@ -51,20 +50,20 @@ export class MobileWebRTCClient {
 
     this.peerConnection = new RTCPeerConnection(config);
 
-    this.peerConnection.onicecandidate = (event) => {
+    (this.peerConnection as any).onicecandidate = (event: any) => {
       if (event.candidate) {
         this.signaling.sendSignal("candidate", event.candidate);
       }
     };
 
-    this.peerConnection.onconnectionstatechange = () => {
-      const state = this.peerConnection.connectionState;
+    (this.peerConnection as any).onconnectionstatechange = () => {
+      const state = (this.peerConnection as any).connectionState;
       this.onStatus?.(state);
       console.log(`Connection state: ${state}`);
     };
 
     // Handle incoming data channels (for receiver)
-    this.peerConnection.ondatachannel = (event) => {
+    (this.peerConnection as any).ondatachannel = (event: any) => {
       this.setupDataChannel(event.channel);
     };
   }
@@ -129,7 +128,7 @@ export class MobileWebRTCClient {
     }
   }
 
-  private setupDataChannel(channel: RTCDataChannel) {
+  private setupDataChannel(channel: any) {
     this.dataChannel = channel;
     this.dataChannel.binaryType = "arraybuffer";
     this.dataChannel.bufferedAmountLowThreshold = MAX_BUFFERED_AMOUNT / 2;

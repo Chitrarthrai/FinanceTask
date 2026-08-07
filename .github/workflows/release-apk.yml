@@ -25,7 +25,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: ./mobile
-        run: npm ci
+        run: npm ci --legacy-peer-deps
 
       - name: Setup Java
         uses: actions/setup-java@v4

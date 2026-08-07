@@ -1,4 +1,17 @@
-const upstreamTransformer = require('@expo/metro-config/babel-transformer');
+let upstreamTransformer;
+try {
+  upstreamTransformer = require('@expo/metro-config/babel-transformer');
+} catch (e) {
+  try {
+    const expoPath = require.resolve('expo/package.json');
+    const metroConfigPath = require.resolve('@expo/metro-config/package.json', { paths: [expoPath] });
+    const babelTransformerPath = require.resolve('./babel-transformer', { paths: [metroConfigPath] });
+    upstreamTransformer = require(babelTransformerPath);
+  } catch (err) {
+    upstreamTransformer = require('metro-babel-transformer');
+  }
+}
+
 
 module.exports.transform = function ({ src, filename, options }) {
   const isNodeModule = filename.indexOf('node_modules') !== -1;

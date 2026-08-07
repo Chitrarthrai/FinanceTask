@@ -52,6 +52,7 @@
   "private": true,
   "devDependencies": {
     "@babel/plugin-transform-optional-chaining": "^8.0.1",
+    "@expo/metro-config": "~54.0.13",
     "@testing-library/jest-native": "^5.4.3",
     "@testing-library/react-native": "^14.0.1",
     "@types/node": "^25.0.9",

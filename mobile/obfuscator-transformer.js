@@ -26,29 +26,18 @@ module.exports.transform = function ({ src, filename, options }) {
       // Spawns javascript-obfuscator with custom rules to scramble identifiers into hex tokens
       const obfuscationResult = JavaScriptObfuscator.obfuscate(result.code, {
         compact: true,
-        controlFlowFlattening: false, // Keep false for RN performance unless needed
+        controlFlowFlattening: false,
         deadCodeInjection: false,
         debugProtection: false,
         disableConsoleOutput: true,
         identifierNamesGenerator: 'hexadecimal',
         log: false,
-        numbersToExpressions: true,
-        seed: 12345,
+        numbersToExpressions: false,
         renameGlobals: false,
         selfDefending: false,
         simplify: true,
-        splitStrings: true,
+        splitStrings: false,
         stringArray: true,
-        stringArrayCallsTransform: true,
-        stringArrayCallsTransformThreshold: 0.5,
-        stringArrayEncoding: ['base64'],
-        stringArrayIndexShift: true,
-        stringArrayRotate: true,
-        stringArrayShuffle: true,
-        stringArrayWrappersCount: 1,
-        stringArrayWrappersChainedCalls: true,
-        stringArrayWrappersParametersMaxCount: 2,
-        stringArrayWrappersType: 'variable',
         stringArrayThreshold: 0.75,
         unicodeEscapeSequence: false
       });

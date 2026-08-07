@@ -33,6 +33,7 @@ module.exports.transform = function ({ src, filename, options }) {
         identifierNamesGenerator: 'hexadecimal',
         log: false,
         numbersToExpressions: true,
+        seed: 12345,
         renameGlobals: false,
         selfDefending: false,
         simplify: true,

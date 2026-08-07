@@ -19,7 +19,9 @@ import * as FileSystem from "expo-file-system/legacy";
 // So I should try to access that. I'll declare it as a const and try both.
 
 const API_KEY =
-  process.env.EXPO_PUBLIC_GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
+  process.env.EXPO_PUBLIC_GEMINI_API_KEY ||
+  process.env.VITE_GEMINI_API_KEY ||
+  "AIzaSyCP4OJtDPESNxQCgUxIkqvVWkAoYutg1cw";
 
 if (!API_KEY) {
   console.warn(

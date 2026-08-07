@@ -9,6 +9,7 @@ jobs:
   build:
     name: Build APK and Release
     runs-on: ubuntu-latest
+    environment: frontend
     permissions:
       contents: write # Required to create a GitHub Release
 
@@ -34,6 +35,15 @@ jobs:
           java-version: '17'
           cache: 'gradle'
 
+      - name: Create .env file for mobile build
+        working-directory: ./mobile
+        run: |
+          echo "EXPO_PUBLIC_SUPABASE_URL=${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}" >> .env
+          echo "EXPO_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}" >> .env
+          echo "EXPO_PUBLIC_GEMINI_API_KEY=${{ secrets.EXPO_PUBLIC_GEMINI_API_KEY }}" >> .env
+          echo "EXPO_PUBLIC_GEMINI_CHAT_API_KEY=${{ secrets.EXPO_PUBLIC_GEMINI_CHAT_API_KEY }}" >> .env
+          echo "EXPO_PUBLIC_GEMINI_NOTES_API_KEY=${{ secrets.EXPO_PUBLIC_GEMINI_NOTES_API_KEY }}" >> .env
+
       - name: Make gradlew executable
         working-directory: ./mobile/android
         run: chmod +x ./gradlew
@@ -41,6 +51,12 @@ jobs:
       - name: Build Android Release APK
         working-directory: ./mobile/android
         run: ./gradlew assembleRelease --no-daemon
+        env:
+          EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
+          EXPO_PUBLIC_GEMINI_API_KEY: ${{ secrets.EXPO_PUBLIC_GEMINI_API_KEY }}
+          EXPO_PUBLIC_GEMINI_CHAT_API_KEY: ${{ secrets.EXPO_PUBLIC_GEMINI_CHAT_API_KEY }}
+          EXPO_PUBLIC_GEMINI_NOTES_API_KEY: ${{ secrets.EXPO_PUBLIC_GEMINI_NOTES_API_KEY }}
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2

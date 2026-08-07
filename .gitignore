@@ -52,3 +52,4 @@ frontend/public/mockServiceWorker.js
 *.jks
 *.keystore
 !mobile/android/app/upload.jks
+!mobile/android/app/debug.keystore

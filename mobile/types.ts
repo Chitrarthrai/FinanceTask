@@ -44,6 +44,17 @@ export interface Task {
   completionTime?: string;
 }
 
+export interface NotificationItem {
+  id: string;
+  userId?: string;
+  taskId?: string;
+  type: "budget_warning" | "alarm" | "task_reminder";
+  title: string;
+  message: string;
+  createdAt: string;
+  readAt?: string;
+}
+
 export interface UndoItem {
   id: string;
   type: "transaction" | "task";
@@ -88,6 +99,7 @@ export interface BudgetSettings {
   fixedExpenses: ExpenseItem[];
   variableExpenses: ExpenseItem[];
   emergencyFund: number; // Simplified to number
+  currencySymbol?: string;
 }
 
 export interface FinancialMetrics {
@@ -101,6 +113,7 @@ export interface FinancialMetrics {
   remainingToday: number;
   daysRemaining: number;
   budgetHealth: "Healthy" | "At Risk" | "Critical";
+  savingsTrend?: number;
 }
 
 // Analytics Types
@@ -154,3 +167,4 @@ export interface Note {
   // Virtual field for linked task info
   linkedTask?: Task;
 }
+

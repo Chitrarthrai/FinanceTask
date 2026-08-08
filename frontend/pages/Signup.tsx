@@ -32,13 +32,20 @@ export const Signup: React.FC = () => {
     setLoading(true);
     setMessage(null);
 
+    const cleanEmail = email.trim();
+    if (!cleanEmail || !password) {
+      setMessage({ type: 'error', text: 'Please enter both email and password.' });
+      setLoading(false);
+      return;
+    }
+
     try {
       const { data, error } = await supabase.auth.signUp({
-        email,
+        email: cleanEmail,
         password,
         options: {
           data: {
-            full_name: fullName || email.split('@')[0],
+            full_name: fullName || cleanEmail.split('@')[0],
           },
         },
       });

@@ -39,6 +39,7 @@ export interface Task {
   tags?: string[];
   recurring?: boolean;
   category?: string; // Added
+  amount?: number;
   reasonNotDone?: string;
   completionTime?: string;
 }

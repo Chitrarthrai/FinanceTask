@@ -24,7 +24,8 @@ const LoginScreen = () => {
   const [loading, setLoading] = useState(false);
 
   const handleAuth = async () => {
-    if (!email || !password) {
+    const cleanEmail = email.trim();
+    if (!cleanEmail || !password) {
       Alert.alert("Missing Fields", "Please enter both email and password.");
       return;
     }
@@ -32,11 +33,11 @@ const LoginScreen = () => {
     setLoading(true);
     if (isSignUp) {
       const { error } = await supabase.auth.signUp({
-        email,
+        email: cleanEmail,
         password,
         options: {
           data: {
-            full_name: email.split("@")[0],
+            full_name: cleanEmail.split("@")[0],
           },
         },
       });
@@ -51,11 +52,17 @@ const LoginScreen = () => {
       }
     } else {
       const { error } = await supabase.auth.signInWithPassword({
-        email,
+        email: cleanEmail,
         password,
       });
       setLoading(false);
-      if (error) Alert.alert("Sign In Error", error.message);
+      if (error) {
+        let msg = error.message;
+        if (msg.includes("Invalid login credentials")) {
+          msg = "Invalid email or password. If you registered via Google OAuth on the web, please log in with Google or set a password in Settings.";
+        }
+        Alert.alert("Sign In Error", msg);
+      }
     }
   };
 

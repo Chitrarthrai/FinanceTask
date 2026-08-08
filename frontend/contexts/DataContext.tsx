@@ -49,8 +49,15 @@ interface DataContextType {
   ) => Promise<void>;
 
   updateBudgetSettings: (settings: Partial<BudgetSettings>) => Promise<void>;
-  addCategory: (category: Category) => Promise<void>;
-  updateCategory: (category: Category) => Promise<void>;
+  addCategory: (
+    categoryOrName: Category | string,
+    type?: "fixed" | "variable" | "pocket" | "income",
+    color?: string,
+  ) => Promise<void>;
+  updateCategory: (
+    categoryOrId: Category | string,
+    name?: string,
+  ) => Promise<void>;
   deleteCategory: (id: string) => Promise<void>;
   addRecurringRule: (rule: any) => Promise<void>;
   addNote: (note: Partial<Note>) => Promise<void>;
@@ -627,46 +634,90 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     });
   };
 
-  const addCategory = async (category: Category) => {
+  const addCategory = async (
+    categoryOrName: Category | string,
+    type?: "fixed" | "variable" | "pocket" | "income",
+    color?: string,
+  ) => {
     if (!user) return;
-    const tempId = Math.random().toString();
-    setCategories((prev) => [...prev, { ...category, id: tempId }]);
+    let catObj: Partial<Category> = {};
+    if (typeof categoryOrName === "object" && categoryOrName !== null) {
+      catObj = categoryOrName;
+    } else {
+      catObj = {
+        name: String(categoryOrName),
+        type: type || "variable",
+        color: color || "#6366f1",
+      };
+    }
 
-    const { data } = await supabase
+    const tempId = Math.random().toString();
+    const newCat: Category = {
+      id: tempId,
+      name: catObj.name || "New Category",
+      type: (catObj.type as any) || "variable",
+      color: catObj.color || "#6366f1",
+      icon: catObj.icon,
+      budgetLimit: catObj.budgetLimit,
+    };
+    setCategories((prev) => [...prev, newCat]);
+
+    const { data, error } = await supabase
       .from("categories")
       .insert({
         user_id: user.id,
-        name: category.name,
-        type: category.type,
-        color: category.color,
-        icon: category.icon,
-        budget_limit: category.budgetLimit || null,
+        name: newCat.name,
+        type: newCat.type,
+        color: newCat.color,
+        icon: newCat.icon,
+        budget_limit: newCat.budgetLimit || null,
       })
       .select()
       .single();
 
-    if (data) {
+    if (error) {
+      console.error("Add Category Error:", error);
+    } else if (data) {
       setCategories((prev) =>
         prev.map((c) => (c.id === tempId ? { ...c, id: data.id } : c)),
       );
     }
   };
 
-  const updateCategory = async (category: Category) => {
+  const updateCategory = async (
+    categoryOrId: Category | string,
+    name?: string,
+  ) => {
     if (!user) return;
-    setCategories((prev) =>
-      prev.map((c) => (c.id === category.id ? category : c)),
-    );
-    await supabase
+    let targetId = "";
+    let updatePayload: any = {};
+
+    if (typeof categoryOrId === "object" && categoryOrId !== null) {
+      targetId = categoryOrId.id;
+      updatePayload = {
+        name: categoryOrId.name,
+        type: categoryOrId.type,
+        color: categoryOrId.color,
+        icon: categoryOrId.icon,
+        budget_limit: categoryOrId.budgetLimit || null,
+      };
+      setCategories((prev) =>
+        prev.map((c) => (c.id === targetId ? categoryOrId : c)),
+      );
+    } else {
+      targetId = String(categoryOrId);
+      updatePayload = { name };
+      setCategories((prev) =>
+        prev.map((c) => (c.id === targetId ? { ...c, name: name || c.name } : c)),
+      );
+    }
+
+    const { error } = await supabase
       .from("categories")
-      .update({
-        name: category.name,
-        type: category.type,
-        color: category.color,
-        icon: category.icon,
-        budget_limit: category.budgetLimit || null,
-      })
-      .eq("id", category.id);
+      .update(updatePayload)
+      .eq("id", targetId);
+
+    if (error) console.error("Update Category Error:", error);
   };
 
   const deleteCategory = async (id: string) => {

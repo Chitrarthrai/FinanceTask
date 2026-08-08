@@ -54,6 +54,25 @@ describe('DataContext Integration Tests', () => {
 
     expect(result.current.transactions.some(t => t.title === 'Salary Credit')).toBe(true);
   });
+
+  it('supports flexible addCategory and updateCategory signatures', async () => {
+    const { result } = await renderHook(() => useData(), { wrapper });
+
+    await waitFor(() => {
+      expect(result.current.isDataLoaded).toBe(true);
+    });
+
+    await act(async () => {
+      await result.current.addCategory({
+        id: 'cat-1',
+        name: 'Investment',
+        type: 'fixed',
+        color: '#10b981',
+      });
+    });
+
+    expect(result.current.categories.some(c => c.name === 'Investment')).toBe(true);
+  });
 });
 
 

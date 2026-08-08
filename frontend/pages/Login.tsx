@@ -32,14 +32,21 @@ export const Login: React.FC = () => {
     setLoading(true);
     setMessage(null);
 
+    const cleanEmail = email.trim();
+    if (!cleanEmail || !password) {
+      setMessage({ type: 'error', text: 'Please enter both email and password.' });
+      setLoading(false);
+      return;
+    }
+
     try {
       if (isSignUp) {
         const { data, error } = await supabase.auth.signUp({
-          email,
+          email: cleanEmail,
           password,
           options: {
             data: {
-              full_name: email.split('@')[0],
+              full_name: cleanEmail.split('@')[0],
             },
           },
         });
@@ -56,7 +63,7 @@ export const Login: React.FC = () => {
         }
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({
-          email,
+          email: cleanEmail,
           password,
         });
         if (error) throw error;
@@ -67,7 +74,11 @@ export const Login: React.FC = () => {
         }
       }
     } catch (error: any) {
-      setMessage({ type: 'error', text: error.message });
+      let errText = error.message;
+      if (errText.includes('Invalid login credentials')) {
+        errText = 'Invalid email or password. If you registered via Google OAuth, please set your password in Settings or continue with Google.';
+      }
+      setMessage({ type: 'error', text: errText });
     } finally {
       setLoading(false);
     }

@@ -72,16 +72,16 @@ jobs:
           EXPO_PUBLIC_GEMINI_CHAT_API_KEY: ${{ secrets.EXPO_PUBLIC_GEMINI_CHAT_API_KEY }}
           EXPO_PUBLIC_GEMINI_NOTES_API_KEY: ${{ secrets.EXPO_PUBLIC_GEMINI_NOTES_API_KEY }}
 
-      - name: Package Universal APK for Release
+      - name: Package All APKs for Release
         working-directory: ./mobile
         run: |
           mkdir -p dist
-          find android/app/build/outputs/apk/release/ -name "*Universal*.apk" -exec cp {} dist/FinanceTask-Universal.apk \;
+          cp android/app/build/outputs/apk/release/*.apk dist/
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: mobile/dist/FinanceTask-Universal.apk
+          files: mobile/dist/*.apk
           name: Release ${{ github.ref_name }}
           draft: false
           prerelease: false

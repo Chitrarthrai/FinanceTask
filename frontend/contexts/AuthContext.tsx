@@ -13,6 +13,7 @@ interface AuthContextType {
   user: User | null;
   signOut: () => Promise<void>;
   loading: boolean;
+  setSessionState: (session: Session | null) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -22,11 +23,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const setSessionState = (newSession: Session | null) => {
+    setSession(newSession);
+    setUser(newSession?.user ?? null);
+    setLoading(false);
+  };
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+      if (session && window.location.hash.includes("access_token")) {
+        window.location.hash = "#/app";
+      }
     });
 
     const {
@@ -35,6 +45,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+      if (session && window.location.hash.includes("access_token")) {
+        window.location.hash = "#/app";
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -49,6 +62,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     user,
     signOut,
     loading,
+    setSessionState,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

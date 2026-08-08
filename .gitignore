@@ -49,6 +49,7 @@ frontend/public/mockServiceWorker.js
 
 # Mobile (if React Native / Expo in future)
 .expo/
+.playwright-mcp/
 *.jks
 *.keystore
 !mobile/android/app/upload.jks

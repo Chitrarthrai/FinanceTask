@@ -17,6 +17,7 @@ import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
 import { Logo } from '../components/common/Logo';
+import { useAuth } from '../contexts/AuthContext';
 
 interface LandingProps {
   theme?: string;
@@ -27,7 +28,18 @@ export const Landing: React.FC<LandingProps> = ({
   theme = 'dark',
   setTheme = () => {},
 }) => {
+  const { session } = useAuth();
   const navigate = useNavigate();
+
+  React.useEffect(() => {
+    if (session) {
+      navigate('/app', { replace: true });
+    }
+  }, [session, navigate]);
+
+  if (session) {
+    return null;
+  }
 
   const toggleTheme = () => {
     setTheme(theme === 'light' ? 'dark' : 'light');

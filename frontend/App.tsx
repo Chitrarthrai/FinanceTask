@@ -13,6 +13,7 @@ import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Notes from "./pages/Notes";
+import AuthCallback from "./pages/AuthCallback";
 import { DataProvider } from "./contexts/DataContext";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { AIChatBot } from "./components/AIChatBot";
@@ -54,6 +55,10 @@ const ProtectedRoute = ({ children }: { children: React.ReactElement }) => {
     );
   }
 
+  if (!session) {
+    return <Navigate to="/login" replace />;
+  }
+
   return children;
 };
 
@@ -88,6 +93,7 @@ const App = () => {
           />
           <Route path="/signup" element={<Signup />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
 
           <Route
             path="/app"

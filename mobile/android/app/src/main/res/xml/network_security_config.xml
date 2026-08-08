@@ -1,10 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
-  <!-- Enforce HTTPS-only globally -->
+  <!-- Enforce HTTPS-only globally for remote servers -->
   <base-config cleartextTrafficPermitted="false">
     <trust-anchors>
       <!-- Trust only system-level CAs. Reject user-installed CAs to prevent MITM. -->
       <certificates src="system"/>
     </trust-anchors>
   </base-config>
+
+  <!-- Explicitly permit cleartext HTTP for Metro bundler local development loopback -->
+  <domain-config cleartextTrafficPermitted="true">
+    <domain includeSubdomains="true">localhost</domain>
+    <domain includeSubdomains="true">10.0.2.2</domain>
+    <domain includeSubdomains="true">127.0.0.1</domain>
+  </domain-config>
 </network-security-config>
+
